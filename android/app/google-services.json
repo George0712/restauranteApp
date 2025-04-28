@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "881860938861",
+    "project_id": "gestionpedidos-dd5ee",
+    "storage_bucket": "gestionpedidos-dd5ee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:881860938861:android:d96d74d57452c87e21c364",
+        "android_client_info": {
+          "package_name": "com.example.restaurante_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbRH6sK2W7jrvTzsAn2Nvh8SrcKZe3N0s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
