@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:firebase_core/firebase_core.dart';          // Agregado
+import 'package:firebase_core/firebase_core.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/core/theme/app_theme.dart';
 import 'routes/app_routes.dart';
-import 'presentation/routes/app_routes.dart';
-import 'firebase_options.dart';                             // Agregado
+import 'firebase_options.dart';                            
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();                // Agregado
-  await Firebase.initializeApp(                             // Agregado
+  WidgetsFlutterBinding.ensureInitialized();               
+  await Firebase.initializeApp(                             
     options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const ProviderScope(child: MyApp()));
