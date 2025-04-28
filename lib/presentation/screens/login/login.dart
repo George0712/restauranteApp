@@ -158,16 +158,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                 }
                               : null,
                           style: ButtonStyle(
-                            padding: MaterialStateProperty.all(
+                            padding: WidgetStateProperty.all(
                               const EdgeInsets.symmetric(vertical: 25),
                             ),
-                            textStyle: MaterialStateProperty.all(
+                            textStyle: WidgetStateProperty.all(
                               const TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                             backgroundColor:
-                                MaterialStateProperty.resolveWith((states) {
-                              if (states.contains(MaterialState.disabled)) {
+                                WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.disabled)) {
                                 return theme
                                     .colorScheme
                                     .primary
@@ -176,10 +176,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
                               return theme.colorScheme.primary;
                             }),
-                            foregroundColor: MaterialStateProperty.all(
+                            foregroundColor: WidgetStateProperty.all(
                               theme.colorScheme.onPrimary,
                             ),
-                            shape: MaterialStateProperty.all(
+                            shape: WidgetStateProperty.all(
                               RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                             ),
