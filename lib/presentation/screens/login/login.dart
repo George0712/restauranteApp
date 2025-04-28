@@ -1,68 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
-import 'package:restaurante_app/core/utils/regex_validators.dart';
+import 'package:restaurante_app/presentation/providers/login/login_provider.dart';
 import 'package:restaurante_app/presentation/widgets/app_text_form_field.dart';
 import 'package:restaurante_app/presentation/widgets/gradient_background.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-
-  final ValueNotifier<bool> passwordNotifier = ValueNotifier(true);
-  final ValueNotifier<bool> fieldValidNotifier = ValueNotifier(false);
-
-  late final TextEditingController emailController;
-  late final TextEditingController passwordController;
-
-  void initializeControllers() {
-    emailController = TextEditingController()..addListener(controllerListener);
-    passwordController = TextEditingController()
-      ..addListener(controllerListener);
-  }
-
-  void disposeControllers() {
-    emailController.dispose();
-    passwordController.dispose();
-  }
-
-  void controllerListener() {
-    final email = emailController.text;
-    final password = passwordController.text;
-
-    if (email.isEmpty && password.isEmpty) return;
-
-    if (AppRegex.emailRegex.hasMatch(email) &&
-        AppRegex.passwordRegex.hasMatch(password)) {
-      fieldValidNotifier.value = true;
-    } else {
-      fieldValidNotifier.value = false;
-    }
-  }
 
   @override
   void initState() {
-    initializeControllers();
     super.initState();
+    final loginController = ref.read(loginControllerProvider);
+    loginController.emailController.addListener(_validateFields);
+    loginController.passwordController.addListener(_validateFields);
+  }
+
+  void _validateFields() {
+    if (!mounted) return;
+    final loginController = ref.read(loginControllerProvider);
+    final isValid = loginController.areFieldsValid();
+    ref.read(fieldsValidProvider.notifier).state = isValid;
   }
 
   @override
   void dispose() {
-    disposeControllers();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final loginController = ref.watch(loginControllerProvider);
+    final isPasswordVisible = ref.watch(passwordVisibilityProvider);
+    final isFieldsValid = ref.watch(fieldsValidProvider);
 
     return Scaffold(
       body: ListView(
@@ -89,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   AppTextFormField(
-                    controller: emailController,
+                    controller: loginController.emailController,
                     labelText: AppStrings.email,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
@@ -102,117 +82,83 @@ class _LoginScreenState extends State<LoginScreen> {
                               : AppStrings.invalidEmailAddress;
                     },
                   ),
-                  ValueListenableBuilder(
-                    valueListenable: passwordNotifier,
-                    builder: (_, passwordObscure, __) {
-                      return AppTextFormField(
-                        obscureText: passwordObscure,
-                        controller: passwordController,
-                        labelText: AppStrings.password,
-                        textInputAction: TextInputAction.done,
-                        keyboardType: TextInputType.visiblePassword,
-                        onChanged: (_) => _formKey.currentState?.validate(),
-                        validator: (value) {
-                          return value!.isEmpty
-                              ? AppStrings.pleaseEnterPassword
-                              : AppConstants.passwordRegex.hasMatch(value)
-                                  ? null
-                                  : AppStrings.invalidPassword;
-                        },
-                        suffixIcon: IconButton(
-                          onPressed: () =>
-                              passwordNotifier.value = !passwordObscure,
-                          style: IconButton.styleFrom(
-                            minimumSize: const Size.square(48),
-                          ),
-                          icon: Icon(
-                            passwordObscure
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            size: 20,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      );
+                  AppTextFormField(
+                    obscureText: isPasswordVisible,
+                    controller: loginController.passwordController,
+                    labelText: AppStrings.password,
+                    textInputAction: TextInputAction.done,
+                    keyboardType: TextInputType.visiblePassword,
+                    onChanged: (_) => _formKey.currentState?.validate(),
+                    validator: (value) {
+                      return value!.isEmpty
+                          ? AppStrings.pleaseEnterPassword
+                          : AppConstants.passwordRegex.hasMatch(value)
+                              ? null
+                              : AppStrings.invalidPassword;
                     },
+                    suffixIcon: IconButton(
+                      onPressed: () =>
+                          ref.read(passwordVisibilityProvider.notifier).state = !isPasswordVisible,
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size.square(48),
+                      ),
+                      icon: Icon(
+                        isPasswordVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
                   ),
                   TextButton(
                     onPressed: () {},
                     child: const Text(AppStrings.forgotPassword),
                   ),
                   const SizedBox(height: 40),
-                  ValueListenableBuilder(
-                    valueListenable: fieldValidNotifier,
-                    builder: (_, isValid, __) {
-                      return SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: isValid
-                              ? () {
-                                  SnackbarHelper.showSnackBar(
-                                    AppStrings.loggedIn,
-                                  );
-                                  emailController.clear();
-                                  passwordController.clear();
-                                  context.go('/mesero/home');
-                                }
-                              : null,
-                          style: ButtonStyle(
-                            padding: MaterialStateProperty.all(
-                              const EdgeInsets.symmetric(vertical: 25),
-                            ),
-                            textStyle: MaterialStateProperty.all(
-                              const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            backgroundColor:
-                                MaterialStateProperty.resolveWith((states) {
-                              if (states.contains(MaterialState.disabled)) {
-                                return theme
-                                    .colorScheme
-                                    .primary
-                                    .withOpacity(
-                                        0.5);
-                              }
-                              return theme.colorScheme.primary;
-                            }),
-                            foregroundColor: MaterialStateProperty.all(
-                              theme.colorScheme.onPrimary,
-                            ),
-                            shape: MaterialStateProperty.all(
-                              RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                            ),
-                          ),
-                          child: const Text(AppStrings.login),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: isFieldsValid
+                          ? () {
+                              loginController.emailController.clear();
+                              loginController.passwordController.clear();
+                              context.go('/splash-screen');
+                            }
+                          : null,
+                      style: ButtonStyle(
+                        padding: MaterialStateProperty.all(
+                          const EdgeInsets.symmetric(vertical: 25),
                         ),
-                      );
-                    },
+                        textStyle: MaterialStateProperty.all(
+                          const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        backgroundColor:
+                            MaterialStateProperty.resolveWith((states) {
+                          if (states.contains(MaterialState.disabled)) {
+                            return theme
+                                .colorScheme
+                                .primary
+                                .withOpacity(
+                                    0.5);
+                          }
+                          return theme.colorScheme.primary;
+                        }),
+                        foregroundColor: MaterialStateProperty.all(
+                          theme.colorScheme.onPrimary,
+                        ),
+                        shape: MaterialStateProperty.all(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      child: const Text(AppStrings.login),
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey.shade200)),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
                 ],
               ),
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                AppStrings.doNotHaveAnAccount,
-                style: theme.textTheme.bodySmall,
-              ),
-              const SizedBox(width: 4),
-              TextButton(
-                onPressed: () => (),
-                child: const Text(AppStrings.register),
-              ),
-            ],
           ),
         ],
       ),

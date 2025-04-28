@@ -1,27 +1,22 @@
 import 'package:flutter/material.dart';
 
-class HomeMeseroScreen extends StatefulWidget {
-  const HomeMeseroScreen({super.key});
+class SettingsAdminScreen extends StatelessWidget {
+  const SettingsAdminScreen({super.key});
 
-  @override
-  State<HomeMeseroScreen> createState() => _HomeMeseroScreenState();
-}
-
-class _HomeMeseroScreenState extends State<HomeMeseroScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Mesero'),
+        title: const Text('Configuración Administrador'),
       ),
       body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Home Mesero',
+              'Configuración Administrador',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            )
+            ),            
           ],
         ),
       ),

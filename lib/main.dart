@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/core/theme/app_theme.dart';
-import 'presentation/routes/app_routes.dart';
+import 'routes/app_routes.dart';
 
 void main() {
    runApp(const ProviderScope(child: MyApp()));
