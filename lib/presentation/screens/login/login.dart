@@ -97,8 +97,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               : AppStrings.invalidPassword;
                     },
                     suffixIcon: IconButton(
-                      onPressed: () =>
-                          ref.read(passwordVisibilityProvider.notifier).state = !isPasswordVisible,
+                      onPressed: () => ref
+                          .read(passwordVisibilityProvider.notifier)
+                          .state = !isPasswordVisible,
                       style: IconButton.styleFrom(
                         minimumSize: const Size.square(48),
                       ),
@@ -120,35 +121,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: isFieldsValid
-                          ? () {
-                              loginController.emailController.clear();
-                              loginController.passwordController.clear();
-                              context.go('/splash-screen');
+                          ? () async {
+                              final success = await loginController.login(ref);
+                              if (success) {
+                                if (context.mounted) {
+                                  context.go(
+                                      '/splash-screen');
+                                }
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Inicio de sesión fallido'),
+                                    ),
+                                  );
+                                }
+                              }
                             }
                           : null,
                       style: ButtonStyle(
-                        padding: MaterialStateProperty.all(
+                        padding: WidgetStateProperty.all(
                           const EdgeInsets.symmetric(vertical: 25),
                         ),
-                        textStyle: MaterialStateProperty.all(
+                        textStyle: WidgetStateProperty.all(
                           const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         backgroundColor:
-                            MaterialStateProperty.resolveWith((states) {
-                          if (states.contains(MaterialState.disabled)) {
-                            return theme
-                                .colorScheme
-                                .primary
-                                .withOpacity(
-                                    0.5);
+                            WidgetStateProperty.resolveWith((states) {
+                          if (states.contains(WidgetState.disabled)) {
+                            return theme.colorScheme.primary.withAlpha(50);
                           }
                           return theme.colorScheme.primary;
                         }),
-                        foregroundColor: MaterialStateProperty.all(
+                        foregroundColor: WidgetStateProperty.all(
                           theme.colorScheme.onPrimary,
                         ),
-                        shape: MaterialStateProperty.all(
+                        shape: WidgetStateProperty.all(
                           RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),

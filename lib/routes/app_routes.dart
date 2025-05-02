@@ -1,12 +1,17 @@
 import 'package:go_router/go_router.dart';
-import 'package:restaurante_app/presentation/screens/admin/manage/create_cocinero_screen.dart';
-import 'package:restaurante_app/presentation/screens/admin/manage/create_mesero_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_cocinero_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_credentials_cocinero.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/manage_cocinero_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_credentials_mesero.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_mesero_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/mesero/manage_mesero_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/producto/create_producto_screen.dart';
 
 import 'package:restaurante_app/presentation/screens/admin/home/home_admin.dart';
-import 'package:restaurante_app/presentation/screens/admin/manage/create_producto_screen.dart';
 import 'package:restaurante_app/presentation/screens/cocina/home_cocinero.dart';
 import 'package:restaurante_app/presentation/screens/login/login.dart';
 import 'package:restaurante_app/presentation/screens/mesero/home_mesero.dart';
+import 'package:restaurante_app/presentation/screens/settings/not_found_screen.dart';
 import 'package:restaurante_app/presentation/screens/settings/settings_admin_screen.dart';
 import 'package:restaurante_app/presentation/screens/splash/splash_screen.dart';
 
@@ -30,14 +35,21 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const HomeMeseroScreen(),
     ),
     GoRoute(
-      path: '/cocina/home',
+      path: '/cocinero/home',
       builder: (context, state) => const HomeCocineroScreen(),
     ),
-    
+
     GoRoute(path: '/admin/manage/mesero',
-      builder: (context, state) => const CreateMeseroScreen(),
+      builder: (context, state) => const ManageMeseroScreen(),
     ),
     GoRoute(path: '/admin/manage/cocinero',
+      builder: (context, state) => const ManageCocineroScreen(),
+    ),
+    
+    GoRoute(path: '/admin/manage/mesero/create-mesero',
+      builder: (context, state) => const CreateMeseroScreen(),
+    ),
+    GoRoute(path: '/admin/manage/cocinero/create-cocinero',
       builder: (context, state) => const CreateCocineroScreen(),
     ),
     GoRoute(path: '/admin/manage/producto',
@@ -46,5 +58,13 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/admin/settings',
       builder: (context, state) => const SettingsAdminScreen(),
     ),
+
+    GoRoute(path: '/admin/manage/mesero/create-credentials',
+      builder: (context, state) => const CreateCredentialsMesero(),
+    ),
+    GoRoute(path: '/admin/manage/cocinero/create-credentials',
+      builder: (context, state) => const CreateCredentialsCocinero(),
+    ),
   ],
+  errorBuilder: (context, state) => const NotFoundScreen(),
 );

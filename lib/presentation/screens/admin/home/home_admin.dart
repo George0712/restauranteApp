@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:restaurante_app/core/constants/app_strings.dart';
+import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/dashboard_card.dart';
 import 'package:restaurante_app/presentation/widgets/option_button_card.dart';
 
@@ -16,11 +18,13 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
+    final dashboard = ref.watch(adminControllerProvider);
+
     final List<Map<String, String>> dashboardData = [
-      {'title': 'Ventas Totales', 'value': '\$0'},
-      {'title': 'Órdenes', 'value': '0'},
-      {'title': 'Clientes', 'value': '0'},
-      {'title': 'Productos', 'value': '0'},
+      {'title': 'Ventas Totales', 'value': '\$${dashboard.totalVentas}'},
+      {'title': 'Órdenes', 'value': '${dashboard.ordenes}'},
+      {'title': 'Clientes', 'value': '${dashboard.clientes}'},
+      {'title': 'Productos', 'value': '${dashboard.productos}'},
     ];
 
     return Scaffold(
@@ -42,7 +46,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           ),
         ),
         title: const Text(
-          'Nombre de Usuario',
+          '',
           style: TextStyle(color: Colors.black),
         ),
       ),
@@ -52,7 +56,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'VISTA GENERAL',
+              AppStrings.dashboard,
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -79,7 +83,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             ),
             const SizedBox(height: 32),
             const Text(
-              'OPCIONES PRINCIPALES',
+              AppStrings.mainOptions,
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -93,21 +97,21 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               children: [
                 OptionButtonCard(
                   icon: Icons.restaurant_menu,
-                  text: 'Productos',
+                  text: AppStrings.products,
                   onTap: () {
                     context.push('/admin/manage/producto');
                   },
                 ),
                 OptionButtonCard(
                   icon: Icons.receipt_long,
-                  text: 'Meseros',
+                  text: AppStrings.waiters,
                   onTap: () {
                     context.push('/admin/manage/mesero');
                   },
                 ),
                 OptionButtonCard(
                   icon: Icons.people,
-                  text: 'Cocineros',
+                  text: AppStrings.cooks,
                   onTap: () {
                     context.push('/admin/manage/cocinero');
                   },
@@ -116,7 +120,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             ),
             const SizedBox(height: 32),
             const Text(
-              'OTRAS OPCIONES',
+              AppStrings.otherOptions,
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -130,14 +134,14 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               children: [
                 OptionButtonCard(
                   icon: Icons.receipt_long,
-                  text: 'Pedidos',
+                  text: AppStrings.orders,
                   onTap: () {
                     context.push('/mesero/home');
                   },
                 ),
                 OptionButtonCard(
                   icon: Icons.settings,
-                  text: 'Configuración',
+                  text: AppStrings.settings,
                   onTap: () {
                     context.push('/admin/settings');
                   },

@@ -1,38 +1,40 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:restaurante_app/models/user_model.dart';
 
-class AuthService {
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+final authProvider = Provider<FirebaseAuth>((ref) => FirebaseAuth.instance);
 
-  // Método para iniciar sesión
-  Future<User?> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      final UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      // Puedes personalizar los errores que quieras manejar
-      if (e.code == 'user-not-found') {
-        throw Exception('No existe un usuario con ese correo.');
-      } else if (e.code == 'wrong-password') {
-        throw Exception('La contraseña es incorrecta.');
-      } else {
-        throw Exception('Error al iniciar sesión: ${e.message}');
-      }
-    } catch (e) {
-      throw Exception('Error inesperado: $e');
-    }
-  }
+final firestoreProvider = Provider<FirebaseFirestore>((ref) {
+  return FirebaseFirestore.instance;
+});
 
-  // Método opcional: cerrar sesión
-  Future<void> signOut() async {
-    await _firebaseAuth.signOut();
-  }
+final authStateChangesProvider = StreamProvider<User?>((ref) {
+  return ref.watch(authProvider).authStateChanges();
+});
 
-  // Método opcional: obtener el usuario actual
-  User? get currentUser => _firebaseAuth.currentUser;
-}
+final signInProvider = FutureProvider.family<void, (String email, String password)>((ref, credentials) async {
+  final auth = ref.watch(authProvider);
+  final (email, password) = credentials;
+  await auth.signInWithEmailAndPassword(email: email, password: password);
+});
+
+final signUpProvider = FutureProvider.family<void, (String email, String password)>((ref, credentials) async {
+  final auth = ref.watch(authProvider);
+  final (email, password) = credentials;
+
+  await auth.createUserWithEmailAndPassword(email: email, password: password);
+});
+
+final userModelProvider = FutureProvider<UserModel>((ref) async {
+  final auth = ref.watch(authProvider);
+  final firestore = ref.watch(firestoreProvider);
+  final user = auth.currentUser;
+
+  if (user == null) throw Exception("Usuario no autenticado");
+  final doc = await firestore.collection('usuario').doc(user.uid).get();
+  if (!doc.exists) throw Exception("Usuario no encontrado en Firestore");
+  final data = doc.data()!;
+
+  return UserModel.fromMap(data, user.uid);
+});

@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
+import 'package:restaurante_app/models/user_model.dart';
+import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
+import 'package:restaurante_app/presentation/screens/splash/splah_loading_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -12,37 +15,39 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
-
-  @override
-  void initState() {
-    super.initState();
-    _navigateToNextScreen();
-  }
-
-  void _navigateToNextScreen() {
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        context.go('/admin/home');
-        SnackbarHelper.showSnackBar(AppStrings.loggedIn);
-        return;
-      }
-      
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    final userModelAsync = ref.watch(userModelProvider);
+
+  return userModelAsync.when(
+    loading: () => const SplashLoadingScreen(),
+    error: (e, _) => Center(child: Text('Error: $e')),
+    data: (user) {
+      Future.microtask(() => _redirectByRole(context, user));
+      return const SizedBox(); // Evita renderizar widgets por ahora
+    },
+  );
   }
 }
+
+void _redirectByRole(BuildContext context, UserModel user) {
+  switch (user.rol) {
+    case 'admin':
+      context.go('/admin/home');
+      break;
+    case 'mesero':
+      context.go('/mesero/home');
+      break;
+    case 'cocinero':
+      context.go('/cocinero/home');
+      break;
+    default:
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Rol desconocido: ${user.rol}')),
+      );
+  }
+}
+
+
 
 
