@@ -1,9 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 class OptionButtonCard extends StatelessWidget {
-  final IconData icon;
+  final Widget icon;
   final String text;
   final VoidCallback onTap;
 
@@ -16,17 +14,23 @@ class OptionButtonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         elevation: 0.5,
+        shadowColor: theme.primaryColor.withAlpha(50),
         child: Container(
           padding: const EdgeInsets.all(4),
           color: Colors.white,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: min(50, 80), color: Colors.black),
+              icon,
               const SizedBox(height: 8),
               Text(
                 text,

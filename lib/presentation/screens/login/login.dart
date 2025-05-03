@@ -20,7 +20,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    
     final loginController = ref.read(loginControllerProvider);
+    loginController.emailController.clear();
+    loginController.passwordController.clear();
     loginController.emailController.addListener(_validateFields);
     loginController.passwordController.addListener(_validateFields);
   }
@@ -108,13 +111,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
                         size: 20,
-                        color: theme.colorScheme.onSurface,
+                        color: theme.primaryColor.withAlpha(200),
                       ),
                     ),
                   ),
                   TextButton(
                     onPressed: () {},
-                    child: const Text(AppStrings.forgotPassword),
+                    child: Text(
+                      AppStrings.forgotPassword, 
+                      style: TextStyle(
+                        color: theme.secondaryHeaderColor.withAlpha(200)
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 40),
                   SizedBox(
@@ -151,9 +159,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         backgroundColor:
                             WidgetStateProperty.resolveWith((states) {
                           if (states.contains(WidgetState.disabled)) {
-                            return theme.colorScheme.primary.withAlpha(50);
+                            return theme.primaryColor.withAlpha(200);
                           }
-                          return theme.colorScheme.primary;
+                          return theme.primaryColor;
                         }),
                         foregroundColor: WidgetStateProperty.all(
                           theme.colorScheme.onPrimary,

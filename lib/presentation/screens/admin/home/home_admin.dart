@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/bi.dart';
+import 'package:iconify_flutter/icons/ri.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/dashboard_card.dart';
@@ -34,13 +37,18 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         toolbarHeight: 60,
         leading: Padding(
           padding: const EdgeInsets.all(10),
-          child: CircleAvatar(
-            backgroundColor: Colors.grey[300],
-            child: Center(
-              child: Icon(
-                Icons.person,
-                size: 35,
-                color: Colors.grey[700],
+          child: GestureDetector(
+            onTap: () {
+              context.push('/admin/settings'); 
+            },
+            child: CircleAvatar(
+              backgroundColor: Colors.grey[300],
+              child: Center(
+                child: Icon(
+                  Icons.person,
+                  size: 35,
+                  color: Colors.grey[700],
+                ),
               ),
             ),
           ),
@@ -96,54 +104,24 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               mainAxisSpacing: 12,
               children: [
                 OptionButtonCard(
-                  icon: Icons.restaurant_menu,
+                  icon: const Iconify(Bi.box, size: 42),
                   text: AppStrings.products,
                   onTap: () {
                     context.push('/admin/manage/producto');
                   },
                 ),
                 OptionButtonCard(
-                  icon: Icons.receipt_long,
+                  icon: const Iconify(Ri.restaurant_2_fill, size: 40,),
                   text: AppStrings.waiters,
                   onTap: () {
                     context.push('/admin/manage/mesero');
                   },
                 ),
                 OptionButtonCard(
-                  icon: Icons.people,
+                  icon: const Iconify(Ri.user_line, size: 40),
                   text: AppStrings.cooks,
                   onTap: () {
                     context.push('/admin/manage/cocinero');
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              AppStrings.otherOptions,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount:
-                  size.width > 600 ? 3 : 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              children: [
-                OptionButtonCard(
-                  icon: Icons.receipt_long,
-                  text: AppStrings.orders,
-                  onTap: () {
-                    context.push('/mesero/home');
-                  },
-                ),
-                OptionButtonCard(
-                  icon: Icons.settings,
-                  text: AppStrings.settings,
-                  onTap: () {
-                    context.push('/admin/settings');
                   },
                 ),
               ],

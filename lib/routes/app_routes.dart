@@ -12,7 +12,7 @@ import 'package:restaurante_app/presentation/screens/cocina/home_cocinero.dart';
 import 'package:restaurante_app/presentation/screens/login/login.dart';
 import 'package:restaurante_app/presentation/screens/mesero/home_mesero.dart';
 import 'package:restaurante_app/presentation/screens/settings/not_found_screen.dart';
-import 'package:restaurante_app/presentation/screens/settings/settings_admin_screen.dart';
+import 'package:restaurante_app/presentation/screens/settings/settings_user_screen.dart';
 import 'package:restaurante_app/presentation/screens/splash/splash_screen.dart';
 
 final GoRouter router = GoRouter(
@@ -56,7 +56,7 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const CreateProductoScreen(),
     ),
     GoRoute(path: '/admin/settings',
-      builder: (context, state) => const SettingsAdminScreen(),
+      builder: (context, state) => const SettingsUserScreen(),
     ),
 
     GoRoute(path: '/admin/manage/mesero/create-credentials',

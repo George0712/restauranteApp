@@ -3,17 +3,24 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  static const _primaryColor = Colors.orangeAccent;
-  static const _secondaryColor = Colors.indigo;
+  static const _primaryColor = Colors.black;
+  static const _grayColor = Color(0xFF424242);
+  static const _accentColor = Color(0xFFFFA726); 
+  static const _secondaryColor = Colors.orange;
+  
+  
 
   static final List<Color> lightGradient = [
-    _primaryColor.withOpacity(0.8), 
-    _secondaryColor.withOpacity(0.8),
+    _primaryColor.withAlpha(230), 
+    _grayColor.withAlpha(190),        // Suave gris oscuro
+    _accentColor.withAlpha(180),
+    _secondaryColor.withAlpha(200),
+
   ];
 
   static final List<Color> darkGradient = [
-    Colors.grey.shade800.withOpacity(0.8),
-    Colors.black.withOpacity(0.8),
+    Colors.grey.shade800.withAlpha(200),
+    Colors.black.withAlpha(200),
   ];
 
   // Tema claro
@@ -21,6 +28,7 @@ class AppTheme {
     brightness: Brightness.light,
     scaffoldBackgroundColor: Colors.white,
     primaryColor: _primaryColor,
+    secondaryHeaderColor: _secondaryColor,
     colorScheme: ColorScheme.fromSeed(
       seedColor: _primaryColor,
       brightness: Brightness.light,
@@ -30,9 +38,9 @@ class AppTheme {
       foregroundColor: Colors.white,
       elevation: 0,
     ),
-    textTheme: const TextTheme(
-      titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-      bodySmall: TextStyle(fontSize: 14),
+    textTheme: TextTheme(
+      titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: _primaryColor.withAlpha(200)),
+      bodySmall: const TextStyle(fontSize: 14, color: Colors.black),
     ),
     inputDecorationTheme: const InputDecorationTheme(
       border: OutlineInputBorder(),
