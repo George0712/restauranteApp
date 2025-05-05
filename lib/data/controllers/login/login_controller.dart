@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
-import 'package:restaurante_app/presentation/providers/common/loading_provider.dart';
+import 'package:restaurante_app/data/providers/common/loading_provider.dart';
 
 class LoginController {
   final TextEditingController emailController = TextEditingController();

@@ -3,11 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/core/theme/app_theme.dart';
+import 'package:restaurante_app/firebase_options.dart';
 import 'routes/app_routes.dart';                      
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();               
-  await Firebase.initializeApp();
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, 
+  );
   runApp(const ProviderScope(child: MyApp()));
 }
 

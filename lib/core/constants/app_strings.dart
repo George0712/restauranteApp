@@ -20,13 +20,14 @@ class AppStrings {
 
   //home admin screen
   static const dashboard = 'VISTA GENERAL';
+  static const manageOptions = 'GESTIONAR OPCIONES';
   static const mainOptions = 'OPCIONES PRINCIPALES';
   static const otherOptions = 'OTRAS OPCIONES';
-  static const products = 'Productos';
-  static const waiters = 'Meseros';
-  static const cooks = 'Cocineros';
-  static const orders = 'Pedidos';
-  static const settings = 'Configuración';
+  static const productsTitle = 'Productos';
+  static const waitersTitle = 'Meseros';
+  static const cooksTitle = 'Cocineros';
+  static const ordersTitle = 'Pedidos';
+  static const settingsTitle = 'Configuración';
 
   //Register mesero screen
   static const manageWaiter = 'Gestionar Meseros';
@@ -48,5 +49,26 @@ class AppStrings {
   static const registerCookCredentials = 'Registrar Credenciales de Cocinero';
   static const registerCookCredentialsDescription = 'Completa los datos de acceso del cocinero.';
   static const registerCookName = 'Nombre del Cocinero';
+
+  //Register producto screen
+  static const manageProduct = 'Gestionar Productos';
+  static const manageProductDescription = 'Gestiona los productos disponibles en tu restaurante.';
+  static const combosTitle = 'Combos';
+  static const categorysTitle = 'Categorías';
+  static const additionalsTitle = 'Adicionales';
+  static const createNewProduct = 'Crear Nuevo Producto';
+  static const createNewProductDescription = 'Completa el formulario para crear un nuevo producto';
+  static const productsDescription = 'Gestiona los detalles de los productos, como precios, descripciones y disponibilidad.';
+  static const price = 'Precio';
+  static const timePreparation = 'Tiempo de preparación';
+  static const registerCategory = 'Registrar Nueva Categoría';
+  static const registerCategoryDescription = 'Completa el formulario para registrar una nueva categoría';
+  static const manageCategory = 'Gestionar Categorías';
+  static const manageCategoryDescription = 'Gestiona las categorías de productos disponibles en tu restaurante.';
+  static const category = 'Categoría';
+  static const ingredients = 'Ingredientes';
+  static const available = 'Disponible';
+
+  
 
 }

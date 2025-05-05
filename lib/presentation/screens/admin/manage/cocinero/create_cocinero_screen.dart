@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/models/user_model.dart';
-import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/data/models/user_model.dart';
+import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateCocineroScreen extends ConsumerStatefulWidget {
@@ -39,13 +39,16 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
   Widget build(BuildContext context) {
     final registerUserController = ref.watch(registerUserControllerProvider);
     final areFieldsValid = ref.watch(isContactInfoValidProvider);
+    final profileImage = ref.watch(profileImageProvider);
+    final imageNotifier = ref.read(profileImageProvider.notifier);
+    final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        foregroundColor: theme.primaryColor,
         elevation: 0,
       ),
       body: Align(
@@ -58,18 +61,6 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
               vertical: isTablet ? 20 : 10,
             ),
             padding: const EdgeInsets.all(20),
-            decoration: isTablet
-                ? BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(50),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  )
-                : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -81,9 +72,9 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   AppStrings.registerCookDescription,
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                  style: TextStyle(fontSize: 16, color: theme.primaryColor),
                 ),
                 const SizedBox(height: 24),
 
@@ -91,21 +82,27 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                 Center(
                   child: Stack(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.grey,
+                        backgroundColor: theme.primaryColor.withAlpha(50),
+                        backgroundImage:
+                            profileImage != null ? FileImage(profileImage) : null,
+                        child: profileImage == null
+                            ? Icon(Icons.person,
+                                size: 50, color: theme.primaryColor.withAlpha(200))
+                            : null,
                       ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: CircleAvatar(
                           radius: 18,
-                          backgroundColor: Colors.black,
+                          backgroundColor: theme.primaryColor,
                           child: IconButton(
                             icon: const Icon(Icons.camera_alt,
                                 size: 18, color: Colors.white),
-                            onPressed: () {
-                              // Lógica para seleccionar imagen
+                            onPressed: () async {
+                               await imageNotifier.pickImage();
                             },
                           ),
                         ),
@@ -185,11 +182,11 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                       },
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        side: const BorderSide(color: Colors.black),
+                        side: BorderSide(color: theme.primaryColor),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancelar',
-                        style: TextStyle(color: Colors.black),
+                        style: TextStyle(color: theme.primaryColor),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -223,7 +220,7 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
+                        backgroundColor: theme.primaryColor,
                       ),
                       child: const Text(
                         'Continuar',

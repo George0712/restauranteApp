@@ -3,21 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
-import 'package:restaurante_app/presentation/widgets/list_cards_user.dart';
+import 'package:restaurante_app/presentation/widgets/list_cards_categorys.dart';
 
-class ManageMeseroScreen extends ConsumerStatefulWidget {
-  const ManageMeseroScreen({super.key});
+class ManageCategoryScreen extends ConsumerStatefulWidget {
+  const ManageCategoryScreen({super.key});
 
   @override
-  ConsumerState<ManageMeseroScreen> createState() => _ManageMeseroScreenState();
+  ConsumerState<ManageCategoryScreen> createState() => _ManageCategoryScreenState();
 }
 
-class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
-  final rol = 'mesero';
+class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen> {
+  final disponible = true;
   @override
   Widget build(BuildContext context) {
-    final usersAsync = ref.watch(usersProvider(rol));
-    final registerUserController = ref.watch(registerUserControllerProvider);
+    final registerCategoryController =
+        ref.read(registerCategoryControllerProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
@@ -37,7 +37,7 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                AppStrings.manageWaiter,
+                AppStrings.manageCategory,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -45,7 +45,7 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                AppStrings.manageWaiterDescription,
+                AppStrings.manageCategoryDescription,
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 24),
@@ -53,14 +53,9 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
               // Botones
               ElevatedButton(
                 onPressed: () {
-                  registerUserController.nombreController.clear();
-                  registerUserController.apellidosController.clear();
-                  registerUserController.telefonoController.clear();
-                  registerUserController.direccionController.clear();
-                  registerUserController.userNameController.clear();
-                  registerUserController.emailController.clear();
-                  registerUserController.passwordController.clear();
-                  context.push('/admin/manage/mesero/create-mesero');
+                  registerCategoryController.nombreController.clear();
+                  context.pop();
+                  context.push('/admin/manage/category/create-item-categorys');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -71,14 +66,14 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
                     Icon(Icons.add, color: Colors.white),
                     SizedBox(width: 5),
                     Text(
-                      'Nuevo Mesero',
+                      'Nueva Categoría',
                       style: TextStyle(color: Colors.white),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
-              ListCardsUsers(usersAsync: usersAsync, rol: rol,),
+              const ListCardsCategories(),
             ],
           ),
         ),

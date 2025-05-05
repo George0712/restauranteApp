@@ -1,10 +1,12 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
-import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateCredentialsMesero extends ConsumerStatefulWidget {
@@ -65,18 +67,6 @@ class _CreateCredentialsMeseroState
               vertical: isTablet ? 20 : 10,
             ),
             padding: const EdgeInsets.all(20),
-            decoration: isTablet
-                ? BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(50),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  )
-                : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -182,15 +172,8 @@ class _CreateCredentialsMeseroState
                                     'Mesero registrado con éxito');
                                 ref.read(userTempProvider.notifier).state =
                                     null;
-                                    registerUserController.nombreController.clear();
-                                    registerUserController.apellidosController.clear();
-                                    registerUserController.telefonoController.clear();
-                                    registerUserController.direccionController.clear();
-                                    registerUserController.userNameController.clear();
-                                    registerUserController.emailController.clear();
-                                    registerUserController.passwordController.clear();
-                                // ignore: use_build_context_synchronously
-                                context.go('/admin/home');
+                                context.pop();
+                                context.push('/admin/manage/mesero');
                               } catch (e) {
                                 SnackbarHelper.showSnackBar(
                                     'Error: ${e.toString()}');

@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:restaurante_app/presentation/controllers/login/login_controller.dart';
+import 'package:restaurante_app/data/controllers/login/login_controller.dart';
 
 final loginControllerProvider = Provider<LoginController>((ref) {
   final controller = LoginController();

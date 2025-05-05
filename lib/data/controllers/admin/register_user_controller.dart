@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:restaurante_app/core/constants/app_constants.dart';
-import 'package:restaurante_app/models/user_model.dart';
+import 'package:restaurante_app/data/models/user_model.dart';
 
 class RegisterUserController {
 

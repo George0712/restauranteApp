@@ -23,7 +23,7 @@ class CustomInputField extends StatelessWidget {
       obscureText: obscureText ?? false,
       decoration: InputDecoration(
         hintText: hintText,
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32)),
         filled: true,
         fillColor: Colors.white,
       ),

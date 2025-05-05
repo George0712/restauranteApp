@@ -5,7 +5,11 @@ import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/manag
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_credentials_mesero.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_mesero_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/manage_mesero_screen.dart';
-import 'package:restaurante_app/presentation/screens/admin/manage/producto/create_producto_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/category/create_item_category_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/category/manage_category_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/producto/create_item_producto_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/producto/create_producto_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/manage_producto_screen.dart';
 
 import 'package:restaurante_app/presentation/screens/admin/home/home_admin.dart';
 import 'package:restaurante_app/presentation/screens/cocina/home_cocinero.dart';
@@ -52,8 +56,11 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/admin/manage/cocinero/create-cocinero',
       builder: (context, state) => const CreateCocineroScreen(),
     ),
-    GoRoute(path: '/admin/manage/producto',
-      builder: (context, state) => const CreateProductoScreen(),
+    GoRoute(path: '/admin/manage/manage-productos',
+      builder: (context, state) => const ManageProductoScreen(),
+    ),
+    GoRoute(path: '/admin/manage/producto/manage-categorys',
+      builder: (context, state) => const ManageCategoryScreen(),
     ),
     GoRoute(path: '/admin/settings',
       builder: (context, state) => const SettingsUserScreen(),
@@ -65,6 +72,16 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/admin/manage/cocinero/create-credentials',
       builder: (context, state) => const CreateCredentialsCocinero(),
     ),
+    GoRoute(path: '/admin/manage/producto/productos',
+    builder: (context, state) => const CreateProductoScreen(),
+    ),
+    GoRoute(path: '/admin/manage/producto/create-item-productos',
+    builder: (context, state) => const CreateItemProductoScreen(),
+    ),
+    GoRoute(path: '/admin/manage/category/create-item-categorys',
+    builder: (context, state) => const CreateItemCategoryScreen(),
+    ),
+    
   ],
   errorBuilder: (context, state) => const NotFoundScreen(),
 );

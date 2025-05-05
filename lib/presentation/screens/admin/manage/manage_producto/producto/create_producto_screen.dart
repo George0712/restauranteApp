@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
-import 'package:restaurante_app/presentation/widgets/list_cards_user.dart';
+import 'package:restaurante_app/presentation/widgets/list_cards_products.dart';
 
-class ManageMeseroScreen extends ConsumerStatefulWidget {
-  const ManageMeseroScreen({super.key});
+class CreateProductoScreen extends ConsumerStatefulWidget {
+  const CreateProductoScreen({super.key});
 
   @override
-  ConsumerState<ManageMeseroScreen> createState() => _ManageMeseroScreenState();
+  ConsumerState<CreateProductoScreen> createState() => _CreateProductoScreenState();
 }
 
-class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
-  final rol = 'mesero';
+class _CreateProductoScreenState extends ConsumerState<CreateProductoScreen> {
   @override
   Widget build(BuildContext context) {
-    final usersAsync = ref.watch(usersProvider(rol));
-    final registerUserController = ref.watch(registerUserControllerProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
@@ -36,31 +31,35 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Buscar producto...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(32),
+                    borderSide: const BorderSide(color: Colors.grey)
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(32),
+                    borderSide: const BorderSide(color: Colors.black), 
+                  ),
+                ),
+                onChanged: (value) {},
+              ),
+              const SizedBox(height: 24),
               const Text(
-                AppStrings.manageWaiter,
+                'Productos',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                AppStrings.manageWaiterDescription,
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-              const SizedBox(height: 24),
-          
-              // Botones
               ElevatedButton(
                 onPressed: () {
-                  registerUserController.nombreController.clear();
-                  registerUserController.apellidosController.clear();
-                  registerUserController.telefonoController.clear();
-                  registerUserController.direccionController.clear();
-                  registerUserController.userNameController.clear();
-                  registerUserController.emailController.clear();
-                  registerUserController.passwordController.clear();
-                  context.push('/admin/manage/mesero/create-mesero');
+                  
+                  context.pop();
+                  context.push('/admin/manage/producto/create-item-productos');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -71,14 +70,14 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
                     Icon(Icons.add, color: Colors.white),
                     SizedBox(width: 5),
                     Text(
-                      'Nuevo Mesero',
+                      'Nuevo Producto',
                       style: TextStyle(color: Colors.white),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
-              ListCardsUsers(usersAsync: usersAsync, rol: rol,),
+              const ListCardsProducts(),
             ],
           ),
         ),

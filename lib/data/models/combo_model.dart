@@ -1,0 +1,48 @@
+class ComboModel {
+  final String id;
+  final String name;
+  final double price;
+  final String? photo;
+
+  ComboModel({
+    required this.id,
+    required this.name,
+    required this.price,
+    this.photo,
+  });
+
+  // Convert ComboModel to Map
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'price': price,
+      'photo': photo,
+    };
+  }
+
+  // Create ComboModel from Map
+  factory ComboModel.fromMap(Map<String, dynamic> map) {
+    return ComboModel(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      price: map['price'] as double,
+      photo: map['photo'] as String?,
+    );
+  }
+
+  // CopyWith method
+  ComboModel copyWith({
+    String? id,
+    String? name,
+    double? price,
+    String? photo,
+  }) {
+    return ComboModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      photo: photo ?? this.photo,
+    );
+  }
+}

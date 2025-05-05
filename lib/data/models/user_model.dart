@@ -27,6 +27,7 @@ class UserModel {
       'apellidos': apellidos,
       'telefono': telefono,
       'direccion': direccion,
+      if(foto != null) 'foto': foto,
       'email': email,
       'username': username,
       'rol': rol,
@@ -43,7 +44,7 @@ class UserModel {
       email: map['email'] ?? '',
       username: map['username'] ?? '',
       rol: map['rol'] ?? '',
-      foto: map['foto'], // puede venir null
+      foto: map['foto'], 
     );
   }
 

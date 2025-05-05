@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/bi.dart';
+import 'package:iconify_flutter/icons/ci.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/dashboard_card.dart';
 import 'package:restaurante_app/presentation/widgets/option_button_card.dart';
 
@@ -20,15 +21,8 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
-    final dashboard = ref.watch(adminControllerProvider);
-
-    final List<Map<String, String>> dashboardData = [
-      {'title': 'Ventas Totales', 'value': '\$${dashboard.totalVentas}'},
-      {'title': 'Órdenes', 'value': '${dashboard.ordenes}'},
-      {'title': 'Clientes', 'value': '${dashboard.clientes}'},
-      {'title': 'Productos', 'value': '${dashboard.productos}'},
-    ];
+    final isTablet = size.width > 600;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -39,7 +33,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           padding: const EdgeInsets.all(10),
           child: GestureDetector(
             onTap: () {
-              context.push('/admin/settings'); 
+              context.push('/admin/settings');
             },
             child: CircleAvatar(
               backgroundColor: Colors.grey[300],
@@ -53,9 +47,9 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             ),
           ),
         ),
-        title: const Text(
+        title: Text(
           '',
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: theme.primaryColor),
         ),
       ),
       body: SingleChildScrollView(
@@ -69,25 +63,33 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             ),
             const SizedBox(height: 16),
             // Dashboard Cards
-            GridView.builder(
+            GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: 4,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: size.width > 600
-                    ? 4
-                    : 2, // 4 columnas en tablet, 2 en móvil
+                crossAxisCount: isTablet ? 4 : 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 2, // Ancho / Alto de las cards
+                childAspectRatio: 2,
               ),
-              itemBuilder: (context, index) {
-                final item = dashboardData[index];
-                return DashboardCard(
-                  title: item['title']!,
-                  value: item['value']!,
-                );
-              },
+              children: [
+                DashboardCard(
+                  title: 'Ventas Totales',
+                  countProvider: totalVentasProvider,
+                ),
+                DashboardCard(
+                  title: 'Órdenes',
+                  countProvider: ordenesProvider,
+                ),
+                DashboardCard(
+                  title: 'Clientes',
+                  countProvider: clientesProvider,
+                ),
+                DashboardCard(
+                  title: 'Productos',
+                  countProvider: productosProviderCount,
+                ),
+              ],
             ),
             const SizedBox(height: 32),
             const Text(
@@ -98,30 +100,39 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount:
-                  size.width > 600 ? 3 : 2,
+              crossAxisCount: isTablet ? 4 : 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               children: [
                 OptionButtonCard(
-                  icon: const Iconify(Bi.box, size: 42),
-                  text: AppStrings.products,
+                  icon: const Iconify(Bi.box, size: 40),
+                  text: AppStrings.productsTitle,
                   onTap: () {
-                    context.push('/admin/manage/producto');
+                    context.push('/admin/manage/manage-productos');
                   },
                 ),
                 OptionButtonCard(
-                  icon: const Iconify(Ri.restaurant_2_fill, size: 40,),
-                  text: AppStrings.waiters,
+                  icon: const Iconify(
+                    Ri.user_line,
+                    size: 40,
+                  ),
+                  text: AppStrings.waitersTitle,
                   onTap: () {
                     context.push('/admin/manage/mesero');
                   },
                 ),
                 OptionButtonCard(
                   icon: const Iconify(Ri.user_line, size: 40),
-                  text: AppStrings.cooks,
+                  text: AppStrings.cooksTitle,
                   onTap: () {
                     context.push('/admin/manage/cocinero');
+                  },
+                ),
+                OptionButtonCard(
+                  icon: const Iconify(Ci.settings, size: 40),
+                  text: AppStrings.settingsTitle,
+                  onTap: () {
+                    context.push('/admin/settings');
                   },
                 ),
               ],
