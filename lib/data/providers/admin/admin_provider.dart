@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/controllers/admin/manage_products_controller.dart';
+import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 
@@ -52,18 +53,17 @@ final isContactInfoValidProvider = StateProvider<bool>((ref) => false);
 final isCredentialsValidProvider = StateProvider<bool>((ref) => false);
 final userTempProvider = StateProvider<UserModel?>((ref) => null);
 
-final usersProvider =
-    StreamProvider.family<List<UserModel>, String>((ref, rol) {
+final usersProvider = FutureProvider.family<List<UserModel>, String>((ref, rol) async {
   final firestore = ref.watch(firestoreProvider);
-  return firestore
+
+  final querySnapshot = await firestore
       .collection('usuario')
       .where('rol', isEqualTo: rol)
-      .snapshots()
-      .map((snapshot) {
-    return snapshot.docs.map((doc) {
-      return UserModel.fromMap(doc.data(), doc.id);
-    }).toList();
-  });
+      .get();
+
+  return querySnapshot.docs
+      .map((doc) => UserModel.fromMap(doc.data(), doc.id))
+      .toList();
 });
 
 
@@ -148,16 +148,25 @@ final registerProductoControllerProvider = Provider<RegisterProductoController>(
   return controller;
 });
 
-final productsProvider = StreamProvider<List<ProductModel>>((ref) {
+final productsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final firestore = ref.watch(firestoreProvider);
-  return firestore
+  final querySnapshot = await firestore
       .collection('producto')
-      .snapshots()
-      .map((snapshot) {
-    return snapshot.docs
-        .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
-        .toList();
-  });
+      .get();
+  return querySnapshot.docs
+      .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
+      .toList();
+});
+
+final productsProviderCategory = FutureProvider.family<List<ProductModel>, String>((ref, categoryId) async {
+  final firestore = ref.watch(firestoreProvider);
+  final querySnapshot = await firestore
+      .collection('producto')
+      .where('categoryId', isEqualTo: categoryId)
+      .get();
+  return querySnapshot.docs
+      .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
+      .toList();
 });
 
 //Providers Additionals
@@ -169,9 +178,18 @@ final registerAdditionalControllerProvider = Provider<RegisterAdditionalControll
   return controller;
 });
 
+final additionalProvider = StreamProvider<List<AdditionalModel>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('adicional').snapshots().map((snapshot) {
+    return snapshot.docs.map((doc) {
+      return AdditionalModel.fromMap(doc.data(), doc.id);
+    }).where((additional) => additional.disponible).toList();
+  });
+});
+
 
 //Providers Combos
-final registerComboControllerProvider = Provider<RegisterComboController>((ref) {
+final registerComboControllerProvider = Provider<RegisterComboController>((ref)  {
   final controller = RegisterComboController();
   ref.onDispose(() {
     controller.dispose();
@@ -179,4 +197,6 @@ final registerComboControllerProvider = Provider<RegisterComboController>((ref) 
   return controller;
 });
 
-
+final registerComboControllerNotifierProvider = StateNotifierProvider<RegisterComboController, void>((ref) {
+  return RegisterComboController();
+});

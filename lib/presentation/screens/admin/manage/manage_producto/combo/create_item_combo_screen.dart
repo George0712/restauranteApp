@@ -25,24 +25,23 @@ class _CreateItemComboScreenState
   @override
   void initState() {
     super.initState();
-    final registerUserController = ref.read(registerUserControllerProvider);
-    registerUserController.nombreController.addListener(_validateFields);
-    registerUserController.apellidosController.addListener(_validateFields);
-    registerUserController.telefonoController.addListener(_validateFields);
-    registerUserController.direccionController.addListener(_validateFields);
+    final registerComboController = ref.read(registerComboControllerProvider);
+    registerComboController.nombreController.addListener(_validateFields);
+    registerComboController.precioController.addListener(_validateFields);
+    registerComboController.tiempoPreparacionController.addListener(_validateFields);
   }
 
   void _validateFields() {
     if (!mounted) return;
-    final registerUserController = ref.read(registerUserControllerProvider);
-    final isValid = registerUserController.areFieldsContactDataValid();
-    ref.read(isContactInfoValidProvider.notifier).state = isValid;
+    final registerComboController = ref.read(registerComboControllerProvider);
+    final isValid = registerComboController.areFieldsValid();
+    ref.read(isValidFieldsProvider.notifier).state = isValid;
   }
 
   @override
   Widget build(BuildContext context) {
-    final registerUserController = ref.watch(registerUserControllerProvider);
-    final areFieldsValid = ref.watch(isContactInfoValidProvider);
+    final registerComboController = ref.watch(registerComboControllerProvider);
+    final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
     final imageNotifier = ref.read(profileImageProvider.notifier);
     final theme = Theme.of(context);
@@ -65,7 +64,7 @@ class _CreateItemComboScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                AppStrings.createNewProduct,
+                AppStrings.createNewCombo,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -73,7 +72,7 @@ class _CreateItemComboScreenState
               ),
               const SizedBox(height: 8),
               Text(
-                AppStrings.createNewProductDescription,
+                AppStrings.createNewComboDescription,
                 style: TextStyle(fontSize: 16, color: theme.primaryColor),
               ),
               const SizedBox(height: 24),
@@ -121,7 +120,7 @@ class _CreateItemComboScreenState
                   children: [
                     CustomInputField(
                         hintText: AppStrings.name,
-                        controller: registerUserController.nombreController,
+                        controller: registerComboController.nombreController,
                         validator: (value) => value == null || value.isEmpty
                             ? 'Por favor ingrese un nombre'
                             : AppConstants.nameRegex.hasMatch(value)
@@ -131,71 +130,44 @@ class _CreateItemComboScreenState
                     CustomInputField(
                       hintText: AppStrings.price,
                       keyboardType: TextInputType.number,
-                      controller: registerUserController.apellidosController,
+                      controller: registerComboController.precioController,
                       validator: (value) => value == null || value.isEmpty
-                          ? 'Por favor ingrese un apellido'
-                          : AppConstants.surnameRegex.hasMatch(value)
+                          ? 'Por favor ingrese un valor'
+                          : AppConstants.priceRegex.hasMatch(value)
                               ? null
-                              : 'El apellido no es válido',
+                              : 'Este campo no es válida',
                     ),
-                    const SizedBox(height: 12),
-                    // Categoría - Dropdown
-                    DropdownButtonFormField<String>(
-                      value: selectedCategory,
-                      decoration: InputDecoration(
-                        hintText: AppStrings.category,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(32),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(32),
-                          borderSide: BorderSide(
-                              color: theme.primaryColor.withAlpha(200)),
-                        ),
-                      ),
-                      items: [
-                        'Salchipapa',
-                        'Hamburguesa',
-                        'Perro caliente',
-                        'Asado'
-                      ]
-                          .map((category) => DropdownMenuItem(
-                                value: category,
-                                child: Text(category,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w400)),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedCategory = value;
-                        });
-                      },
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Seleccione una categoría'
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 12),                    
                     CustomInputField(
                       hintText: AppStrings.timePreparation,
-                      controller: registerUserController.direccionController,
+                      controller: registerComboController.tiempoPreparacionController,
                       validator: (value) => value == null || value.isEmpty
-                          ? 'Ingrese una dirección'
-                          : AppConstants.addressRegex.hasMatch(value)
+                          ? 'Ingrese un tiempo de preparación'
+                          : AppConstants.timePreparationRegex.hasMatch(value)
                               ? null
-                              : 'La dirección no es válida',
+                              : 'El tiempo de preparación no es válido',
                     ),
                     const SizedBox(height: 12),
-                    CustomInputField(
-                      hintText: AppStrings.ingredients,
-                      controller: registerUserController.direccionController,
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Ingrese una dirección'
-                          : AppConstants.addressRegex.hasMatch(value)
-                              ? null
-                              : 'La dirección no es válida',
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.add_shopping_cart, color: Colors.white),
+                        label: const Text(
+                          'Agregar Productos al Combo',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(32),
+                          ),
+                        ),
+                        onPressed: () {
+                          context.push('/admin/manage/combo/create-item-combo/products-item-combo');
+                        },
+                      ),
                     ),
-                    const SizedBox(height: 12),
                     // Checkbox de disponibilidad
                     Align(
                       alignment: Alignment.centerLeft,
@@ -276,7 +248,7 @@ class _CreateItemComboScreenState
                             (_formKey.currentState?.validate() ?? false)
                         ? () {
                             context.push(
-                                '/admin/manage/mesero/create-credentials');
+                                '/admin/manage/producto/manage-combos');
                           }
                         : null,
                     style: ElevatedButton.styleFrom(

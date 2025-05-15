@@ -78,7 +78,7 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              ListCardsUsers(usersAsync: usersAsync, rol: rol,),
+              ListCardsUsers(usersAsync: usersAsync, rol: rol),
             ],
           ),
         ),

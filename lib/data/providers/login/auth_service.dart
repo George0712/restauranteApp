@@ -27,14 +27,12 @@ final signUpProvider = FutureProvider.family<void, (String email, String passwor
 });
 
 final userModelProvider = FutureProvider<UserModel>((ref) async {
-  final auth = ref.watch(authProvider);
+  final userAsync = await ref.watch(authStateChangesProvider.future);
+  if (userAsync == null) throw Exception("Usuario no autenticado");
+
   final firestore = ref.watch(firestoreProvider);
-  final user = auth.currentUser;
-
-  if (user == null) throw Exception("Usuario no autenticado");
-  final doc = await firestore.collection('usuario').doc(user.uid).get();
+  final doc = await firestore.collection('usuario').doc(userAsync.uid).get();
   if (!doc.exists) throw Exception("Usuario no encontrado en Firestore");
-  final data = doc.data()!;
-
-  return UserModel.fromMap(data, user.uid);
+  
+  return UserModel.fromMap(doc.data()!, userAsync.uid);
 });

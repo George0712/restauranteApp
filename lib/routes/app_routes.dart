@@ -2,6 +2,11 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_cocinero_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_credentials_cocinero.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/manage_cocinero_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/additional/create_item_additional_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/additional/manage_additional_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/create_item_combo_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/manage_combo_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/products_item_combo_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_credentials_mesero.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_mesero_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/manage_mesero_screen.dart';
@@ -62,6 +67,12 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/admin/manage/producto/manage-categorys',
       builder: (context, state) => const ManageCategoryScreen(),
     ),
+    GoRoute(path: '/admin/manage/producto/manage-additionals',
+      builder: (context, state) => const ManageAdditionalScreen(),
+    ),
+    GoRoute(path: '/admin/manage/producto/manage-combos',
+      builder: (context, state) => const ManageComboScreen(),
+    ),
     GoRoute(path: '/admin/settings',
       builder: (context, state) => const SettingsUserScreen(),
     ),
@@ -80,6 +91,15 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(path: '/admin/manage/category/create-item-categorys',
     builder: (context, state) => const CreateItemCategoryScreen(),
+    ),
+    GoRoute(path: '/admin/manage/additional/create-item-Additionals',
+    builder: (context, state) => const CreateItemAdditionalScreen(),
+    ),
+    GoRoute(path: '/admin/manage/combo/create-item-Combos',
+    builder: (context, state) => const CreateItemComboScreen(),
+    ),
+    GoRoute(path: '/admin/manage/combo/create-item-combo/products-item-combo',
+    builder: (context, state) => const ProductsItemComboScreen(),
     ),
     
   ],

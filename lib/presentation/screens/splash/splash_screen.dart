@@ -19,20 +19,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     final userModelAsync = ref.watch(userModelProvider);
 
-  return userModelAsync.when(
-    loading: () => const SplashLoadingScreen(),
-    error: (e, _) => Center(child: Text('Error: $e')),
-    data: (user) {
-      Future.microtask(() => _redirectByRole(context, user));
-      return const SizedBox(); // Evita renderizar widgets por ahora
-    },
-  );
+    return userModelAsync.when(
+      loading: () => const SplashLoadingScreen(),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (user) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _redirectByRole(context, user);
+        });
+        return const SizedBox(); // Evita renderizar widgets por ahora
+      },
+    );
   }
 }
 
 void _redirectByRole(BuildContext context, UserModel user) {
   switch (user.rol) {
     case 'admin':
+      print('Rol del usuario actual: ${user.rol}');
       context.go('/admin/home');
       break;
     case 'mesero':
@@ -47,7 +50,3 @@ void _redirectByRole(BuildContext context, UserModel user) {
       );
   }
 }
-
-
-
-

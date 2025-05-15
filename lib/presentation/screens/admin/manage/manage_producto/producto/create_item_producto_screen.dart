@@ -9,7 +9,6 @@ import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
-import 'package:restaurante_app/data/providers/login/login_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateItemProductoScreen extends ConsumerStatefulWidget {
@@ -44,7 +43,7 @@ class _CreateItemProductoScreenState
     final registerProductController =
         ref.read(registerProductoControllerProvider);
     final isValid = registerProductController.areFieldsValid();
-    ref.read(fieldsValidProvider.notifier).state = isValid;
+    ref.read(isValidFieldsProvider.notifier).state = isValid;
   }
 
   @override
@@ -52,7 +51,7 @@ class _CreateItemProductoScreenState
     final registerProductController =
         ref.watch(registerProductoControllerProvider);
     final categoryAsync = ref.watch(categoryDisponibleProvider);
-    final areFieldsValid = ref.watch(fieldsValidProvider);
+    final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
     final imageNotifier = ref.read(profileImageProvider.notifier);
     final theme = Theme.of(context);
@@ -303,6 +302,7 @@ class _CreateItemProductoScreenState
                                 foto: profileImage?.path ?? '');
                               SnackbarHelper.showSnackBar(
                                   'Producto agregado correctamente');
+                                  
                             context.pop();
                             context.push('/admin/manage/producto/productos');
                           }

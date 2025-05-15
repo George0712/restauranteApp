@@ -75,14 +75,14 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                     icon: const Iconify(Mdi.burger_plus, size: 40),
                     text: AppStrings.additionalsTitle,
                     onTap: () {
-                      context.push('/admin/manage/producto/create-additionals');
+                      context.push('/admin/manage/producto/manage-additionals');
                     },
                   ),
                   OptionButtonCard(
                     icon: const Iconify(Ion.fast_food, size: 40),
                     text: AppStrings.combosTitle,
                     onTap: () {
-                      context.push('/admin/manage/producto/create-additionals');
+                      context.push('/admin/manage/producto/manage-combos');
                     },
                   ),
                 ],

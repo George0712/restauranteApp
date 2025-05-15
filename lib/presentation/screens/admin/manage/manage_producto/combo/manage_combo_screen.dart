@@ -33,7 +33,7 @@ class _ManageComboScreenState extends ConsumerState<ManageComboScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                AppStrings.manageCategory,
+                AppStrings.manageCombos,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -41,7 +41,7 @@ class _ManageComboScreenState extends ConsumerState<ManageComboScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                AppStrings.manageCategoryDescription,
+                AppStrings.manageCombosDescription,
                 style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 24),
@@ -49,7 +49,7 @@ class _ManageComboScreenState extends ConsumerState<ManageComboScreen> {
               // Botones
               ElevatedButton(
                 onPressed: () {
-                  context.push('/admin/manage/category/create-item-categorys');
+                  context.push('/admin/manage/combo/create-item-combos');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
@@ -60,7 +60,7 @@ class _ManageComboScreenState extends ConsumerState<ManageComboScreen> {
                     Icon(Icons.add, color: Colors.white),
                     SizedBox(width: 5),
                     Text(
-                      'Nueva Categoría',
+                      'Nuevo Combo',
                       style: TextStyle(color: Colors.white),
                     ),
                   ],

@@ -42,21 +42,24 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
           ),
           elevation: 0.5,
           shadowColor: theme.primaryColor.withAlpha(50),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            color: Colors.white,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                widget.icon,
-                const SizedBox(height: 8),
-                Text(
-                  widget.text,
-                  style:
-                      const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              color: Colors.white,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  widget.icon,
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.text,
+                    style:
+                        const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
@@ -23,22 +26,22 @@ class _CreateItemAdditionalScreenState extends ConsumerState<CreateItemAdditiona
   @override
   void initState() {
     super.initState();
-    final registerUserController = ref.read(registerUserControllerProvider);
-    registerUserController.nombreController.addListener(_validateFields);
-    registerUserController.apellidosController.addListener(_validateFields);
+    final registerAdditionalController = ref.read(registerAdditionalControllerProvider);
+    registerAdditionalController.nombreController.addListener(_validateFields);
+    registerAdditionalController.precioController.addListener(_validateFields);
   }
 
   void _validateFields() {
     if (!mounted) return;
-    final registerUserController = ref.read(registerUserControllerProvider);
-    final isValid = registerUserController.areFieldsContactDataValid();
-    ref.read(isContactInfoValidProvider.notifier).state = isValid;
+    final registerAdditionalController = ref.read(registerAdditionalControllerProvider);
+    final isValid = registerAdditionalController.areFieldsValid();
+    ref.read(isValidFieldsProvider.notifier).state = isValid;
   }
 
   @override
   Widget build(BuildContext context) {
-    final registerUserController = ref.watch(registerUserControllerProvider);
-    final areFieldsValid = ref.watch(isContactInfoValidProvider);
+    final registerAdditionalController = ref.watch(registerAdditionalControllerProvider);
+    final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
     final imageNotifier = ref.read(profileImageProvider.notifier);
     final theme = Theme.of(context);
@@ -61,7 +64,7 @@ class _CreateItemAdditionalScreenState extends ConsumerState<CreateItemAdditiona
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                AppStrings.registerCategory,
+                AppStrings.registerAdditional,
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -69,7 +72,7 @@ class _CreateItemAdditionalScreenState extends ConsumerState<CreateItemAdditiona
               ),
               const SizedBox(height: 8),
               Text(
-                AppStrings.registerCategoryDescription,
+                AppStrings.registerAdditionalDescription,
                 style: TextStyle(fontSize: 16, color: theme.primaryColor),
               ),
               const SizedBox(height: 24),
@@ -84,7 +87,7 @@ class _CreateItemAdditionalScreenState extends ConsumerState<CreateItemAdditiona
                       backgroundImage:
                           profileImage != null ? FileImage(profileImage) : null,
                       child: profileImage == null
-                          ? Icon(Icons.category,
+                          ? Icon(Icons.add,
                               size: 50, color: theme.primaryColor.withAlpha(200))
                           : null,
                     ),
@@ -115,7 +118,7 @@ class _CreateItemAdditionalScreenState extends ConsumerState<CreateItemAdditiona
                   children: [
                     CustomInputField(
                         hintText: AppStrings.name,
-                        controller: registerUserController.nombreController,
+                        controller: registerAdditionalController.nombreController,
                         validator: (value) => value == null || value.isEmpty
                             ? 'Por favor ingrese un nombre'
                             : AppConstants.nameRegex.hasMatch(value)
@@ -123,13 +126,13 @@ class _CreateItemAdditionalScreenState extends ConsumerState<CreateItemAdditiona
                                 : 'El nombre no es válido'),
                     const SizedBox(height: 12),
                     CustomInputField(
-                      hintText: 'Descripción',
-                      controller: registerUserController.apellidosController,
+                      hintText: 'Precio',
+                      controller: registerAdditionalController.precioController,
                       validator: (value) => value == null || value.isEmpty
-                          ? 'Por favor ingrese un apellido'
-                          : AppConstants.surnameRegex.hasMatch(value)
+                          ? 'Por favor ingrese un valor'
+                          : AppConstants.priceRegex.hasMatch(value)
                               ? null
-                              : 'El apellido no es válido',
+                              : 'El campo no es válido',
                     ),
                     const SizedBox(height: 12),
                     // Checkbox de disponibilidad
@@ -210,9 +213,25 @@ class _CreateItemAdditionalScreenState extends ConsumerState<CreateItemAdditiona
                   ElevatedButton(
                     onPressed: areFieldsValid &&
                             (_formKey.currentState?.validate() ?? false)
-                        ? () {
-                            context.push(
-                                '/admin/manage/producto/create-categorys');
+                        ? () async {
+                              final result = await registerAdditionalController
+                                .registrarAdditional(
+                              ref,
+                              nombre: registerAdditionalController
+                                  .nombreController.text,
+                              precio: double.parse(registerAdditionalController
+                                  .precioController.text),
+                              disponible: isAvailable!,
+                              foto: profileImage?.path ?? '',
+                            );
+                            if (result == null) {
+                              // Registro exitoso
+                              SnackbarHelper.showSnackBar('Adicional Agregado');
+                              context.pop();
+                              context.push('/admin/manage/producto/manage-additionals');
+                            } else {
+                              SnackbarHelper.showSnackBar('Error al registrar adicional');
+                            }
                           }
                         : null,
                     style: ElevatedButton.styleFrom(

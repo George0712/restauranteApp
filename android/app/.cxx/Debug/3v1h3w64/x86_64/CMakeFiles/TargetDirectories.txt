@@ -1,0 +1,2 @@
+C:/Users/User/OneDrive/Documentos/My Workspace/Sistema restaurante/restaurante_app/android/app/.cxx/Debug/3v1h3w64/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/User/OneDrive/Documentos/My Workspace/Sistema restaurante/restaurante_app/android/app/.cxx/Debug/3v1h3w64/x86_64/CMakeFiles/rebuild_cache.dir

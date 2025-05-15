@@ -1,14 +1,16 @@
-class Additional {
+class AdditionalModel {
   final String id;
   final String name;
   final double price;
+  final bool disponible;
   final String? photo;
 
-  Additional({
+  AdditionalModel({
     required this.id,
     required this.name,
     required this.price,
-    this.photo
+    this.photo,
+    this.disponible = true,
   });
 
   // Convert Additional to Map
@@ -18,31 +20,35 @@ class Additional {
       'name': name,
       'price': price,
       if(photo != null) 'photo': photo,
+      'disponible': disponible,
     };
   }
 
   // Create Additional from Map
-  factory Additional.fromMap(Map<String, dynamic> map, String id) {
-    return Additional(
+  factory AdditionalModel.fromMap(Map<String, dynamic> map, String id) {
+    return AdditionalModel(
       id: id,
       name: map['name'] ?? '',
-      price: map['price']?.toDouble() ?? 0.0,
+      price: (map['price'] ?? 0).toDouble(),
+      disponible: map['disponible'] ?? true,
       photo: map['photo'] ?? '',
     );
   }
 
   // CopyWith method
-  Additional copyWith({
+  AdditionalModel copyWith({
     String? id,
     String? name,
     double? price,
     String? photo,
+    bool? disponible,
   }) {
-    return Additional(
+    return AdditionalModel(
       id: id ?? this.id,
       name: name ?? this.name,
       price: price ?? this.price,
       photo: photo ?? this.photo,
+      disponible: disponible ?? this.disponible,
     );
   }
 }

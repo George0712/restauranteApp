@@ -68,7 +68,12 @@ class AppStrings {
   static const category = 'Categoría';
   static const ingredients = 'Ingredientes';
   static const available = 'Disponible';
-
-  
-
+  static const manageAdditional = 'Gestionar Adicionales';
+  static const manageAdditionalDescription = 'Gestiona los adicionales disponibles para los productos en tu restaurante.';
+  static const manageCombos = 'Gestionar Combos';
+  static const manageCombosDescription = 'Gestiona los Combos disponibles en tu restaurante.';
+  static const createNewCombo = 'Crear Nuevo Combo';
+  static const createNewComboDescription = 'Completa el formulario para crear un nuevo combo';
+  static const registerAdditional = 'Registrar Nuevo Adicional';
+  static const registerAdditionalDescription = 'Completa el formulario para registrar un nuevo adicional';
 }
