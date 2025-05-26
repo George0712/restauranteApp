@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/presentation/widgets/list_cards_products.dart';
 
 class ProductsItemComboScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,11 @@ class _State extends ConsumerState<ProductsItemComboScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_outlined,
+              color: Colors.black54),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: Align(
         alignment: Alignment.topCenter,

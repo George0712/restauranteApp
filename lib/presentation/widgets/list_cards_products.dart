@@ -47,13 +47,16 @@ class ListCardsProducts extends ConsumerWidget {
                   Expanded(
                     flex: 3,
                     child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: producto.photo != null && producto.photo!.isNotEmpty
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(12)),
+                      child: producto.photo != null &&
+                              producto.photo!.isNotEmpty
                           ? Image.network(
                               producto.photo!,
                               fit: BoxFit.cover,
                               width: double.infinity,
-                              loadingBuilder: (context, child, loadingProgress) {
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
                                 if (loadingProgress == null) return child;
                                 return Container(
                                   color: Colors.grey[200],
@@ -64,7 +67,7 @@ class ListCardsProducts extends ConsumerWidget {
                               },
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
-                                  color: Colors.grey[200],
+                                  width: double.infinity,
                                   child: Icon(
                                     Icons.fastfood,
                                     size: 60,
@@ -74,7 +77,7 @@ class ListCardsProducts extends ConsumerWidget {
                               },
                             )
                           : Container(
-                              color: Colors.grey[200],
+                              width: double.infinity,
                               child: Icon(
                                 Icons.fastfood,
                                 size: 60,
@@ -91,14 +94,16 @@ class ListCardsProducts extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            producto.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                          Flexible(
+                            child: Text(
+                              producto.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -123,7 +128,9 @@ class ListCardsProducts extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  producto.disponible ? 'Disponible' : 'No disponible',
+                                  producto.disponible
+                                      ? 'Disponible'
+                                      : 'No disponible',
                                   style: TextStyle(
                                     color: producto.disponible
                                         ? Colors.green

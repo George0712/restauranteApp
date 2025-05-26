@@ -25,7 +25,7 @@ Widget buildEstadisticaItem(String label, String valor, Color color, IconData ic
             label,
             style: const TextStyle(
               fontSize: 12,
-              color: Colors.black54,
+              color: Colors.white70,
               fontWeight: FontWeight.w500,
             ),
           ),

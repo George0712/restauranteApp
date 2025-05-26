@@ -25,6 +25,11 @@ class _ManageAdditionalScreenState extends ConsumerState<ManageAdditionalScreen>
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_outlined,
+              color: Colors.black54),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: Align(
         alignment: Alignment.topCenter,

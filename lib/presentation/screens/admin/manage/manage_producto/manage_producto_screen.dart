@@ -13,7 +13,8 @@ class ManageProductoScreen extends ConsumerStatefulWidget {
   const ManageProductoScreen({super.key});
 
   @override
-  ConsumerState<ManageProductoScreen> createState() => _ManageProductoScreenState();
+  ConsumerState<ManageProductoScreen> createState() =>
+      _ManageProductoScreenState();
 }
 
 class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
@@ -24,71 +25,99 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_outlined,
+              color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
       ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: SingleChildScrollView(
-          padding: isTablet
-                    ? const EdgeInsets.symmetric(vertical: 40, horizontal: 80)
-                    : const EdgeInsets.all(16), 
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                AppStrings.manageProduct,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                AppStrings.manageProductDescription,
-                style: TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-              const SizedBox(height: 24),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: isTablet ? 4 : 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                children: [
-                  OptionButtonCard(
-                    icon: const Iconify(Bi.box, size: 42),
-                    text: AppStrings.productsTitle,
-                    onTap: () {
-                      context.push('/admin/manage/producto/productos');
-                    },
-                  ),
-                  OptionButtonCard(
-                    icon: const Iconify(Bx.category, size: 40),
-                    text: AppStrings.categorysTitle,
-                    onTap: () {
-                      context.push('/admin/manage/producto/manage-categorys');
-                    },
-                  ),
-                  OptionButtonCard(
-                    icon: const Iconify(Mdi.burger_plus, size: 40),
-                    text: AppStrings.additionalsTitle,
-                    onTap: () {
-                      context.push('/admin/manage/producto/manage-additionals');
-                    },
-                  ),
-                  OptionButtonCard(
-                    icon: const Iconify(Ion.fast_food, size: 40),
-                    text: AppStrings.combosTitle,
-                    onTap: () {
-                      context.push('/admin/manage/producto/manage-combos');
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F0F23),
+              Color(0xFF1A1A2E),
+              Color(0xFF16213E),
             ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: SingleChildScrollView(
+            padding: isTablet
+                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 80)
+                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  AppStrings.manageProduct,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  AppStrings.manageProductDescription,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: isTablet ? 4 : 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  children: [
+                    OptionButtonCard(
+                      icon: const Iconify(Bi.box, size: 42),
+                      text: AppStrings.productsTitle,
+                      color: const Color(0xFF8B5CF6),
+                      onTap: () {
+                        context.push('/admin/manage/producto/productos');
+                      },
+                    ),
+                    OptionButtonCard(
+                      icon: const Iconify(Bx.category, size: 40),
+                      text: AppStrings.categorysTitle,
+                      color: const Color(0xFF3B82F6),
+                      onTap: () {
+                        context.push('/admin/manage/producto/manage-categorys');
+                      },
+                    ),
+                    OptionButtonCard(
+                      icon: const Iconify(Mdi.burger_plus, size: 40),
+                      text: AppStrings.additionalsTitle,
+                      color: const Color(0xFF10B981),
+                      onTap: () {
+                        context
+                            .push('/admin/manage/producto/manage-additionals');
+                      },
+                    ),
+                    OptionButtonCard(
+                      icon: const Iconify(Ion.fast_food, size: 40),
+                      text: AppStrings.combosTitle,
+                      color: const Color(0xFFF59E0B),
+                      onTap: () {
+                        context.push('/admin/manage/producto/manage-combos');
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
           ),
         ),
       ),

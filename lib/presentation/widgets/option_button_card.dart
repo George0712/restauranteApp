@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class OptionButtonCard extends ConsumerStatefulWidget {
   final Widget icon;
   final String text;
+  final Color color;
   final VoidCallback onTap;
 
   const OptionButtonCard({
     Key? key,
     required this.icon,
     required this.text,
+    required this.color,
     required this.onTap,
   }) : super(key: key);
 
@@ -26,7 +28,6 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -36,33 +37,81 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
       child: AnimatedScale(
         scale: _scale,
         duration: const Duration(milliseconds: 150),
-        child: Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF1F2937),
+              const Color(0xFF374151).withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          elevation: 0.5,
-          shadowColor: theme.primaryColor.withAlpha(50),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: widget.color.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Decoración de fondo
+            Positioned(
+              top: -30,
+              right: -30,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: widget.color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            // Contenido
+            Padding(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  widget.icon,
-                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                         widget.color.withOpacity(0.8),
+                          widget.color,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.color.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: widget.icon,
+                  ),
+                  const SizedBox(height: 12),
                   Text(
                     widget.text,
-                    style:
-                        const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
-                    textAlign: TextAlign.center,
+                    textAlign: TextAlign.start,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
+      ),
       ),
     );
   }

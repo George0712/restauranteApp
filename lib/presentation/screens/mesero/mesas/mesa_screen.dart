@@ -44,7 +44,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
     final mesasFiltradas = filtro == 'Todas' ? mesas : mesas.where((m) => m.estado == filtro).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFF121212),
       appBar: _buildAppBar(theme, notifier),
       body: Column(
         children: [
@@ -62,22 +62,22 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
   PreferredSizeWidget _buildAppBar(ThemeData theme, MesasNotifier notifier) {
     return AppBar(
       elevation: 0,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.black54),
+        icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white70),
         onPressed: () => context.pop(),
       ),
       title: const Text(
         'Gestión de Mesas',
         style: TextStyle(
-          color: Colors.black87,
+          color: Colors.white,
           fontWeight: FontWeight.w600,
           fontSize: 24,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.refresh_outlined, color: Colors.black54),
+          icon: const Icon(Icons.refresh_outlined, color: Colors.white70),
           onPressed: () => setState(() {}),
         ),
       ],
@@ -89,11 +89,11 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.07),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -248,7 +248,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color.fromARGB(255, 33, 33, 36),
           borderRadius: BorderRadius.circular(16),
           border: isSelected 
               ? Border.all(color: Theme.of(context).primaryColor, width: 2)
@@ -283,7 +283,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Colors.white70,
                     ),
                   ),
                   Container(
@@ -341,7 +341,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: Colors.white70,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -362,15 +362,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '\$${mesa.total?.toStringAsFixed(2) ?? '0.00'}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.black87,
-                          ),
                         ),
                       ] else if (mesa.estado == 'Reservada') ...[
                         Row(
@@ -401,7 +392,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
 
   Widget _buildFAB(ThemeData theme) {
     return FloatingActionButton.extended(
-      backgroundColor: theme.primaryColor,
+      backgroundColor: Colors.blueAccent.shade700,
       foregroundColor: Colors.white,
       onPressed: () => _mostrarFormularioMesa(nueva: true),
       icon: const Icon(Icons.add),
@@ -421,7 +412,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
   Widget _buildOpcionesBottomSheet(MesaModel mesa) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFF1E1E1E),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: const EdgeInsets.all(24),
@@ -443,7 +434,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Colors.white70,
             ),
           ),
           
@@ -793,8 +784,10 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
         style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 20,
+          color: Colors.white70,
         ),
       ),
+      backgroundColor: const Color(0xFF1E1E1E),
       content: Form(
         key: _formKey,
         child: Column(
@@ -847,6 +840,9 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red,
+          ),
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
@@ -856,6 +852,8 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
               borderRadius: BorderRadius.circular(12),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            backgroundColor: Colors.blueAccent.shade700,
+            foregroundColor: Colors.white,
           ),
           child: Text(widget.esNueva ? 'Crear Mesa' : 'Actualizar'),
         ),

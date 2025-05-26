@@ -78,8 +78,10 @@ class _ReservarMesaDialogState extends ConsumerState<ReservarMesaDialog> {
         style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 20,
+          color: Colors.white70,
         ),
       ),
+      backgroundColor: const Color(0xFF1E1E1E),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -218,6 +220,7 @@ class _ReservarMesaDialogState extends ConsumerState<ReservarMesaDialog> {
                           ? () => setState(() => _numeroPersonas--) 
                           : null,
                       icon: const Icon(Icons.remove),
+                      color: Colors.blue.shade700,
                     ),
                     Expanded(
                       child: Center(
@@ -226,6 +229,7 @@ class _ReservarMesaDialogState extends ConsumerState<ReservarMesaDialog> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: Colors.white70,
                           ),
                         ),
                       ),
@@ -235,6 +239,7 @@ class _ReservarMesaDialogState extends ConsumerState<ReservarMesaDialog> {
                           ? () => setState(() => _numeroPersonas++) 
                           : null,
                       icon: const Icon(Icons.add),
+                      color: Colors.blue.shade700,
                     ),
                   ],
                 ),
@@ -264,6 +269,10 @@ class _ReservarMesaDialogState extends ConsumerState<ReservarMesaDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red,
+            textStyle: const TextStyle(fontSize: 16),
+          ),
           child: const Text('Cancelar'),
         ),
         ElevatedButton.icon(
