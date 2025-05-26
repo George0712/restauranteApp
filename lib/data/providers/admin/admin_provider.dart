@@ -79,34 +79,53 @@ class ProfileImageNotifier extends StateNotifier<File?> {
       return;
     }
 
-    bool permissionGranted = false;
+    try {
+      if (Platform.isAndroid) {
+        // Primero verificamos el permiso de fotos
+        var photosStatus = await Permission.photos.status;
+        if (!photosStatus.isGranted) {
+          photosStatus = await Permission.photos.request();
+          if (!photosStatus.isGranted) {
+            SnackbarHelper.showSnackBar('Se necesita permiso para acceder a las fotos');
+            return;
+          }
+        }
 
-    if (Platform.isIOS) {
-      final photosStatus = await Permission.photos.request();
-      permissionGranted = photosStatus.isGranted;
-    } else if (Platform.isAndroid) {
-      var mediaStatus = await Permission.photos.status;
-      if (!mediaStatus.isGranted) {
-        mediaStatus = await Permission.photos.request();
-        permissionGranted = mediaStatus.isGranted;
-      } else {
+        // Luego verificamos el permiso de almacenamiento
         var storageStatus = await Permission.storage.status;
         if (!storageStatus.isGranted) {
           storageStatus = await Permission.storage.request();
+          if (!storageStatus.isGranted) {
+            SnackbarHelper.showSnackBar('Se necesita permiso para acceder al almacenamiento');
+            return;
+          }
         }
-        permissionGranted = storageStatus.isGranted;
+      } else if (Platform.isIOS) {
+        var photosStatus = await Permission.photos.status;
+        if (!photosStatus.isGranted) {
+          photosStatus = await Permission.photos.request();
+          if (!photosStatus.isGranted) {
+            SnackbarHelper.showSnackBar('Se necesita permiso para acceder a las fotos');
+            return;
+          }
+        }
       }
-    }
 
-    if (permissionGranted) {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+
       if (pickedFile != null) {
         state = File(pickedFile.path);
       } else {
         SnackbarHelper.showSnackBar('No se seleccionó ninguna foto');
       }
+    } catch (e) {
+      SnackbarHelper.showSnackBar('Error al seleccionar la imagen: $e');
     }
   }
+
   void clearImage() {
     state = null;
   }
@@ -148,25 +167,26 @@ final registerProductoControllerProvider = Provider<RegisterProductoController>(
   return controller;
 });
 
-final productsProvider = FutureProvider<List<ProductModel>>((ref) async {
+final productsProvider = StreamProvider<List<ProductModel>>((ref) {
   final firestore = ref.watch(firestoreProvider);
-  final querySnapshot = await firestore
-      .collection('producto')
-      .get();
-  return querySnapshot.docs
-      .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
-      .toList();
+  return firestore.collection('producto').snapshots().map((snapshot) {
+    return snapshot.docs.map((doc) {
+      return ProductModel.fromMap(doc.data(), doc.id);
+    }).toList();
+  });
 });
 
-final productsProviderCategory = FutureProvider.family<List<ProductModel>, String>((ref, categoryId) async {
+final productsProviderCategory = StreamProvider.family<List<ProductModel>, String>((ref, categoryId) {
   final firestore = ref.watch(firestoreProvider);
-  final querySnapshot = await firestore
+  return firestore
       .collection('producto')
       .where('categoryId', isEqualTo: categoryId)
-      .get();
-  return querySnapshot.docs
-      .map((doc) => ProductModel.fromMap(doc.data(), doc.id))
-      .toList();
+      .snapshots()
+      .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          return ProductModel.fromMap(doc.data(), doc.id);
+        }).toList();
+      });
 });
 
 //Providers Additionals

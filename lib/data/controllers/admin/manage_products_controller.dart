@@ -86,12 +86,11 @@ class RegisterProductoController {
         'time': tiempoPreparacion,
         'ingredients': ingredientes,
         'category': categoria,
-        'disponible': disponible = true,
+        'disponible': disponible,
         'photo': foto,
       };
 
       final db = FirebaseFirestore.instance;
-
       await db.collection('producto').add(productoData);
 
       return null; // Éxito
@@ -192,7 +191,6 @@ class RegisterComboController extends StateNotifier<void> {
         AppConstants.priceRegex.hasMatch(precio) &&
         AppConstants.timePreparationRegex.hasMatch(tiempoPreparacion);
   }
-
 
   Future<String?> registrarCombo(
     WidgetRef ref, {

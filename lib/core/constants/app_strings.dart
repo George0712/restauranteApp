@@ -20,7 +20,7 @@ class AppStrings {
 
   //home admin screen
   static const dashboard = 'VISTA GENERAL';
-  static const manageOptions = 'GESTIONAR OPCIONES';
+  static const manageOptions = 'GESTIONAR';
   static const mainOptions = 'OPCIONES PRINCIPALES';
   static const otherOptions = 'OTRAS OPCIONES';
   static const productsTitle = 'Productos';

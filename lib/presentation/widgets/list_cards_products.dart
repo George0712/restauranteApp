@@ -15,7 +15,12 @@ class ListCardsProducts extends ConsumerWidget {
     return productsAsync.when(
       data: (productos) {
         if (productos.isEmpty) {
-          return const Text('No hay Productos registrados');
+          return const Center(
+            child: Text(
+              'No hay Productos registrados',
+              style: TextStyle(fontSize: 16),
+            ),
+          );
         }
 
         return GridView.builder(
@@ -23,54 +28,115 @@ class ListCardsProducts extends ConsumerWidget {
           physics: const NeverScrollableScrollPhysics(),
           itemCount: productos.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isTablet
-                    ? 4
-                    : 2, // 2 columnas
+            crossAxisCount: isTablet ? 4 : 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1, // cuadrado
+            childAspectRatio: 0.8,
           ),
           itemBuilder: (context, index) {
             final producto = productos[index];
 
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
+            return Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(10),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Spacer(),
-                  Center(
-                    child: Icon(
-                      Icons.fastfood, 
-                      size: 60, 
-                      color: theme.primaryColor.withAlpha(230),
+                  Expanded(
+                    flex: 3,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                      child: producto.photo != null && producto.photo!.isNotEmpty
+                          ? Image.network(
+                              producto.photo!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: Icon(
+                                    Icons.fastfood,
+                                    size: 60,
+                                    color: theme.primaryColor.withAlpha(230),
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              color: Colors.grey[200],
+                              child: Icon(
+                                Icons.fastfood,
+                                size: 60,
+                                color: theme.primaryColor.withAlpha(230),
+                              ),
+                            ),
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    producto.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '\$${producto.price.toStringAsFixed(0)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Expanded(
+                    flex: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            producto.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '\$${producto.price.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.primaryColor,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: producto.disponible
+                                      ? Colors.green.withOpacity(0.1)
+                                      : Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  producto.disponible ? 'Disponible' : 'No disponible',
+                                  style: TextStyle(
+                                    color: producto.disponible
+                                        ? Colors.green
+                                        : Colors.red,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -79,7 +145,12 @@ class ListCardsProducts extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Text('Error al cargar productos: $error'),
+      error: (error, stackTrace) => Center(
+        child: Text(
+          'Error al cargar productos: $error',
+          style: const TextStyle(color: Colors.red),
+        ),
+      ),
     );
   }
 }

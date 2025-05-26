@@ -2,14 +2,17 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_cocinero_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_credentials_cocinero.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/manage_cocinero_screen.dart';
+
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/additional/create_item_additional_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/additional/manage_additional_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/create_item_combo_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/manage_combo_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/products_item_combo_screen.dart';
+
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_credentials_mesero.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_mesero_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/manage_mesero_screen.dart';
+
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/category/create_item_category_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/category/manage_category_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/producto/create_item_producto_screen.dart';
@@ -19,10 +22,12 @@ import 'package:restaurante_app/presentation/screens/admin/manage/manage_product
 import 'package:restaurante_app/presentation/screens/admin/home/home_admin.dart';
 import 'package:restaurante_app/presentation/screens/cocina/home_cocinero.dart';
 import 'package:restaurante_app/presentation/screens/login/login.dart';
-import 'package:restaurante_app/presentation/screens/mesero/home_mesero.dart';
+import 'package:restaurante_app/presentation/screens/mesero/home/home_mesero.dart';
+import 'package:restaurante_app/presentation/screens/mesero/mesas/mesa_screen.dart';
 import 'package:restaurante_app/presentation/screens/settings/not_found_screen.dart';
 import 'package:restaurante_app/presentation/screens/settings/settings_user_screen.dart';
 import 'package:restaurante_app/presentation/screens/splash/splash_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/pedidos/pedido_screen.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/login',
@@ -101,7 +106,14 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/admin/manage/combo/create-item-combo/products-item-combo',
     builder: (context, state) => const ProductsItemComboScreen(),
     ),
-    
+    GoRoute(path: '/mesero/pedidos/mesas',
+    builder: (context, state) => const MesasScreen(),
+    ),
+    GoRoute(path: '/mesero/pedidos/detalle/:mesaId/:pedidoId',
+      builder: (context, state) => SeleccionProductosScreen(
+        pedidoId: state.pathParameters['pedidoId']!,
+      ),
+    ),
   ],
   errorBuilder: (context, state) => const NotFoundScreen(),
 );

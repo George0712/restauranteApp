@@ -96,7 +96,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               ),
               const SizedBox(height: 32),
               const Text(
-                AppStrings.mainOptions,
+                AppStrings.manageOptions,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
