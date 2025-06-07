@@ -66,7 +66,7 @@ class ListCardsProducts extends ConsumerWidget {
                                 );
                               },
                               errorBuilder: (context, error, stackTrace) {
-                                return Container(
+                                return SizedBox(
                                   width: double.infinity,
                                   child: Icon(
                                     Icons.fastfood,
@@ -76,7 +76,7 @@ class ListCardsProducts extends ConsumerWidget {
                                 );
                               },
                             )
-                          : Container(
+                          : SizedBox(
                               width: double.infinity,
                               child: Icon(
                                 Icons.fastfood,

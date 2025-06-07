@@ -59,6 +59,7 @@ class _ManageAdditionalScreenState extends ConsumerState<ManageAdditionalScreen>
                 onPressed: () {
                   registerAdditionalController.nombreController.clear();
                   registerAdditionalController.precioController.clear();
+                  context.pop();
                   context.push('/admin/manage/additional/create-item-additionals');
                 },
                 style: ElevatedButton.styleFrom(

@@ -72,7 +72,7 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                     color: Colors.white70,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
