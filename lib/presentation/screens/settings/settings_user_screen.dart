@@ -44,7 +44,7 @@ class SettingsUserScreen extends ConsumerWidget {
 
               const Divider(height: 32),
 
-              if (user.rol == 'admin')
+              if (user.rol == 'admin') ...[
                 ListTile(
                   leading: const Icon(Icons.restaurant_menu_rounded),
                   title: const Text('Ir a vista de Mesero'),
@@ -52,6 +52,14 @@ class SettingsUserScreen extends ConsumerWidget {
                     context.push('/mesero/home');
                   },
                 ),
+                ListTile(
+                  leading: const Icon(Icons.kitchen),
+                  title: const Text('Ir a vista de Cocina'),
+                  onTap: () {
+                    context.push('/cocinero/home');
+                  },
+                ),
+              ],
 
               ListTile(
                 leading: const Icon(Icons.logout),
