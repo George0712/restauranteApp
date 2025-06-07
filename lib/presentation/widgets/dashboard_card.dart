@@ -1,60 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class DashboardCard extends ConsumerWidget {
-  final String title;
-  final Provider<int> countProvider;
-
-  const DashboardCard({
-    Key? key,
-    required this.title,
-    required this.countProvider,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(countProvider);
-
-    final width = MediaQuery.of(context).size.width;
-    final isTablet = width > 600;
-    final padding = isTablet ? 16.0 : 8.0;
-    final valueFontSize = isTablet ? 32.0 : 24.0;
-    final titleFontSize = isTablet ? 20.0 : 16.0;
-    final elevation = isTablet ? 8.0 : 4.0;
-
-    final theme = Theme.of(context);
-
-    return Card(
-      color: Colors.white,  // <-- Fuerza fondo blanco
-      elevation: elevation,
-      shadowColor: theme.primaryColor.withAlpha(50),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(isTablet ? 16 : 8),
+Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
+    dynamic provider, Color color, IconData icon) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: const Color(0xFF0D1117),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: color.withOpacity(0.3),
+        width: 1,
       ),
-      child: Padding(
-        padding: EdgeInsets.all(padding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header con icono
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '\$$count',
-              style: TextStyle(
-                fontSize: valueFontSize,
-                fontWeight: FontWeight.bold,
-                color: theme.primaryColor,
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    color.withOpacity(0.8),
+                    color,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: 18,
               ),
             ),
-            SizedBox(height: padding / 2),
             Text(
               title,
-              style: TextStyle(
-                fontSize: titleFontSize,
-                color: theme.primaryColor,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
+
+        const SizedBox(height: 12),
+
+        const SizedBox(
+          height: 28,
+          child: Text(
+            '\$0',
+            style: TextStyle(
+              fontSize: 24.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

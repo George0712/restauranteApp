@@ -50,8 +50,10 @@ class _OcuparMesaDialogState extends ConsumerState<OcuparMesaDialog> {
         style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 20,
+          color: Colors.white70,
         ),
       ),
+      backgroundColor: const Color(0xFF1E1E1E),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -63,17 +65,17 @@ class _OcuparMesaDialogState extends ConsumerState<OcuparMesaDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: Colors.green.shade50,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.table_restaurant, color: Colors.blue.shade700),
+                    Icon(Icons.table_restaurant, color: Colors.green.shade700),
                     const SizedBox(width: 8),
                     Text(
                       'Capacidad: ${widget.mesa.capacidad} personas',
                       style: TextStyle(
-                        color: Colors.blue.shade700,
+                        color: Colors.green.shade700,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -143,6 +145,7 @@ class _OcuparMesaDialogState extends ConsumerState<OcuparMesaDialog> {
                           ? () => setState(() => _numeroPersonas--) 
                           : null,
                       icon: const Icon(Icons.remove),
+                      color: Colors.green.shade700,
                     ),
                     Expanded(
                       child: Center(
@@ -151,6 +154,7 @@ class _OcuparMesaDialogState extends ConsumerState<OcuparMesaDialog> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: Colors.white70,
                           ),
                         ),
                       ),
@@ -160,6 +164,7 @@ class _OcuparMesaDialogState extends ConsumerState<OcuparMesaDialog> {
                           ? () => setState(() => _numeroPersonas++) 
                           : null,
                       icon: const Icon(Icons.add),
+                      color: Colors.green.shade700,
                     ),
                   ],
                 ),
@@ -189,6 +194,10 @@ class _OcuparMesaDialogState extends ConsumerState<OcuparMesaDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.red,
+            textStyle: const TextStyle(fontSize: 16),
+          ),
           child: const Text('Cancelar'),
         ),
         ElevatedButton.icon(

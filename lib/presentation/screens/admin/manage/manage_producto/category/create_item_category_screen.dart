@@ -56,6 +56,11 @@ class _CreateItemCategoryScreenState
         backgroundColor: Colors.white,
         foregroundColor: theme.primaryColor,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_outlined,
+              color: Colors.black54),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: Align(
         alignment: Alignment.topCenter,

@@ -103,16 +103,17 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
           children: [
             // Fondo con gradiente y overlay de imagen
             Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.8),
-                    theme.primaryColor.withOpacity(0.7),
-                  ],
-                ),
-              ),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F0F23),
+              Color(0xFF1A1A2E),
+              Color(0xFF16213E),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
             ),
             Positioned.fill(
               child: Opacity(
