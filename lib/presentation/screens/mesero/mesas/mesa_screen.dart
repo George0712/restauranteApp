@@ -225,22 +225,22 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
       case 'Disponible':
         colorEstado = Colors.green;
         iconoEstado = Icons.check_circle;
-        colorFondo = Colors.green.withOpacity(0.1);
+        colorFondo = Colors.green.withAlpha(25);
         break;
       case 'Ocupada':
         colorEstado = Colors.orange;
         iconoEstado = Icons.people;
-        colorFondo = Colors.orange.withOpacity(0.1);
+        colorFondo = Colors.orange.withAlpha(25);
         break;
       case 'Reservada':
         colorEstado = Colors.blue;
         iconoEstado = Icons.event;
-        colorFondo = Colors.blue.withOpacity(0.1);
+        colorFondo = Colors.blue.withAlpha(25);
         break;
       default:
         colorEstado = Colors.grey;
         iconoEstado = Icons.help;
-        colorFondo = Colors.grey.withOpacity(0.1);
+        colorFondo = Colors.grey.withAlpha(25);
     }
 
     return GestureDetector(
@@ -255,11 +255,9 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
               : null,
           boxShadow: [
             BoxShadow(
-              color: isSelected
-                  ? Theme.of(context).primaryColor.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.08),
-              blurRadius: isSelected ? 12 : 8,
-              offset: const Offset(0, 4),
+              color: Colors.black.withAlpha(20),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
