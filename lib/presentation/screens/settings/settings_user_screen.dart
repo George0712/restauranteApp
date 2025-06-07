@@ -1,4 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +10,10 @@ class SettingsUserScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(userModelProvider);
-    final currentLocation = GoRouter.of(context).routerDelegate.currentConfiguration.fullPath;
+    final currentLocation = GoRouter.of(context)
+        .routerDelegate
+        .currentConfiguration
+        .fullPath;
 
     return Scaffold(
       appBar: AppBar(
@@ -20,8 +22,10 @@ class SettingsUserScreen extends ConsumerWidget {
         elevation: 0,
         foregroundColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined,
-              color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_outlined,
+            color: Colors.white,
+          ),
           onPressed: () => context.pop(),
         ),
       ),
@@ -41,10 +45,14 @@ class SettingsUserScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(16, 100, 16, 32),
         child: userAsync.when(
           loading: () => const Center(
-              child: CircularProgressIndicator(color: Colors.white)),
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
           error: (e, _) => Center(
-              child: Text('Error: $e',
-                  style: const TextStyle(color: Colors.white))),
+            child: Text(
+              'Error: $e',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
           data: (user) => Column(
             children: [
               CircleAvatar(
@@ -61,26 +69,30 @@ class SettingsUserScreen extends ConsumerWidget {
               Text(
                 '${user.nombre} ${user.apellidos}',
                 style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 4),
               Text(user.email, style: const TextStyle(color: Colors.white70)),
               const SizedBox(height: 8),
               Chip(
-                label:
-                    Text(user.rol, style: const TextStyle(color: Colors.white)),
+                label: Text(
+                  user.rol,
+                  style: const TextStyle(color: Colors.white),
+                ),
                 backgroundColor: Colors.deepPurple.withOpacity(0.4),
               ),
               const Divider(height: 32, color: Colors.white24),
+
               if (user.rol == 'admin') ...[
+                // Si la ruta actual es /mesero/home, mostrar enlace a Admin
                 if (currentLocation.startsWith('/mesero')) ...[
                   _customTile(
                     icon: Icons.admin_panel_settings,
                     label: 'Ir a vista de Administrador',
-                    onTap: () => context
-                        .go('/admin/home'), 
+                    onTap: () => context.go('/admin/home'),
                   ),
                 ] else ...[
                   _customTile(
@@ -90,7 +102,15 @@ class SettingsUserScreen extends ConsumerWidget {
                   ),
                 ],
                 const SizedBox(height: 12),
+                // Nuevo botón: Ir a vista de Cocina
+                _customTile(
+                  icon: Icons.kitchen,
+                  label: 'Ir a vista de Cocina',
+                  onTap: () => context.go('/cocinero/home'),
+                ),
+                const SizedBox(height: 12),
               ],
+
               _customTile(
                 icon: Icons.logout,
                 label: 'Cerrar sesión',
@@ -125,8 +145,10 @@ class SettingsUserScreen extends ConsumerWidget {
           children: [
             Icon(icon, color: Colors.white),
             const SizedBox(width: 12),
-            Text(label,
-                style: const TextStyle(color: Colors.white, fontSize: 16)),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
           ],
         ),
       ),
