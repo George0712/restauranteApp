@@ -8,7 +8,7 @@ final orderStatusFilterProvider = StateProvider<String>((ref) => 'all');
 // StreamProvider para obtener órdenes en tiempo real
 final ordersStreamProvider = StreamProvider<List<Order>>((ref) {
   return FirebaseFirestore.instance
-      .collection('orders')
+      .collection('pedido')
       .orderBy('createdAt', descending: false)
       .snapshots()
       .map((snapshot) {
@@ -61,7 +61,7 @@ class OrdersNotifier extends StateNotifier<bool> {
   Future<void> startPreparation(String orderId) async {
     state = true;
     try {
-      await _firestore.collection('orders').doc(orderId).update({
+      await _firestore.collection('pedido').doc(orderId).update({
         'status': 'preparando',
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -77,7 +77,7 @@ class OrdersNotifier extends StateNotifier<bool> {
   Future<void> finishOrder(String orderId) async {
     state = true;
     try {
-      await _firestore.collection('orders').doc(orderId).update({
+      await _firestore.collection('pedido').doc(orderId).update({
         'status': 'terminado',
         'completedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -94,7 +94,7 @@ class OrdersNotifier extends StateNotifier<bool> {
   Future<void> cancelOrder(String orderId) async {
     state = true;
     try {
-      await _firestore.collection('orders').doc(orderId).update({
+      await _firestore.collection('pedido').doc(orderId).update({
         'status': 'cancelado',
         'cancelledAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -111,7 +111,7 @@ class OrdersNotifier extends StateNotifier<bool> {
   Future<void> reactivateOrder(String orderId) async {
     state = true;
     try {
-      await _firestore.collection('orders').doc(orderId).update({
+      await _firestore.collection('pedido').doc(orderId).update({
         'status': 'pendiente',
         'updatedAt': FieldValue.serverTimestamp(),
       });

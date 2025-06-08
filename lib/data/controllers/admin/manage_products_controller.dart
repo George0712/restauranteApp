@@ -6,6 +6,9 @@ import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/data/models/combo_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:uuid/uuid.dart';
 
 class RegisterCategoryController {
   final TextEditingController nombreController = TextEditingController();
@@ -80,6 +83,21 @@ class RegisterProductoController {
     required String foto,
   }) async {
     try {
+      String? photoUrl;
+      
+      // Si hay una imagen, subirla a Firebase Storage
+      if (foto.isNotEmpty) {
+        final file = File(foto);
+        final storageRef = FirebaseStorage.instance.ref();
+        final imageRef = storageRef.child('productos/${const Uuid().v4()}.jpg');
+        
+        // Subir la imagen
+        await imageRef.putFile(file);
+        
+        // Obtener la URL de la imagen
+        photoUrl = await imageRef.getDownloadURL();
+      }
+
       final productoData = {
         'name': nombre,
         'price': precio,
@@ -87,7 +105,7 @@ class RegisterProductoController {
         'ingredients': ingredientes,
         'category': categoria,
         'disponible': disponible,
-        'photo': foto,
+        'photo': photoUrl, // Guardar la URL de la imagen en lugar de la ruta local
       };
 
       final db = FirebaseFirestore.instance;

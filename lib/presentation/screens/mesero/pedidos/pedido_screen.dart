@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
@@ -22,16 +23,19 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
     with TickerProviderStateMixin {
   late TabController _tabController;
   String categoriaSeleccionada = 'Todas';
+  String categoriaIdSeleccionada = '';
   String filtroTexto = '';
   final TextEditingController _searchController = TextEditingController();
+  bool pedidoConfirmado = false;
 
   @override
   void initState() {
     super.initState();
-    final productosAsync = ref.read(productsProvider);
-    productosAsync.whenData((productos) {
-      final categorias = ['Todas', ...productos.map((p) => p.category).toSet().toList()];
-      _tabController = TabController(length: categorias.length, vsync: this);
+    final categoriasAsync = ref.read(categoryDisponibleProvider);
+    
+    categoriasAsync.whenData((categorias) {
+      final nombresCategorias = ['Todas', ...categorias.map((c) => c.name).toList()];
+      _tabController = TabController(length: nombresCategorias.length, vsync: this);
     });
   }
 
@@ -163,53 +167,72 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
   }
 
   Widget _buildCategorias(List<String> categorias) {
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: categorias.length,
-        itemBuilder: (context, index) {
-          final categoria = categorias[index];
-          final isSelected = categoriaSeleccionada == categoria;
-          
-          return GestureDetector(
-            onTap: () => setState(() => categoriaSeleccionada = categoria),
-            child: Container(
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                color: isSelected ? Theme.of(context).primaryColor : Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: isSelected 
-                        ? Theme.of(context).primaryColor.withOpacity(0.3)
-                        : Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+    final categoriasAsync = ref.watch(categoryDisponibleProvider);
+    
+    return categoriasAsync.when(
+      data: (categoriasList) {
+        final nombresCategorias = ['Todas', ...categoriasList.map((c) => c.name).toList()];
+        
+        return Container(
+          height: 50,
+          margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: nombresCategorias.length,
+            itemBuilder: (context, index) {
+              final categoria = nombresCategorias[index];
+              final isSelected = categoriaSeleccionada == categoria;
+              
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    categoriaSeleccionada = categoria;
+                    if (index == 0) {
+                      categoriaIdSeleccionada = '';
+                    } else {
+                      categoriaIdSeleccionada = categoriasList[index - 1].id;
+                    }
+                  });
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Theme.of(context).primaryColor : Colors.white,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isSelected 
+                            ? Theme.of(context).primaryColor.withOpacity(0.3)
+                            : Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Text(
-                categoria,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black54,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  fontSize: 14,
+                  child: Text(
+                    categoria,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black54,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Text('Error: $error'),
     );
   }
 
   Widget _buildProductosGrid(List<ProductModel> productos) {
     final productosFiltrados = productos.where((producto) {
-      final matchesCategoria = categoriaSeleccionada == 'Todas' || 
-                              producto.category == categoriaSeleccionada;
+      final matchesCategoria = categoriaIdSeleccionada.isEmpty || 
+                              producto.category == categoriaIdSeleccionada;
       final matchesTexto = filtroTexto.isEmpty ||
                           producto.name.toLowerCase().contains(filtroTexto.toLowerCase());
       return matchesCategoria && matchesTexto;
@@ -286,12 +309,47 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
               ),
               child: Stack(
                 children: [
-                  Center(
-                    child: Text(
-                      producto.photo ?? '🍽️',
-                      style: const TextStyle(fontSize: 48),
+                  if (producto.photo != null && producto.photo!.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                      child: Image.network(
+                        producto.photo!,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(
+                              Icons.fastfood,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  else
+                    const Center(
+                      child: Icon(
+                        Icons.fastfood,
+                        size: 48,
+                        color: Colors.grey,
+                      ),
                     ),
-                  ),
                   if (!producto.disponible)
                     Container(
                       decoration: BoxDecoration(
@@ -371,8 +429,15 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
   Widget? _buildCarritoBottomBar(BuildContext context, List<ItemCarrito> carrito) {
     if (carrito.isEmpty) return null;
 
-    final total = ref.read(carritoProvider.notifier).total;
-    final cantidadTotal = ref.read(carritoProvider.notifier).cantidadTotal;
+    final total = carrito.fold<double>(0, (sum, item) {
+      final precioBase = item.precioUnitario * item.cantidad;
+      final precioAdicionales = item.adicionales?.fold<double>(
+        0,
+        (sum, adicional) => sum + (adicional.price * item.cantidad),
+      ) ?? 0;
+      return sum + precioBase + precioAdicionales;
+    });
+    final cantidadTotal = carrito.fold(0, (sum, item) => sum + item.cantidad);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -443,8 +508,121 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => const _CarritoBottomSheet(),
+      builder: (context) => _CarritoBottomSheet(
+        onConfirmar: () => _confirmarPedido(context, ref.read(carritoProvider)),
+        onPagar: () => _procesarPago(context, ref.read(carritoProvider)),
+        pedidoConfirmado: pedidoConfirmado,
+      ),
     );
+  }
+
+  void _confirmarPedido(BuildContext context, List<ItemCarrito> carrito) async {
+    try {
+      final adicionalesAsync = await ref.read(additionalProvider.future);
+      
+      // Crear los items del pedido con sus adicionales
+      final items = carrito.map((item) {
+        final adicionales = item.modificacionesSeleccionadas
+            .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
+            .toList();
+            
+        return {
+          'productId': item.producto.id,
+          'name': item.producto.name,
+          'price': item.precioUnitario,
+          'quantity': item.cantidad,
+          'notes': item.notas,
+          'adicionales': adicionales.map((a) => a.toMap()).toList(),
+        };
+      }).toList();
+
+      // Calcular totales
+      final subtotal = carrito.fold<double>(0, (sum, item) {
+        final precioBase = item.precioUnitario * item.cantidad;
+        final precioAdicionales = item.adicionales?.fold<double>(
+          0,
+          (sum, adicional) => sum + (adicional.price * item.cantidad),
+        ) ?? 0;
+        return sum + precioBase + precioAdicionales;
+      });
+      final total = subtotal;
+
+      // Crear el pedido en Firestore
+      final pedidoRef = await FirebaseFirestore.instance.collection('pedido').add({
+        'mode': 'mesa',
+        'tableNumber': widget.pedidoId,
+        'items': items,
+        'subtotal': subtotal,
+        'total': total,
+        'status': 'pendiente',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Actualizar estado
+      setState(() {
+        pedidoConfirmado = true;
+      });
+
+      // Mostrar mensaje de éxito
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pedido confirmado exitosamente')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al confirmar el pedido: $e')),
+        );
+      }
+    }
+  }
+
+  void _procesarPago(BuildContext context, List<ItemCarrito> carrito) async {
+    try {
+      // Simular proceso de pago
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Calcular total
+      final total = carrito.fold<double>(0, (sum, item) {
+        final precioBase = item.precioUnitario * item.cantidad;
+        final precioAdicionales = item.adicionales?.fold<double>(
+          0,
+          (sum, adicional) => sum + (adicional.price * item.cantidad),
+        ) ?? 0;
+        return sum + precioBase + precioAdicionales;
+      });
+
+      // Actualizar estado del pedido en Firestore
+      final pedidoRef = await FirebaseFirestore.instance.collection('pedido')
+          .where('tableNumber', isEqualTo: widget.pedidoId)
+          .where('status', isEqualTo: 'pendiente')
+          .get();
+
+      if (pedidoRef.docs.isNotEmpty) {
+        await pedidoRef.docs.first.reference.update({
+          'status': 'pagado',
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Limpiar carrito después del pago exitoso
+      ref.read(carritoProvider.notifier).limpiarCarrito();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pago procesado exitosamente')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al procesar el pago: $e')),
+        );
+      }
+    }
   }
 }
 
@@ -468,16 +646,30 @@ class _DetalleProductoBottomSheetState extends ConsumerState<_DetalleProductoBot
     super.dispose();
   }
 
-  void _agregarAlCarrito() {
-    final item = ItemCarrito(
-      producto: widget.producto,
-      cantidad: cantidad,
-      modificacionesSeleccionadas: adicionalesSeleccionados,
-      notas: _notasController.text,
-      precioUnitario: widget.producto.price,
-    );
-    ref.read(carritoProvider.notifier).agregarItem(item);
-    Navigator.pop(context);
+  void _agregarAlCarrito() async {
+    try {
+      final adicionalesAsync = await ref.read(additionalProvider.future);
+      final adicionales = adicionalesSeleccionados
+          .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
+          .toList();
+
+      final item = ItemCarrito(
+        producto: widget.producto,
+        cantidad: cantidad,
+        modificacionesSeleccionadas: adicionalesSeleccionados,
+        notas: _notasController.text,
+        precioUnitario: widget.producto.price,
+        adicionales: adicionales,
+      );
+      ref.read(carritoProvider.notifier).agregarItem(item);
+      Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al agregar al carrito: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -517,12 +709,43 @@ class _DetalleProductoBottomSheetState extends ConsumerState<_DetalleProductoBot
                           color: Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Center(
-                          child: Text(
-                            widget.producto.photo ?? '🍽️',
-                            style: const TextStyle(fontSize: 32),
-                          ),
-                        ),
+                        child: widget.producto.photo != null && widget.producto.photo!.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  widget.producto.photo!,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded /
+                                                loadingProgress.expectedTotalBytes!
+                                            : null,
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(
+                                        Icons.fastfood,
+                                        size: 32,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : const Center(
+                                child: Icon(
+                                  Icons.fastfood,
+                                  size: 32,
+                                  color: Colors.grey,
+                                ),
+                              ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -687,7 +910,7 @@ class _DetalleProductoBottomSheetState extends ConsumerState<_DetalleProductoBot
               child: ElevatedButton.icon(
                 onPressed: widget.producto.disponible ? _agregarAlCarrito : null,
                 icon: const Icon(Icons.add_shopping_cart),
-                label: Text('Agregar al carrito - \$${precioTotal.toStringAsFixed(2)}'),
+                label: const Text('Agregar al carrito'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -704,7 +927,15 @@ class _DetalleProductoBottomSheetState extends ConsumerState<_DetalleProductoBot
 }
 
 class _CarritoBottomSheet extends ConsumerWidget {
-  const _CarritoBottomSheet();
+  final VoidCallback onConfirmar;
+  final VoidCallback onPagar;
+  final bool pedidoConfirmado;
+
+  const _CarritoBottomSheet({
+    required this.onConfirmar,
+    required this.onPagar,
+    required this.pedidoConfirmado,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -729,9 +960,9 @@ class _CarritoBottomSheet extends ConsumerWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const Text(
-            'Tu carrito',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          Text(
+            pedidoConfirmado ? 'Pedido Confirmado' : 'Tu carrito',
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -797,11 +1028,12 @@ class _CarritoBottomSheet extends ConsumerWidget {
               ),
               Text(
                 '\$${carrito.fold<double>(0, (sum, item) {
-                  final modsPrecio = item.modificacionesSeleccionadas.fold<double>(
+                  final precioBase = item.precioUnitario * item.cantidad;
+                  final precioAdicionales = item.adicionales?.fold<double>(
                     0,
-                    (modSum, mod) => modSum + (item.producto.price),
-                  );
-                  return sum + ((item.precioUnitario + modsPrecio) * item.cantidad);
+                    (sum, adicional) => sum + (adicional.price * item.cantidad),
+                  ) ?? 0;
+                  return sum + precioBase + precioAdicionales;
                 }).toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 20,
@@ -815,11 +1047,9 @@ class _CarritoBottomSheet extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: carrito.isEmpty ? null : () {
-                Navigator.pop(context);
-              },
-              icon: const Icon(Icons.payment),
-              label: const Text('Proceder al pago'),
+              onPressed: carrito.isEmpty ? null : (pedidoConfirmado ? onPagar : onConfirmar),
+              icon: Icon(pedidoConfirmado ? Icons.payment : Icons.check_circle),
+              label: Text(pedidoConfirmado ? 'Proceder al Pago' : 'Confirmar Pedido'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(

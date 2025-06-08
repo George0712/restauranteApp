@@ -688,11 +688,31 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
 
   void _confirmarLlegada(MesaModel mesa) {
     Navigator.pop(context);
+    
+    // Crear nuevo pedido
+    final pedidoId = const Uuid().v4();
+    final nuevoPedido = Pedido(
+      id: pedidoId,
+      mesaId: mesa.id,
+      cliente: mesa.cliente,
+      fecha: DateTime.now(),
+      items: [],
+      estado: 'pendiente',
+    );
+
+    // Actualizar mesa
     final mesaActualizada = mesa.copyWith(
       estado: 'Ocupada',
       horaOcupacion: DateTime.now(),
+      pedidoId: pedidoId,
     );
+
+    // Guardar cambios
+    ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
     ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+
+    // Navegar a la pantalla de pedido
+    context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
   }
 
   void _cancelarReserva(MesaModel mesa) {
