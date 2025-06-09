@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_cocinero_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_credentials_cocinero.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/manage_cocinero_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/historial/historial_mesero_screen.dart';
 
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/additional/create_item_additional_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/additional/manage_additional_screen.dart';
@@ -113,6 +114,10 @@ final GoRouter router = GoRouter(
       builder: (context, state) => SeleccionProductosScreen(
         pedidoId: state.pathParameters['pedidoId']!,
       ),
+    ),
+    GoRoute(
+      path: '/mesero/historial',
+      builder: (context, state) => const HistorialMeseroScreen(),
     ),
   ],
   errorBuilder: (context, state) => const NotFoundScreen(),

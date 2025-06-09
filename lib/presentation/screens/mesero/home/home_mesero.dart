@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/bx.dart';
 import 'package:iconify_flutter/icons/ion.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:iconify_flutter/icons/ri.dart';
@@ -251,11 +250,13 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                             onTap: () {},
                           ),
                           _buildEnhancedOptionCard(
-                            icon: const Iconify(Bx.bxs_receipt, size: 50),
+                            icon: const Iconify(Ri.history_fill, size: 50),
                             text: 'Historial',
-                            description: 'Pedidos anteriores',
+                            description: 'Ver historial de pedidos',
                             color: const Color(0xFF0097A7),
-                            onTap: () {},
+                            onTap: () {
+                              context.push('/mesero/historial');
+                            },
                           ),
                           if (isTablet) ...[
                             _buildEnhancedOptionCard(
