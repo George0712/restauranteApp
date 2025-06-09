@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:restaurante_app/data/providers/cocina/order_provider.dart';
 import 'package:restaurante_app/presentation/widgets/order_cards.dart';
@@ -33,6 +34,37 @@ class HomeCocineroScreen extends ConsumerWidget {
             ),
           ),
           centerTitle: true,
+          leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Hero(
+            tag: 'profile_avatar',
+            child: GestureDetector(
+              onTap: () {
+                context.push('/admin/settings');
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    )
+                  ],
+                ),
+                child: CircleAvatar(
+                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.8),
+                  child: const Icon(
+                    Icons.person,
+                    size: 28,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
           actions: [
             IconButton(
               onPressed: () => _showStatsDialog(context, stats),
@@ -127,7 +159,7 @@ class HomeCocineroScreen extends ConsumerWidget {
             ),
 
             // 3) El único elemento Expanded: TabBarView tomará el espacio restante
-            Expanded(
+            const Expanded(
               child: TabBarView(
                 children: [
                   _PendingOrdersTab(),

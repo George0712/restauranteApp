@@ -97,6 +97,7 @@ class SettingsUserScreen extends ConsumerWidget {
                 ] else ...[
                   _customTile(
                     icon: Icons.restaurant_menu_rounded,
+                    
                     label: 'Ir a vista de Mesero',
                     onTap: () => context.go('/mesero/home'),
                   ),
