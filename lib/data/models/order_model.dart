@@ -6,6 +6,8 @@ class OrderItem {
   final int price;
   final int quantity;
   final String? notes;
+  final List<String> modifications; // Para manejar modificaciones/adicionales
+  final String? image; // Para mostrar imagen del producto
 
   OrderItem({
     required this.productId,
@@ -13,15 +15,19 @@ class OrderItem {
     required this.price,
     required this.quantity,
     this.notes,
+    this.modifications = const [],
+    this.image,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      productId: json['productId'] ?? '',
-      name: json['name'] ?? '',
-      price: (json['price'] ?? 0).toInt(),
-      quantity: (json['quantity'] ?? 0).toInt(),
-      notes: json['notes'],
+      productId: json['productId'] ?? json['id'] ?? '', // Maneja ambos casos
+      name: json['name'] ?? json['nombre'] ?? 'Producto sin nombre', // Maneja ambos casos
+      price: (json['price'] ?? json['precio'] ?? 0).toInt(),
+      quantity: (json['quantity'] ?? json['cantidad'] ?? 0).toInt(),
+      notes: json['notes'] ?? json['notas'],
+      modifications: List<String>.from(json['modifications'] ?? json['modificaciones'] ?? []),
+      image: json['image'] ?? json['imagen'],
     );
   }
 
@@ -32,6 +38,8 @@ class OrderItem {
       'price': price,
       'quantity': quantity,
       if (notes != null) 'notes': notes,
+      'modifications': modifications,
+      if (image != null) 'image': image,
     };
   }
 
@@ -41,6 +49,8 @@ class OrderItem {
     int? price,
     int? quantity,
     String? notes,
+    List<String>? modifications,
+    String? image,
   }) {
     return OrderItem(
       productId: productId ?? this.productId,
@@ -48,8 +58,18 @@ class OrderItem {
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
       notes: notes ?? this.notes,
+      modifications: modifications ?? this.modifications,
+      image: image ?? this.image,
     );
   }
+
+  // Precio total incluyendo modificaciones
+  int get totalPrice => price * quantity;
+
+  // Mostrar modificaciones como string
+  String get modificationsText => modifications.isEmpty 
+      ? '' 
+      : modifications.join(', ');
 
   @override
   bool operator ==(Object other) {
@@ -90,31 +110,61 @@ class Order {
     this.discount = 0,
     required this.total,
     required this.createdAt,
-    this.status = 'pendiente', // Estado por defecto
+    this.status = 'pendiente',
     this.updatedAt,
     this.completedAt,
     this.cancelledAt,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
+    // Debug: Imprimir la estructura de datos
+    print('Order.fromJson recibido: $json');
+    print('Items en JSON: ${json['items']}');
+    
+    List<OrderItem> parsedItems = [];
+    
+    // Maneja diferentes estructuras de items
+    if (json['items'] != null) {
+      final itemsData = json['items'];
+      if (itemsData is List) {
+        for (var item in itemsData) {
+          if (item is Map<String, dynamic>) {
+            parsedItems.add(OrderItem.fromJson(item));
+          }
+        }
+      }
+    }
+    
+    // También maneja si los items vienen como 'productos'
+    if (json['productos'] != null && parsedItems.isEmpty) {
+      final productosData = json['productos'];
+      if (productosData is List) {
+        for (var producto in productosData) {
+          if (producto is Map<String, dynamic>) {
+            parsedItems.add(OrderItem.fromJson(producto));
+          }
+        }
+      }
+    }
+
+    print('Items parseados: ${parsedItems.length}');
+    
     return Order(
       id: json['id'],
-      mode: json['mode'] ?? 'mesa',
-      tableNumber: json['tableNumber'],
-      customerName: json['customerName'],
-      address: json['address'],
-      phone: json['phone'],
-      items: (json['items'] as List<dynamic>?)
-          ?.map((item) => OrderItem.fromJson(item as Map<String, dynamic>))
-          .toList() ?? [],
+      mode: json['mode'] ?? json['tipo'] ?? 'mesa',
+      tableNumber: json['tableNumber'] ?? json['mesa']?.toString(),
+      customerName: json['customerName'] ?? json['cliente'],
+      address: json['address'] ?? json['direccion'],
+      phone: json['phone'] ?? json['telefono'],
+      items: parsedItems,
       subtotal: (json['subtotal'] ?? 0).toInt(),
-      discount: (json['discount'] ?? 0).toInt(),
+      discount: (json['discount'] ?? json['descuento'] ?? 0).toInt(),
       total: (json['total'] ?? 0).toInt(),
-      createdAt: json['createdAt'] ?? Timestamp.now(),
-      status: json['status'] ?? 'pendiente',
-      updatedAt: json['updatedAt'],
-      completedAt: json['completedAt'],
-      cancelledAt: json['cancelledAt'],
+      createdAt: json['createdAt'] ?? json['fechaCreacion'] ?? Timestamp.now(),
+      status: json['status'] ?? json['estado'] ?? 'pendiente',
+      updatedAt: json['updatedAt'] ?? json['fechaActualizacion'],
+      completedAt: json['completedAt'] ?? json['fechaCompletado'],
+      cancelledAt: json['cancelledAt'] ?? json['fechaCancelado'],
     );
   }
 
@@ -216,6 +266,6 @@ class Order {
 
   @override
   String toString() {
-    return 'Order(id: $id, mode: $mode, status: $status, total: $total)';
+    return 'Order(id: $id, mode: $mode, status: $status, total: $total, items: ${items.length})';
   }
 }
