@@ -105,13 +105,65 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                             .push('/admin/manage/producto/manage-additionals');
                       },
                     ),
-                    OptionButtonCard(
-                      icon: const Iconify(Ion.fast_food, size: 40),
-                      text: AppStrings.combosTitle,
-                      color: const Color(0xFFF59E0B),
-                      onTap: () {
-                        context.push('/admin/manage/producto/manage-combos');
-                      },
+                    // Botón de combos deshabilitado
+                    Stack(
+                      children: [
+                        OptionButtonCard(
+                          icon: const Iconify(Ion.fast_food, size: 40),
+                          text: AppStrings.combosTitle,
+                          color: Colors.grey.shade600, // Color gris para indicar deshabilitado
+                          onTap: () {
+                            // No hace nada o muestra un mensaje
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Esta función no está disponible'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          },
+                        ),
+                        // Overlay con candado y listón
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.6),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.lock,
+                                    color: Colors.white70,
+                                    size: 24,
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Próximamente',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Listón diagonal (opcional)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: CustomPaint(
+                              painter: DiagonalStripePainter(),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -123,4 +175,25 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
       ),
     );
   }
+}
+
+// Painter para crear el listón diagonal
+class DiagonalStripePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red.withOpacity(0.8)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+
+    // Dibuja una línea diagonal desde la esquina superior izquierda a la inferior derecha
+    canvas.drawLine(
+      const Offset(0, 0),
+      Offset(size.width, size.height),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
