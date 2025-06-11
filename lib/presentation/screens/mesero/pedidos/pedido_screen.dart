@@ -269,8 +269,8 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
           childAspectRatio: 0.8,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
         ),
         itemBuilder: (context, index) {
           final producto = productosFiltrados[index];
@@ -298,95 +298,101 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
+            Expanded(
+              flex: 3,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
                 ),
-              ),
-              child: Stack(
-                children: [
-                  if (producto.photo != null && producto.photo!.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
-                      child: Image.network(
-                        producto.photo!,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(
-                            child: Icon(
-                              Icons.fastfood,
-                              size: 48,
-                              color: Colors.grey,
-                            ),
-                          );
-                        },
-                      ),
-                    )
-                  else
-                    const Center(
-                      child: Icon(
-                        Icons.fastfood,
-                        size: 48,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  if (!producto.disponible)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                child: Stack(
+                  children: [
+                    if (producto.photo != null && producto.photo!.isNotEmpty)
+                      ClipRRect(
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(16),
                           topRight: Radius.circular(16),
                         ),
+                        child: Image.network(
+                          producto.photo!,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.fastfood,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    else
+                      const Center(
+                        child: Icon(
+                          Icons.fastfood,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
                       ),
-                      child: const Center(
-                        child: Text(
-                          'No Disponible',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    if (!producto.disponible)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                          ),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'No Disponible',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
             Expanded(
+              flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text(
-                      producto.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black87,
+                    Flexible(
+                      child: Text(
+                        producto.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -397,11 +403,11 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                           style: TextStyle(
                             color: Theme.of(context).primaryColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 14,
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: producto.disponible 
                                 ? Theme.of(context).primaryColor
@@ -411,7 +417,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                           child: const Icon(
                             Icons.add,
                             color: Colors.white,
-                            size: 16,
+                            size: 14,
                           ),
                         ),
                       ],
@@ -483,6 +489,8 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
               label: const Text('Ver Carrito'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -892,7 +900,7 @@ class _DetalleProductoBottomSheetState extends ConsumerState<_DetalleProductoBot
                       Text(
                         'Total: \$${precioTotal.toStringAsFixed(2)}',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).primaryColor,
                         ),
@@ -913,6 +921,8 @@ class _DetalleProductoBottomSheetState extends ConsumerState<_DetalleProductoBot
                 label: const Text('Agregar al carrito'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -988,6 +998,7 @@ class _CarritoBottomSheet extends ConsumerWidget {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            color: Colors.white,
                             child: ListTile(
                               leading: CircleAvatar(
                                 child: Text(item.producto.photo ?? '🍽️'),
@@ -1052,6 +1063,8 @@ class _CarritoBottomSheet extends ConsumerWidget {
               label: Text(pedidoConfirmado ? 'Proceder al Pago' : 'Confirmar Pedido'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: pedidoConfirmado ? Colors.green : Colors.blue,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
