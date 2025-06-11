@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:restaurante_app/data/providers/login/auth_service.dart';
+import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 
 class SettingsUserScreen extends ConsumerWidget {
   const SettingsUserScreen({super.key});

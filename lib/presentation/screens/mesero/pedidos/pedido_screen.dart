@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
-import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
-import 'package:restaurante_app/data/providers/mesero/pedidos_provider.dart';
+import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
+import 'package:restaurante_app/presentation/screens/mesero/pedidos/detalle_producto_screen.dart';
+import 'package:restaurante_app/presentation/widgets/carrito_bottom.dart';
 
 class SeleccionProductosScreen extends ConsumerStatefulWidget {
   final String pedidoId;
@@ -507,7 +509,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _DetalleProductoBottomSheet(producto: producto),
+      builder: (context) => DetalleProductoScreen(producto: producto),
     );
   }
 
@@ -516,7 +518,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _CarritoBottomSheet(
+      builder: (context) => CarritoBottomSheet(
         onConfirmar: () => _confirmarPedido(context, ref.read(carritoProvider)),
         onPagar: () => _procesarPago(context, ref.read(carritoProvider)),
         pedidoConfirmado: pedidoConfirmado,
@@ -556,7 +558,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
       final total = subtotal;
 
       // Crear el pedido en Firestore
-      final pedidoRef = await FirebaseFirestore.instance.collection('pedido').add({
+      await FirebaseFirestore.instance.collection('pedido').add({
         'mode': 'mesa',
         'tableNumber': widget.pedidoId,
         'items': items,
@@ -593,7 +595,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
       await Future.delayed(const Duration(seconds: 2));
 
       // Calcular total
-      final total = carrito.fold<double>(0, (sum, item) {
+      carrito.fold<double>(0, (sum, item) {
         final precioBase = item.precioUnitario * item.cantidad;
         final precioAdicionales = item.adicionales?.fold<double>(
           0,
@@ -634,447 +636,6 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
   }
 }
 
-class _DetalleProductoBottomSheet extends ConsumerStatefulWidget {
-  final ProductModel producto;
 
-  const _DetalleProductoBottomSheet({required this.producto});
-
-  @override
-  ConsumerState<_DetalleProductoBottomSheet> createState() => _DetalleProductoBottomSheetState();
-}
-
-class _DetalleProductoBottomSheetState extends ConsumerState<_DetalleProductoBottomSheet> {
-  int cantidad = 1;
-  List<String> adicionalesSeleccionados = [];
-  final TextEditingController _notasController = TextEditingController();
-
-  @override
-  void dispose() {
-    _notasController.dispose();
-    super.dispose();
-  }
-
-  void _agregarAlCarrito() async {
-    try {
-      final adicionalesAsync = await ref.read(additionalProvider.future);
-      final adicionales = adicionalesSeleccionados
-          .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
-          .toList();
-
-      final item = ItemCarrito(
-        producto: widget.producto,
-        cantidad: cantidad,
-        modificacionesSeleccionadas: adicionalesSeleccionados,
-        notas: _notasController.text,
-        precioUnitario: widget.producto.price,
-        adicionales: adicionales,
-      );
-      ref.read(carritoProvider.notifier).agregarItem(item);
-      Navigator.pop(context);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al agregar al carrito: $e')),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final adicionalesAsync = ref.watch(additionalProvider);
-    final precioTotal = widget.producto.price * cantidad;
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: widget.producto.photo != null && widget.producto.photo!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  widget.producto.photo!,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        value: loadingProgress.expectedTotalBytes != null
-                                            ? loadingProgress.cumulativeBytesLoaded /
-                                                loadingProgress.expectedTotalBytes!
-                                            : null,
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Center(
-                                      child: Icon(
-                                        Icons.fastfood,
-                                        size: 32,
-                                        color: Colors.grey,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            : const Center(
-                                child: Icon(
-                                  Icons.fastfood,
-                                  size: 32,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.producto.name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '\$${widget.producto.price.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  if (widget.producto.ingredientes.isNotEmpty) ...[
-                    const Text(
-                      'Ingredientes',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.producto.ingredientes,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  adicionalesAsync.when(
-                    data: (adicionales) {
-                      if (adicionales.isEmpty) return const SizedBox.shrink();
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Adicionales',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          ...adicionales.map((adicional) =>
-                            CheckboxListTile(
-                              title: Text(adicional.name),
-                              subtitle: Text('+\$${adicional.price.toStringAsFixed(2)}'),
-                              value: adicionalesSeleccionados.contains(adicional.id),
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  if (value == true) {
-                                    adicionalesSeleccionados.add(adicional.id);
-                                  } else {
-                                    adicionalesSeleccionados.remove(adicional.id);
-                                  }
-                                });
-                              },
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) => Text('Error: $error'),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Notas especiales',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _notasController,
-                    decoration: InputDecoration(
-                      hintText: 'Instrucciones especiales para la cocina...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Cantidad',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: cantidad > 1 
-                                  ? () => setState(() => cantidad--) 
-                                  : null,
-                              icon: const Icon(Icons.remove),
-                            ),
-                            SizedBox(
-                              width: 40,
-                              child: Text(
-                                cantidad.toString(),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => setState(() => cantidad++),
-                              icon: const Icon(Icons.add),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        'Total: \$${precioTotal.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(24),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: widget.producto.disponible ? _agregarAlCarrito : null,
-                icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('Agregar al carrito'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CarritoBottomSheet extends ConsumerWidget {
-  final VoidCallback onConfirmar;
-  final VoidCallback onPagar;
-  final bool pedidoConfirmado;
-
-  const _CarritoBottomSheet({
-    required this.onConfirmar,
-    required this.onPagar,
-    required this.pedidoConfirmado,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final carrito = ref.watch(carritoProvider);
-    final adicionalesAsync = ref.watch(additionalProvider);
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Text(
-            pedidoConfirmado ? 'Pedido Confirmado' : 'Tu carrito',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: carrito.isEmpty
-                ? const Center(child: Text('Tu carrito está vacío.'))
-                : ListView.builder(
-                    itemCount: carrito.length,
-                    itemBuilder: (context, index) {
-                      final item = carrito[index];
-                      return adicionalesAsync.when(
-                        data: (adicionales) {
-                          final adicionalesSeleccionados = item.modificacionesSeleccionadas
-                              .map((id) => adicionales.firstWhere((a) => a.id == id))
-                              .toList();
-                          final modsPrecio = adicionalesSeleccionados.fold(
-                            0.0,
-                            (sum, adicional) => sum + adicional.price,
-                          );
-                          final totalItem = (item.precioUnitario + modsPrecio) * item.cantidad;
-
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            color: Colors.white,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                child: Text(item.producto.photo ?? '🍽️'),
-                              ),
-                              title: Text('${item.producto.name} x${item.cantidad}'),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (adicionalesSeleccionados.isNotEmpty)
-                                    Text('Adicionales: ${adicionalesSeleccionados.map((a) => a.name).join(", ")}'),
-                                  if (item.notas?.isNotEmpty ?? false)
-                                    Text('Nota: ${item.notas}'),
-                                ],
-                              ),
-                              trailing: Text(
-                                '\$${totalItem.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                        loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (error, stack) => Text('Error: $error'),
-                      );
-                    },
-                  ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Total:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                '\$${carrito.fold<double>(0, (sum, item) {
-                  final precioBase = item.precioUnitario * item.cantidad;
-                  final precioAdicionales = item.adicionales?.fold<double>(
-                    0,
-                    (sum, adicional) => sum + (adicional.price * item.cantidad),
-                  ) ?? 0;
-                  return sum + precioBase + precioAdicionales;
-                }).toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Theme.of(context).primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: carrito.isEmpty ? null : (pedidoConfirmado ? onPagar : onConfirmar),
-              icon: Icon(pedidoConfirmado ? Icons.payment : Icons.check_circle),
-              label: Text(pedidoConfirmado ? 'Proceder al Pago' : 'Confirmar Pedido'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: pedidoConfirmado ? Colors.green : Colors.blue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 

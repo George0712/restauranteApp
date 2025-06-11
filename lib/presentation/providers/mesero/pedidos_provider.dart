@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
-import '../../models/pedido.dart';
+import '../../../data/models/pedido.dart';
 
 final pedidosProvider = StateNotifierProvider<PedidosNotifier, List<Pedido>>((ref) {
   return PedidosNotifier();

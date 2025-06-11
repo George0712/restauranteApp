@@ -219,7 +219,6 @@ class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
     try {
       final data = pedido.data() as Map<String, dynamic>;
       final fecha = (data['createdAt'] as Timestamp).toDate();
-      final items = data['items'] as List<dynamic>;
       final total = data['total'] as int;
       
       return Card(

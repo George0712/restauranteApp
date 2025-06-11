@@ -5,9 +5,9 @@ import 'package:restaurante_app/presentation/widgets/dialog_reservar_mesa.dart';
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
-import 'package:restaurante_app/data/providers/mesero/pedidos_provider.dart' as pedidos;
+import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart' as pedidos;
 import 'package:restaurante_app/data/models/mesa_model.dart';
-import 'package:restaurante_app/data/providers/mesero/mesas_provider.dart';
+import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
 import 'package:restaurante_app/presentation/widgets/build_stadistics_mesas.dart';
 
 class MesasScreen extends ConsumerStatefulWidget {

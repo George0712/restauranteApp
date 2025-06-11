@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/data/providers/login/login_provider.dart';
+import 'package:restaurante_app/presentation/providers/login/login_provider.dart';
 import 'package:restaurante_app/presentation/widgets/app_text_form_field.dart';
 import 'package:restaurante_app/presentation/widgets/gradient_background.dart';
 

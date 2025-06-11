@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 
 class ListCardsCategories extends ConsumerWidget {
   const ListCardsCategories({super.key});

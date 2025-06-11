@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
-import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateMeseroScreen extends ConsumerStatefulWidget {
