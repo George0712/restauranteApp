@@ -5,9 +5,9 @@ import 'package:restaurante_app/presentation/widgets/dialog_reservar_mesa.dart';
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
-import 'package:restaurante_app/data/providers/mesero/pedidos_provider.dart' as pedidos;
+import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart' as pedidos;
 import 'package:restaurante_app/data/models/mesa_model.dart';
-import 'package:restaurante_app/data/providers/mesero/mesas_provider.dart';
+import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
 import 'package:restaurante_app/presentation/widgets/build_stadistics_mesas.dart';
 
 class MesasScreen extends ConsumerStatefulWidget {
@@ -203,9 +203,9 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
         itemCount: mesas.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
-          childAspectRatio: 1,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
+          childAspectRatio: 0.85,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
         ),
         itemBuilder: (context, index) {
           final mesa = mesas[index];
@@ -219,28 +219,23 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
     final isSelected = mesa.id == mesaSeleccionadaId;
     Color colorEstado;
     IconData iconoEstado;
-    Color colorFondo;
 
     switch(mesa.estado) {
       case 'Disponible':
         colorEstado = Colors.green;
         iconoEstado = Icons.check_circle;
-        colorFondo = Colors.green.withAlpha(25);
         break;
       case 'Ocupada':
         colorEstado = Colors.orange;
         iconoEstado = Icons.people;
-        colorFondo = Colors.orange.withAlpha(25);
         break;
       case 'Reservada':
         colorEstado = Colors.blue;
         iconoEstado = Icons.event;
-        colorFondo = Colors.blue.withAlpha(25);
         break;
       default:
         colorEstado = Colors.grey;
         iconoEstado = Icons.help;
-        colorFondo = Colors.grey.withAlpha(25);
     }
 
     return GestureDetector(
@@ -248,11 +243,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 33, 33, 36),
+          color: colorEstado.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
-          border: isSelected 
-              ? Border.all(color: Theme.of(context).primaryColor, width: 2)
-              : null,
+          border: Border.all(
+            color: isSelected ? Theme.of(context).primaryColor : colorEstado.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(20),
@@ -265,9 +261,9 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
           children: [
             // Header con número y estado
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorFondo,
+                color: colorEstado.withOpacity(0.2),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -279,47 +275,27 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
                   Text(
                     'Mesa ${mesa.id}',
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white70,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: colorEstado,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(iconoEstado, color: Colors.white, size: 12),
-                        const SizedBox(width: 4),
-                        Text(
-                          mesa.estado,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  Icon(iconoEstado, color: colorEstado, size: 20),
                 ],
               ),
             ),
             
-            // Contenido con scroll
+            // Contenido
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.people_outline, color: Colors.grey.shade600, size: 16),
+                        Icon(Icons.people_outline, color: Colors.grey.shade600, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           '${mesa.capacidad} personas',
@@ -333,29 +309,27 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
                     ),
                     
                     if (mesa.estado != 'Disponible') ...[
-                      const SizedBox(height: 12),
                       Text(
                         mesa.cliente ?? '',
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontSize: 13,
                           color: Colors.white70,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       
-                      const SizedBox(height: 8),
                       if (mesa.estado == 'Ocupada') ...[
                         Row(
                           children: [
-                            Icon(Icons.access_time, size: 14, color: colorEstado),
+                            Icon(Icons.access_time, size: 12, color: colorEstado),
                             const SizedBox(width: 4),
                             Text(
                               mesa.tiempoTranscurrido,
                               style: TextStyle(
                                 color: colorEstado,
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -364,13 +338,13 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
                       ] else if (mesa.estado == 'Reservada') ...[
                         Row(
                           children: [
-                            Icon(Icons.schedule, size: 14, color: colorEstado),
+                            Icon(Icons.schedule, size: 12, color: colorEstado),
                             const SizedBox(width: 4),
                             Text(
                               mesa.tiempo ?? '',
                               style: TextStyle(
                                 color: colorEstado,
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -649,7 +623,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
   void _agregarAlPedido(MesaModel mesa) {
     Navigator.pop(context);
     if (mesa.pedidoId != null) {
-      context.push('/mesero/pedidos/agregar-item/${mesa.pedidoId}');
+      context.push('/mesero/pedidos/detalle/${mesa.id}/${mesa.pedidoId}');
     }
   }
 

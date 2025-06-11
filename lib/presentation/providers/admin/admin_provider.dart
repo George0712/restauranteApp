@@ -6,15 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
-import 'package:restaurante_app/data/controllers/admin/manage_products_controller.dart';
+import 'package:restaurante_app/presentation/controllers/admin/manage_products_controller.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 
 import 'package:restaurante_app/data/models/user_model.dart';
 
-import 'package:restaurante_app/data/controllers/admin/admin_controller.dart';
-import 'package:restaurante_app/data/controllers/admin/register_user_controller.dart';
+import 'package:restaurante_app/presentation/controllers/admin/admin_controller.dart';
+import 'package:restaurante_app/presentation/controllers/admin/register_user_controller.dart';
 
 //Providers Admin
 final adminControllerProvider =

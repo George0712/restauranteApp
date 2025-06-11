@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:restaurante_app/data/providers/cocina/order_provider.dart';
+import 'package:restaurante_app/presentation/providers/cocina/order_provider.dart';
 import 'package:restaurante_app/presentation/widgets/order_cards.dart';
 import 'package:restaurante_app/presentation/widgets/kitchen_stats.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:restaurante_app/data/providers/cocina/order_provider.dart';
+import 'package:restaurante_app/presentation/providers/cocina/order_provider.dart';
 
 class KitchenStats extends ConsumerWidget {
   const KitchenStats({Key? key}) : super(key: key);

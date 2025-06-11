@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
     dynamic provider, Color color, IconData icon) {
   return Container(
-    padding: const EdgeInsets.all(20),
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: const Color(0xFF0D1117),
       borderRadius: BorderRadius.circular(16),
@@ -14,6 +14,7 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
       ),
     ),
     child: Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header con icono
@@ -21,7 +22,7 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -31,7 +32,7 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
                     color: color.withOpacity(0.4),
@@ -43,31 +44,34 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
               child: Icon(
                 icon,
                 color: Colors.white,
-                size: 18,
+                size: 16,
               ),
             ),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
-        const SizedBox(
-          height: 28,
+        const Flexible(
           child: Text(
             '\$0',
-            style: TextStyle(
-              fontSize: 24.0,
+            style: const TextStyle(
+              fontSize: 20.0,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

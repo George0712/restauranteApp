@@ -9,7 +9,7 @@ import 'package:iconify_flutter/icons/ci.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/data/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/dashboard_card.dart';
 import 'package:restaurante_app/presentation/widgets/option_button_card.dart';
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:restaurante_app/data/models/order_model.dart';
-import 'package:restaurante_app/data/providers/cocina/order_provider.dart';
+import 'package:restaurante_app/presentation/providers/cocina/order_provider.dart';
 
 class OrderCard extends ConsumerWidget {
   final Order order;
@@ -384,8 +384,8 @@ class OrderCard extends ConsumerWidget {
               Navigator.of(context).pop();
               ref.read(ordersNotifierProvider.notifier).cancelOrder(order.id!);
             },
-            child: const Text('Sí, Cancelar'),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Sí, Cancelar'),
           ),
         ],
       ),
