@@ -384,8 +384,8 @@ class OrderCard extends ConsumerWidget {
               Navigator.of(context).pop();
               ref.read(ordersNotifierProvider.notifier).cancelOrder(order.id!);
             },
-            child: const Text('Sí, Cancelar'),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Sí, Cancelar'),
           ),
         ],
       ),
