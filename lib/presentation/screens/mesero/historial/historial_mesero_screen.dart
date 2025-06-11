@@ -17,7 +17,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: const Color(0xFF0F0F23),
           elevation: 0,
           foregroundColor: Colors.white,
           leading: IconButton(
@@ -32,7 +32,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
             ],
           ),
         ),
-        extendBodyBehindAppBar: true,
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -60,7 +59,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
         .collection('pedido')
-        .orderBy('createdAt', descending: true)
+        .where('status', whereIn: ['pendiente', 'preparando', 'en_preparacion'])
         .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -77,7 +76,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
           return _buildEmptyWidget('No hay pedidos en curso');
         }
 
-        // Ordenar manualmente por fecha
         final docs = snapshot.data!.docs;
         docs.sort((a, b) {
           final dataA = a.data() as Map<String, dynamic>;
@@ -97,15 +95,17 @@ class _HistorialScreenState extends State<HistorialScreen> {
             // Usar fecha actual si hay error
           }
           
-          return fechaB.compareTo(fechaA); // Más reciente primero
+          return fechaB.compareTo(fechaA);
         });
 
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 100),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            return _buildPedidoCard(docs[index]);
-          },
+        return SafeArea(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 16, bottom: 16),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              return _buildPedidoCard(docs[index]);
+            },
+          ),
         );
       },
     );
@@ -132,7 +132,6 @@ class _HistorialScreenState extends State<HistorialScreen> {
           return _buildEmptyWidget('No hay pedidos completados');
         }
 
-        // Ordenar manualmente por fecha
         final docs = snapshot.data!.docs;
         docs.sort((a, b) {
           final dataA = a.data() as Map<String, dynamic>;
@@ -152,15 +151,17 @@ class _HistorialScreenState extends State<HistorialScreen> {
             // Usar fecha actual si hay error
           }
           
-          return fechaB.compareTo(fechaA); // Más reciente primero
+          return fechaB.compareTo(fechaA);
         });
 
-        return ListView.builder(
-          padding: const EdgeInsets.only(top: 100),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            return _buildPedidoCard(docs[index]);
-          },
+        return SafeArea(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 16, bottom: 16),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              return _buildPedidoCard(docs[index]);
+            },
+          ),
         );
       },
     );
