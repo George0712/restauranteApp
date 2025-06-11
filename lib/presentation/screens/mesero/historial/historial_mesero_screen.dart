@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class HistorialScreen extends StatefulWidget {
   const HistorialScreen({super.key});
@@ -10,6 +11,7 @@ class HistorialScreen extends StatefulWidget {
 
 class _HistorialScreenState extends State<HistorialScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final NumberFormat _monedaCOP = NumberFormat.currency(locale: 'es_CO', symbol: '\$');
 
   @override
   Widget build(BuildContext context) {
@@ -251,7 +253,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 style: TextStyle(color: Colors.white.withOpacity(0.7)),
               ),
               Text(
-                'Total: \$${(total / 100).toStringAsFixed(2)}',
+                'Total: ${_monedaCOP.format(total)}',
                 style: TextStyle(color: Colors.white.withOpacity(0.7)),
               ),
               Text(
@@ -397,7 +399,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                               ),
                             ),
                             Text(
-                              '\$${((item['price'] ?? 0) / 100).toStringAsFixed(2)}',
+                              _monedaCOP.format(item['price'] ?? 0),
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -413,7 +415,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         border: Border.all(color: Colors.green),
                       ),
                       child: Text(
-                        'Total: \$${(total / 100).toStringAsFixed(2)}',
+                        'Total: ${_monedaCOP.format(total)}',
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
