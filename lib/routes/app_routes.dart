@@ -117,7 +117,7 @@ final GoRouter router = GoRouter(
     ),
     GoRoute(
       path: '/mesero/historial',
-      builder: (context, state) => const HistorialMeseroScreen(),
+      builder: (context, state) => const HistorialScreen(),
     ),
   ],
   errorBuilder: (context, state) => const NotFoundScreen(),

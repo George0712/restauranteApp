@@ -1,28 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
-class HistorialMeseroScreen extends StatefulWidget {
-  const HistorialMeseroScreen({super.key});
+class HistorialScreen extends StatefulWidget {
+  const HistorialScreen({super.key});
 
   @override
-  State<HistorialMeseroScreen> createState() => _HistorialMeseroScreenState();
+  State<HistorialScreen> createState() => _HistorialScreenState();
 }
 
-class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
+class _HistorialScreenState extends State<HistorialScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  @override
-  void initState() {
-    super.initState();
-    _verificarMeseroId();
-  }
-
-  void _verificarMeseroId() {
-    final meseroId = _auth.currentUser?.uid;
-    print('ID del mesero actual: $meseroId');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,72 +57,54 @@ class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
   }
 
   Widget _buildPedidosEnCurso() {
-    final meseroId = _auth.currentUser?.uid;
-    print('Consultando pedidos en curso para mesero: $meseroId');
-
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
-          .collection('pedido')
-          .where('meseroId', isEqualTo: meseroId)
-          .where('status', whereIn: ['pendiente', 'preparando'])
-          .orderBy('createdAt', descending: true)
-          .snapshots(),
+        .collection('pedido')
+        .orderBy('createdAt', descending: true)
+        .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          print('Error en pedidos en curso: ${snapshot.error}');
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                const SizedBox(height: 16),
-                Text(
-                  'Error al cargar los pedidos: ${snapshot.error}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => setState(() {}),
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
-          );
+          return _buildErrorWidget('Error al cargar pedidos en curso', snapshot.error);
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(
-              color: Colors.white,
-            ),
+            child: CircularProgressIndicator(color: Colors.white),
           );
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.history, color: Colors.white54, size: 48),
-                SizedBox(height: 16),
-                Text(
-                  'No hay pedidos en curso',
-                  style: TextStyle(color: Colors.white54),
-                ),
-              ],
-            ),
-          );
+          return _buildEmptyWidget('No hay pedidos en curso');
         }
 
-        print('Pedidos encontrados: ${snapshot.data!.docs.length}');
+        // Ordenar manualmente por fecha
+        final docs = snapshot.data!.docs;
+        docs.sort((a, b) {
+          final dataA = a.data() as Map<String, dynamic>;
+          final dataB = b.data() as Map<String, dynamic>;
+          
+          DateTime fechaA = DateTime.now();
+          DateTime fechaB = DateTime.now();
+          
+          try {
+            if (dataA['createdAt'] is Timestamp) {
+              fechaA = (dataA['createdAt'] as Timestamp).toDate();
+            }
+            if (dataB['createdAt'] is Timestamp) {
+              fechaB = (dataB['createdAt'] as Timestamp).toDate();
+            }
+          } catch (e) {
+            // Usar fecha actual si hay error
+          }
+          
+          return fechaB.compareTo(fechaA); // Más reciente primero
+        });
+
         return ListView.builder(
           padding: const EdgeInsets.only(top: 100),
-          itemCount: snapshot.data!.docs.length,
+          itemCount: docs.length,
           itemBuilder: (context, index) {
-            final pedido = snapshot.data!.docs[index];
-            print('Pedido ${index + 1}: ${pedido.data()}');
-            return _buildPedidoCard(pedido);
+            return _buildPedidoCard(docs[index]);
           },
         );
       },
@@ -143,98 +112,141 @@ class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
   }
 
   Widget _buildPedidosCompletados() {
-    final meseroId = _auth.currentUser?.uid;
-    print('Consultando pedidos completados para mesero: $meseroId');
-
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore
           .collection('pedido')
-          .where('meseroId', isEqualTo: meseroId)
-          .where('status', whereIn: ['terminado', 'cancelado'])
-          .orderBy('createdAt', descending: true)
+          .where('status', whereIn: ['terminado', 'cancelado', 'completado', 'entregado', 'pagado'])
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          print('Error en pedidos completados: ${snapshot.error}');
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                const SizedBox(height: 16),
-                Text(
-                  'Error al cargar los pedidos: ${snapshot.error}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => setState(() {}),
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
-          );
+          return _buildErrorWidget('Error al cargar pedidos completados', snapshot.error);
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(
-              color: Colors.white,
-            ),
+            child: CircularProgressIndicator(color: Colors.white),
           );
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.history, color: Colors.white54, size: 48),
-                SizedBox(height: 16),
-                Text(
-                  'No hay pedidos completados',
-                  style: TextStyle(color: Colors.white54),
-                ),
-              ],
-            ),
-          );
+          return _buildEmptyWidget('No hay pedidos completados');
         }
 
-        print('Pedidos completados encontrados: ${snapshot.data!.docs.length}');
+        // Ordenar manualmente por fecha
+        final docs = snapshot.data!.docs;
+        docs.sort((a, b) {
+          final dataA = a.data() as Map<String, dynamic>;
+          final dataB = b.data() as Map<String, dynamic>;
+          
+          DateTime fechaA = DateTime.now();
+          DateTime fechaB = DateTime.now();
+          
+          try {
+            if (dataA['createdAt'] is Timestamp) {
+              fechaA = (dataA['createdAt'] as Timestamp).toDate();
+            }
+            if (dataB['createdAt'] is Timestamp) {
+              fechaB = (dataB['createdAt'] as Timestamp).toDate();
+            }
+          } catch (e) {
+            // Usar fecha actual si hay error
+          }
+          
+          return fechaB.compareTo(fechaA); // Más reciente primero
+        });
+
         return ListView.builder(
           padding: const EdgeInsets.only(top: 100),
-          itemCount: snapshot.data!.docs.length,
+          itemCount: docs.length,
           itemBuilder: (context, index) {
-            final pedido = snapshot.data!.docs[index];
-            print('Pedido completado ${index + 1}: ${pedido.data()}');
-            return _buildPedidoCard(pedido);
+            return _buildPedidoCard(docs[index]);
           },
         );
       },
     );
   }
 
+  Widget _buildErrorWidget(String message, dynamic error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red, size: 48),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Error: $error',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.red, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => setState(() {}),
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyWidget(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.history, color: Colors.white54, size: 48),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: const TextStyle(color: Colors.white54),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPedidoCard(DocumentSnapshot pedido) {
     try {
       final data = pedido.data() as Map<String, dynamic>;
-      final fecha = (data['createdAt'] as Timestamp).toDate();
-      final items = data['items'] as List<dynamic>;
-      final total = data['total'] as int;
+      
+      // Manejo robusto de la fecha
+      DateTime fecha;
+      try {
+        if (data['createdAt'] is Timestamp) {
+          fecha = (data['createdAt'] as Timestamp).toDate();
+        } else if (data['createdAt'] is String) {
+          fecha = DateTime.parse(data['createdAt']);
+        } else {
+          fecha = DateTime.now();
+        }
+      } catch (e) {
+        fecha = DateTime.now();
+      }
+
+      final items = data['items'] as List<dynamic>? ?? [];
+      final total = data['total'] as int? ?? 0;
+      final status = data['status'] as String? ?? 'desconocido';
       
       return Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: Colors.white.withOpacity(0.1),
         child: ListTile(
           title: Text(
-            data['mode'] == 'mesa' ? 'Mesa ${data['tableNumber']}' : data['customerName'] ?? 'Cliente',
+            data['mode'] == 'mesa' 
+                ? 'Mesa ${data['tableNumber'] ?? 'N/A'}' 
+                : data['customerName'] ?? 'Cliente',
             style: const TextStyle(color: Colors.white),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Fecha: ${fecha.toString().split('.')[0]}',
+                'Fecha: ${fecha.day}/${fecha.month}/${fecha.year} ${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}',
                 style: TextStyle(color: Colors.white.withOpacity(0.7)),
               ),
               Text(
@@ -242,11 +254,15 @@ class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
                 style: TextStyle(color: Colors.white.withOpacity(0.7)),
               ),
               Text(
-                'Estado: ${data['status']}',
+                'Estado: $status',
                 style: TextStyle(
-                  color: _getStatusColor(data['status']),
+                  color: _getStatusColor(status),
                   fontWeight: FontWeight.bold,
                 ),
+              ),
+              Text(
+                'Items: ${items.length}',
+                style: TextStyle(color: Colors.white.withOpacity(0.7)),
               ),
             ],
           ),
@@ -255,7 +271,6 @@ class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
         ),
       );
     } catch (e) {
-      print('Error al construir tarjeta de pedido: $e');
       return Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: Colors.red.withOpacity(0.1),
@@ -274,12 +289,17 @@ class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
   }
 
   Color _getStatusColor(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'pendiente':
         return Colors.orange;
       case 'preparando':
+      case 'en_preparacion':
         return Colors.blue;
       case 'terminado':
+      case 'completado':
+      case 'entregado':
+        return Colors.green;
+      case 'pagado':
         return Colors.green;
       case 'cancelado':
         return Colors.red;
@@ -308,13 +328,13 @@ class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
             }
 
             if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: CircularProgressIndicator(color: Colors.white));
             }
 
             try {
               final data = snapshot.data!.data() as Map<String, dynamic>;
-              final items = data['items'] as List<dynamic>;
-              final total = data['total'] as int;
+              final items = data['items'] as List<dynamic>? ?? [];
+              final total = data['total'] as int? ?? 0;
 
               return SingleChildScrollView(
                 child: Column(
@@ -322,44 +342,91 @@ class _HistorialMeseroScreenState extends State<HistorialMeseroScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      data['mode'] == 'mesa' ? 'Mesa ${data['tableNumber']}' : 'Cliente: ${data['customerName']}',
-                      style: const TextStyle(color: Colors.white),
+                      data['mode'] == 'mesa' 
+                          ? 'Mesa ${data['tableNumber'] ?? 'N/A'}' 
+                          : 'Cliente: ${data['customerName'] ?? 'N/A'}',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Estado: ${data['status']}',
+                      'Estado: ${data['status'] ?? 'desconocido'}',
                       style: TextStyle(
-                        color: _getStatusColor(data['status']),
+                        color: _getStatusColor(data['status'] ?? ''),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 16),
                     const Text(
-                      'Items:',
-                      style: TextStyle(color: Colors.white),
+                      'Items del pedido:',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
-                    ...items.map((item) => Padding(
-                      padding: const EdgeInsets.only(left: 16),
-                      child: Text(
-                        '• ${item['name']} x${item['quantity']} - \$${(item['price'] / 100).toStringAsFixed(2)}',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    )),
                     const SizedBox(height: 8),
-                    Text(
-                      'Total: \$${(total / 100).toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    if (items.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 16),
+                        child: Text(
+                          'No hay items en este pedido',
+                          style: TextStyle(color: Colors.white54),
+                        ),
+                      )
+                    else
+                      ...items.map((item) => Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['name'] ?? 'Item sin nombre',
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    'Cantidad: ${item['quantity'] ?? 0}',
+                                    style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '\$${((item['price'] ?? 0) / 100).toStringAsFixed(2)}',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      )),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green),
+                      ),
+                      child: Text(
+                        'Total: \$${(total / 100).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ],
                 ),
               );
             } catch (e) {
-              print('Error al mostrar detalles: $e');
               return Text(
-                'Error al cargar detalles: $e',
+                'Error al cargar detalles del pedido',
                 style: const TextStyle(color: Colors.red),
               );
             }
