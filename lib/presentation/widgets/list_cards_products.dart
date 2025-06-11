@@ -41,73 +41,72 @@ class ListCardsProducts extends ConsumerWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
                 children: [
-                  Expanded(
-                    flex: 3,
-                    child: ClipRRect(
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: producto.photo != null &&
-                              producto.photo!.isNotEmpty
-                          ? Image.network(
-                              producto.photo!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                return SizedBox(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: ClipRRect(
+                          borderRadius:
+                              const BorderRadius.vertical(top: Radius.circular(12)),
+                          child: producto.photo != null &&
+                                  producto.photo!.isNotEmpty
+                              ? Image.network(
+                                  producto.photo!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.grey[200],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return SizedBox(
+                                      width: double.infinity,
+                                      child: Icon(
+                                        Icons.fastfood,
+                                        size: 60,
+                                        color: theme.primaryColor.withAlpha(230),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : SizedBox(
                                   width: double.infinity,
                                   child: Icon(
                                     Icons.fastfood,
                                     size: 60,
                                     color: theme.primaryColor.withAlpha(230),
                                   ),
-                                );
-                              },
-                            )
-                          : SizedBox(
-                              width: double.infinity,
-                              child: Icon(
-                                Icons.fastfood,
-                                size: 60,
-                                color: theme.primaryColor.withAlpha(230),
-                              ),
-                            ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              producto.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Row(
+                                ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              Flexible(
+                                child: Text(
+                                  producto.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                               Text(
                                 '\$${producto.price.toStringAsFixed(0)}',
                                 style: TextStyle(
@@ -116,32 +115,35 @@ class ListCardsProducts extends ConsumerWidget {
                                   fontSize: 16,
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: producto.disponible
-                                      ? Colors.green.withOpacity(0.1)
-                                      : Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  producto.disponible
-                                      ? 'Disponible'
-                                      : 'No disponible',
-                                  style: TextStyle(
-                                    color: producto.disponible
-                                        ? Colors.green
-                                        : Colors.red,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
-                        ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: producto.disponible
+                            ? Colors.green.withOpacity(0.9)
+                            : Colors.red.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        producto.disponible
+                            ? 'Disponible'
+                            : 'No disponible',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -161,3 +163,4 @@ class ListCardsProducts extends ConsumerWidget {
     );
   }
 }
+

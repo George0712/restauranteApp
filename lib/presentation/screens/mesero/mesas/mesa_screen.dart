@@ -649,7 +649,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
   void _agregarAlPedido(MesaModel mesa) {
     Navigator.pop(context);
     if (mesa.pedidoId != null) {
-      context.push('/mesero/pedidos/agregar-item/${mesa.pedidoId}');
+      context.push('/mesero/pedidos/detalle/${mesa.id}/${mesa.pedidoId}');
     }
   }
 
