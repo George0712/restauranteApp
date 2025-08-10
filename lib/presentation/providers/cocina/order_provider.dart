@@ -12,14 +12,12 @@ final ordersStreamProvider = StreamProvider<List<Order>>((ref) {
       .orderBy('createdAt', descending: false)
       .snapshots()
       .map((snapshot) {
-    print('Órdenes recibidas: ${snapshot.docs.length}'); // Debug
     return snapshot.docs.map((doc) {
       final data = doc.data();
-      print('Datos de orden: $data'); // Debug para ver la estructura
       return Order.fromJson({...data, 'id': doc.id});
     }).toList();
   }).handleError((error) {
-    print('Error en ordersStreamProvider: $error');
+    // Error handling
   });
 });
 
@@ -29,16 +27,13 @@ final pendingOrdersProvider = Provider<AsyncValue<List<Order>>>((ref) {
   
   return ordersAsync.when(
     data: (orders) {
-      print('Órdenes totales: ${orders.length}'); // Debug
       final pendingOrders = orders.where((order) => 
         order.status == 'pendiente' || order.status == 'preparando'
       ).toList();
-      print('Órdenes pendientes: ${pendingOrders.length}'); // Debug
       return AsyncValue.data(pendingOrders);
     },
     loading: () => const AsyncValue.loading(),
     error: (error, stack) {
-      print('Error en pendingOrdersProvider: $error');
       return AsyncValue.error(error, stack);
     },
   );
@@ -76,7 +71,6 @@ class OrdersNotifier extends StateNotifier<bool> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error al iniciar preparación: $e');
       rethrow;
     } finally {
       state = false;
@@ -93,7 +87,6 @@ class OrdersNotifier extends StateNotifier<bool> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error al terminar orden: $e');
       rethrow;
     } finally {
       state = false;
@@ -110,7 +103,6 @@ class OrdersNotifier extends StateNotifier<bool> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error al cancelar orden: $e');
       rethrow;
     } finally {
       state = false;
@@ -126,7 +118,6 @@ class OrdersNotifier extends StateNotifier<bool> {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error al reactivar orden: $e');
       rethrow;
     } finally {
       state = false;

@@ -41,7 +41,6 @@ class LoginController {
       return true;
     } on FirebaseAuthException catch (e) {
       // Puedes mostrar un snackbar u otra forma de feedback
-      debugPrint('Error en login: ${e.message}');
       ref.read(loadingProvider.notifier).state = false;
       return false;
     }

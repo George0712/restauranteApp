@@ -66,7 +66,7 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
         const Flexible(
           child: Text(
             '\$0',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20.0,
               fontWeight: FontWeight.bold,
               color: Colors.white,

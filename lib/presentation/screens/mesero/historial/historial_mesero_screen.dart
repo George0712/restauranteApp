@@ -428,9 +428,9 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 ),
               );
             } catch (e) {
-              return Text(
+              return const Text(
                 'Error al cargar detalles del pedido',
-                style: const TextStyle(color: Colors.red),
+                style: TextStyle(color: Colors.red),
               );
             }
           },

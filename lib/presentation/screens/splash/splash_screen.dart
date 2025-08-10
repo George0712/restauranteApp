@@ -35,7 +35,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 void _redirectByRole(BuildContext context, UserModel user) {
   switch (user.rol) {
     case 'admin':
-      print('Rol del usuario actual: ${user.rol}');
       context.go('/admin/home');
       break;
     case 'mesero':

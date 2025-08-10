@@ -117,10 +117,6 @@ class Order {
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
-    // Debug: Imprimir la estructura de datos
-    print('Order.fromJson recibido: $json');
-    print('Items en JSON: ${json['items']}');
-    
     List<OrderItem> parsedItems = [];
     
     // Maneja diferentes estructuras de items
@@ -147,8 +143,6 @@ class Order {
       }
     }
 
-    print('Items parseados: ${parsedItems.length}');
-    
     return Order(
       id: json['id'],
       mode: json['mode'] ?? json['tipo'] ?? 'mesa',

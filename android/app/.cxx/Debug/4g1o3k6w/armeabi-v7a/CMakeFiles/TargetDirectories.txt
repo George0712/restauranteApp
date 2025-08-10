@@ -1,0 +1,2 @@
+C:/Users/User/OneDrive/Documentos/MyWorkspace/restaurante/restaurante_app/android/app/.cxx/Debug/4g1o3k6w/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/User/OneDrive/Documentos/MyWorkspace/restaurante/restaurante_app/android/app/.cxx/Debug/4g1o3k6w/armeabi-v7a/CMakeFiles/rebuild_cache.dir
