@@ -39,7 +39,7 @@ class LoginController {
 
       ref.read(loadingProvider.notifier).state = false;
       return true;
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException {
       // Puedes mostrar un snackbar u otra forma de feedback
       ref.read(loadingProvider.notifier).state = false;
       return false;

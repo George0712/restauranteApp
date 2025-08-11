@@ -39,17 +39,22 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
         duration: const Duration(milliseconds: 150),
         child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [
-              const Color(0xFF1F2937),
-              const Color(0xFF374151).withOpacity(0.8),
+              Color(0xFF1F2937),
+              Color.fromRGBO(55, 65, 81, 0.8),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: widget.color.withOpacity(0.3),
+            color: Color.fromRGBO(
+              widget.color.red,
+              widget.color.green,
+              widget.color.blue,
+              0.3,
+            ),
             width: 1,
           ),
         ),
@@ -63,7 +68,12 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: widget.color.withOpacity(0.1),
+                  color: Color.fromRGBO(
+                    widget.color.red,
+                    widget.color.green,
+                    widget.color.blue,
+                    0.1,
+                  ),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -79,7 +89,12 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                         widget.color.withOpacity(0.8),
+                         Color.fromRGBO(
+                           widget.color.red,
+                           widget.color.green,
+                           widget.color.blue,
+                           0.8,
+                         ),
                           widget.color,
                         ],
                         begin: Alignment.topLeft,
@@ -88,7 +103,12 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: widget.color.withOpacity(0.3),
+                          color: Color.fromRGBO(
+                            widget.color.red,
+                            widget.color.green,
+                            widget.color.blue,
+                            0.3,
+                          ),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),

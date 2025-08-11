@@ -21,8 +21,8 @@ Widget quickStatItem(String title, String value, IconData icon) {
         const SizedBox(height: 2),
         Text(
           title,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+          style: const TextStyle(
+            color: Color.fromRGBO(255, 255, 255, 0.7),
             fontSize: 12,
           ),
         ),

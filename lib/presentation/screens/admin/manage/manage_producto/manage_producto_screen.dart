@@ -126,7 +126,7 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
+                              color: const Color.fromRGBO(0, 0, 0, 0.6),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Center(
@@ -182,7 +182,7 @@ class DiagonalStripePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.red.withOpacity(0.8)
+      ..color = const Color.fromRGBO(244, 67, 54, 0.8)
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
 

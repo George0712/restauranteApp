@@ -43,18 +43,23 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                   context.push('/admin/settings');
                 },
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      )
+                      color: Color.fromRGBO(0, 0, 0, 0.2),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    )
                     ],
                   ),
                   child: CircleAvatar(
-                    backgroundColor: theme.primaryColor.withOpacity(0.8),
+                    backgroundColor: Color.fromRGBO(
+                      theme.primaryColor.red,
+                      theme.primaryColor.green,
+                      theme.primaryColor.blue,
+                      0.8,
+                    ),
                     child: const Icon(
                       Icons.person,
                       size: 28,
@@ -145,10 +150,10 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                             fontSize: isTablet ? 36 : 30,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            shadows: [
+                            shadows: const [
                               Shadow(
-                                color: Colors.black.withOpacity(0.5),
-                                offset: const Offset(1, 1),
+                                color:Color.fromRGBO(0, 0, 0, 0.5),
+                                offset: Offset(1, 1),
                                 blurRadius: 3,
                               ),
                             ],
@@ -159,7 +164,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                           '¿Qué te gustaría hacer hoy?',
                           style: TextStyle(
                             fontSize: isTablet ? 18 : 16,
-                            color: Colors.white.withOpacity(0.9),
+                            color: const Color.fromRGBO(255, 255, 255, 0.9),
                             fontWeight: FontWeight.w300,
                           ),
                         ),
@@ -178,14 +183,14 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                           vertical: 15, horizontal: 20),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        color: Colors.white.withOpacity(0.15),
+                        color: const Color.fromRGBO(255, 255, 255, 0.15),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                          color: const Color.fromRGBO(255, 255, 255, 0.2),
                           width: 1,
                         ),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Color.fromRGBO(0, 0, 0, 0.2),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),
@@ -301,15 +306,15 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                   if (!isTablet)
                     Container(
                       height: 70,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: const BorderRadius.only(
+                      decoration: const BoxDecoration(
+                        color: Color.fromRGBO(0, 0, 0, 0.7),
+                        borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Color.fromRGBO(0, 0, 0, 0.3),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),

@@ -70,12 +70,17 @@ class EnhancedOptionCardState extends ConsumerState<EnhancedOptionCard> with Sin
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: Colors.white.withOpacity(_isPressed ? 0.3 : 0.2),
+                  color: Color.fromRGBO(255, 255, 255, _isPressed ? 0.3 : 0.2),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: widget.color.withOpacity(_isPressed ? 0.2 : 0.3),
+                    color: Color.fromRGBO(
+                      widget.color.red,
+                      widget.color.green,
+                      widget.color.blue,
+                      _isPressed ? 0.2 : 0.3,
+                    ),
                     blurRadius: _isPressed ? 4 : 6,
                     spreadRadius: 0,
                     offset: Offset(0, _isPressed ? 2 : 3),
@@ -85,8 +90,23 @@ class EnhancedOptionCardState extends ConsumerState<EnhancedOptionCard> with Sin
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    _isPressed ? widget.color.withOpacity(0.8) : widget.color,
-                    _isPressed ? widget.color.withOpacity(0.6) : widget.color.withOpacity(0.8),
+                    _isPressed ? Color.fromRGBO(
+                      widget.color.red,
+                      widget.color.green,
+                      widget.color.blue,
+                      0.8,
+                    ) : widget.color,
+                    _isPressed ? Color.fromRGBO(
+                      widget.color.red,
+                      widget.color.green,
+                      widget.color.blue,
+                      0.6,
+                    ) : Color.fromRGBO(
+                      widget.color.red,
+                      widget.color.green,
+                      widget.color.blue,
+                      0.8,
+                    ),
                   ],
                 ),
               ),
@@ -101,7 +121,7 @@ class EnhancedOptionCardState extends ConsumerState<EnhancedOptionCard> with Sin
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(_isPressed ? 0.08 : 0.1),
+                        color: Color.fromRGBO(255, 255, 255, _isPressed ? 0.08 : 0.1),
                       ),
                     ),
                   ),
@@ -113,7 +133,7 @@ class EnhancedOptionCardState extends ConsumerState<EnhancedOptionCard> with Sin
                       height: 70,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(_isPressed ? 0.03 : 0.05),
+                        color: Color.fromRGBO(255, 255, 255, _isPressed ? 0.03 : 0.05),
                       ),
                     ),
                   ),
@@ -136,9 +156,9 @@ class EnhancedOptionCardState extends ConsumerState<EnhancedOptionCard> with Sin
                         const SizedBox(height: 4),
                         Text(
                           widget.description,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
-                            color: Colors.white.withOpacity(0.8),
+                            color: Color.fromRGBO(255, 255, 255, 0.8),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

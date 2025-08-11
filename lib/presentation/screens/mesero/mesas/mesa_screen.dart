@@ -91,11 +91,11 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.07),
+            color: Color.fromRGBO(0, 0, 0, 0.07),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -150,7 +150,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
                 ),
                 boxShadow: isSelected ? [
                   BoxShadow(
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    color: Color.fromRGBO(
+                      Theme.of(context).primaryColor.red,
+                      Theme.of(context).primaryColor.green,
+                      Theme.of(context).primaryColor.blue,
+                      0.3,
+                    ),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -243,10 +248,20 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: colorEstado.withOpacity(0.1),
+          color: Color.fromRGBO(
+            colorEstado.red,
+            colorEstado.green,
+            colorEstado.blue,
+            0.1,
+          ),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? Theme.of(context).primaryColor : colorEstado.withOpacity(0.3),
+            color: isSelected ? Theme.of(context).primaryColor : Color.fromRGBO(
+              colorEstado.red,
+              colorEstado.green,
+              colorEstado.blue,
+              0.3,
+            ),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -263,7 +278,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen> with TickerProviderSt
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorEstado.withOpacity(0.2),
+                color: Color.fromRGBO(
+                  colorEstado.red,
+                  colorEstado.green,
+                  colorEstado.blue,
+                  0.2,
+                ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),

@@ -205,8 +205,13 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                     boxShadow: [
                       BoxShadow(
                         color: isSelected 
-                            ? Theme.of(context).primaryColor.withOpacity(0.3)
-                            : Colors.black.withOpacity(0.05),
+                            ? Color.fromRGBO(
+                                Theme.of(context).primaryColor.red,
+                                Theme.of(context).primaryColor.green,
+                                Theme.of(context).primaryColor.blue,
+                                0.3,
+                              )
+                            : const Color.fromRGBO(0, 0, 0, 0.05),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -289,11 +294,11 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Color.fromRGBO(0, 0, 0, 0.08),
               blurRadius: 8,
-              offset: const Offset(0, 2),
+              offset: Offset(0, 2),
             ),
           ],
         ),
@@ -355,9 +360,9 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                       ),
                     if (!producto.disponible)
                       Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          borderRadius: const BorderRadius.only(
+                        decoration: const BoxDecoration(
+                          color: Color.fromRGBO(0, 0, 0, 0.6),
+                          borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(16),
                             topRight: Radius.circular(16),
                           ),
@@ -449,13 +454,13 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Color.fromRGBO(0, 0, 0, 0.1),
             blurRadius: 8,
-            offset: const Offset(0, -2),
+            offset: Offset(0, -2),
           ),
         ],
       ),

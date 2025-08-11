@@ -82,7 +82,7 @@ class SettingsUserScreen extends ConsumerWidget {
                   user.rol,
                   style: const TextStyle(color: Colors.white),
                 ),
-                backgroundColor: Colors.deepPurple.withOpacity(0.4),
+                backgroundColor: const Color.fromRGBO(103, 58, 183, 0.4),
               ),
               const Divider(height: 32, color: Colors.white24),
 
@@ -139,7 +139,7 @@ class SettingsUserScreen extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
+          color: const Color.fromRGBO(255, 255, 255, 0.07),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

@@ -9,7 +9,12 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
       color: const Color(0xFF0D1117),
       borderRadius: BorderRadius.circular(16),
       border: Border.all(
-        color: color.withOpacity(0.3),
+        color: Color.fromRGBO(
+          color.red,
+          color.green,
+          color.blue,
+          0.3,
+        ),
         width: 1,
       ),
     ),
@@ -26,7 +31,12 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    color.withOpacity(0.8),
+                    Color.fromRGBO(
+                      color.red,
+                      color.green,
+                      color.blue,
+                      0.8,
+                    ),
                     color,
                   ],
                   begin: Alignment.topLeft,
@@ -35,7 +45,12 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.4),
+                    color: Color.fromRGBO(
+                      color.red,
+                      color.green,
+                      color.blue,
+                      0.4,
+                    ),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),

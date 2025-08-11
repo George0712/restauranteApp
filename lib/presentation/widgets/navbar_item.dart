@@ -18,7 +18,7 @@ Widget navbarItem(IconData icon, bool isActive, BuildContext context) {
         icon,
         color: isActive
             ? Theme.of(context).secondaryHeaderColor
-            : Colors.white.withOpacity(0.6),
+            : const Color.fromRGBO(255, 255, 255, 0.6),
         size: 28,
       ),
     ),

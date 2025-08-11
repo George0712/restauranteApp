@@ -44,18 +44,23 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                   context.push('/admin/settings');
                 },
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      )
+                      color: Color.fromRGBO(0, 0, 0, 0.2),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    )
                     ],
                   ),
                   child: CircleAvatar(
-                    backgroundColor: theme.primaryColor.withOpacity(0.8),
+                    backgroundColor: Color.fromRGBO(
+                      theme.primaryColor.red,
+                      theme.primaryColor.green,
+                      theme.primaryColor.blue,
+                      0.8,
+                    ),
                     child: const Icon(
                       Icons.person,
                       size: 28,

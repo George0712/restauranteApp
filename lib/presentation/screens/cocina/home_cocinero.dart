@@ -43,18 +43,23 @@ class HomeCocineroScreen extends ConsumerWidget {
                 context.push('/admin/settings');
               },
               child: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color:Color.fromRGBO(0, 0, 0, 0.2),
                       blurRadius: 8,
                       spreadRadius: 2,
                     )
                   ],
                 ),
                 child: CircleAvatar(
-                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.8),
+                  backgroundColor: Color.fromRGBO(
+                    Theme.of(context).primaryColor.red,
+                    Theme.of(context).primaryColor.green,
+                    Theme.of(context).primaryColor.blue,
+                    0.8,
+                  ),
                   child: const Icon(
                     Icons.person,
                     size: 28,
@@ -381,7 +386,12 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 80, color: color.withOpacity(0.5)),
+          Icon(icon, size: 80, color: Color.fromRGBO(
+            color.red,
+            color.green,
+            color.blue,
+            0.5,
+          )),
           const SizedBox(height: 16),
           Text(
             title,

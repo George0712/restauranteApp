@@ -131,8 +131,8 @@ class ListCardsProducts extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: producto.disponible
-                            ? Colors.green.withOpacity(0.9)
-                            : Colors.red.withOpacity(0.9),
+                            ? const Color.fromRGBO(76, 175, 80, 0.9)
+                            : const Color.fromRGBO(244, 67, 54, 0.9),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

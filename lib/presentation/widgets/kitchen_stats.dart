@@ -15,11 +15,11 @@ class KitchenStats extends ConsumerWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF3D3D3D),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Color.fromRGBO(0, 0, 0, 0.2),
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -65,7 +65,12 @@ class KitchenStats extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: Color.fromRGBO(
+                color.red,
+                color.green,
+                color.blue,
+                0.2,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(

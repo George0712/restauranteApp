@@ -237,7 +237,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
       
       return Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        color: Colors.white.withOpacity(0.1),
+        color: const Color.fromRGBO(255, 255, 255, 0.1),
         child: ListTile(
           title: Text(
             data['mode'] == 'mesa' 
@@ -250,11 +250,11 @@ class _HistorialScreenState extends State<HistorialScreen> {
             children: [
               Text(
                 'Fecha: ${fecha.day}/${fecha.month}/${fecha.year} ${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}',
-                style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                style: const TextStyle(color:Color.fromRGBO(255, 255, 255, 0.7)),
               ),
               Text(
                 'Total: ${_monedaCOP.format(total)}',
-                style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                style: const TextStyle(color: Color.fromRGBO(255, 255, 255, 0.7)),
               ),
               Text(
                 'Estado: $status',
@@ -265,7 +265,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
               ),
               Text(
                 'Items: ${items.length}',
-                style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                style: const TextStyle(color: Color.fromRGBO(255, 255, 255, 0.7)),
               ),
             ],
           ),
@@ -276,7 +276,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
     } catch (e) {
       return Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        color: Colors.red.withOpacity(0.1),
+        color: const Color.fromRGBO(244, 67, 54, 0.1),
         child: ListTile(
           title: const Text(
             'Error al cargar pedido',
@@ -377,7 +377,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: const Color.fromRGBO(255, 255, 255, 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -393,7 +393,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                                   ),
                                   Text(
                                     'Cantidad: ${item['quantity'] ?? 0}',
-                                    style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                                    style: const TextStyle(color: Color.fromRGBO(255, 255, 255, 0.7)),
                                   ),
                                 ],
                               ),
@@ -410,7 +410,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.2),
+                        color: const Color.fromRGBO(76, 175, 80, 0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.green),
                       ),
