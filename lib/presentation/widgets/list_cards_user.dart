@@ -42,7 +42,14 @@ class ListCardsUsers extends ConsumerWidget {
               onTap: () => _showUserOptions(context, usuario),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white,
+                      Colors.white.withOpacity(0.6),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -93,8 +100,7 @@ class ListCardsUsers extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) =>
-          Text('Error al cargar usuarios: $error'),
+      error: (error, stackTrace) => Text('Error al cargar usuarios: $error'),
     );
   }
 

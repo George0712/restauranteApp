@@ -88,7 +88,7 @@ class ListCardsProducts extends ConsumerWidget {
                       gradient: LinearGradient(
                         colors: [
                           Colors.white,
-                          Colors.grey.shade50,
+                          Colors.white.withOpacity(0.6),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,

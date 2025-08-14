@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ion.dart';
-import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 import 'package:restaurante_app/presentation/widgets/enhanced_option_card.dart';
 import 'package:restaurante_app/presentation/widgets/navbar_item.dart';
@@ -243,15 +242,8 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                           _buildEnhancedOptionCard(
                             icon: const Iconify(Ion.fast_food, size: 50),
                             text: 'Para llevar',
-                            description: 'Pedidos para recoger',
+                            description: 'Para recoger y domicilios',
                             color: const Color(0xFF00897B),
-                            onTap: () {},
-                          ),
-                          _buildEnhancedOptionCard(
-                            icon: const Iconify(Mdi.delivery_dining, size: 50),
-                            text: 'Domicilios',
-                            description: 'Entregas a domicilio',
-                            color: const Color(0xFF5D4037),
                             onTap: () {},
                           ),
                           _buildEnhancedOptionCard(

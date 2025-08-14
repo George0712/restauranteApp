@@ -17,7 +17,6 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final usersAsync = ref.watch(usersProvider(rol));
     final registerUserController = ref.watch(registerUserControllerProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;

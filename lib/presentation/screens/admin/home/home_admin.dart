@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/bi.dart';
-import 'package:iconify_flutter/icons/ci.dart';
+import 'package:iconify_flutter/icons/ic.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 
 import 'package:restaurante_app/core/constants/app_strings.dart';
@@ -209,10 +209,10 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                       onTap: () => context.push('/admin/manage/cocinero'),
                     ),
                     OptionButtonCard(
-                      icon: const Iconify(Ci.settings, size: 32),
-                      text: AppStrings.settingsTitle,
+                      icon: const Iconify(Ic.outline_table_restaurant, size: 32),
+                      text: 'Mesas',
                       color: const Color(0xFFF59E0B),
-                      onTap: () => context.push('/admin/settings'),
+                      onTap: () => context.push('/admin/manage/mesas'),
                     ),
                   ],
                 ),

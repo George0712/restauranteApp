@@ -10,7 +10,6 @@ class ListCardsAdditionals extends ConsumerStatefulWidget {
 }
 
 class _State extends ConsumerState<ListCardsAdditionals> {
-
   @override
   Widget build(BuildContext context) {
     final additionalsAsync = ref.watch(additionalProvider);
@@ -37,7 +36,14 @@ class _State extends ConsumerState<ListCardsAdditionals> {
 
             return Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white,
+                    Colors.white.withOpacity(0.6),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(

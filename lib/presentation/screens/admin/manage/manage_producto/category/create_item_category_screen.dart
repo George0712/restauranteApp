@@ -58,7 +58,7 @@ class _CreateItemCategoryScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_outlined,
-              color: Colors.black54),
+              color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
@@ -179,7 +179,9 @@ class _CreateItemCategoryScreenState
                                         },
                                         activeColor: Colors.green,
                                       ),
-                                      const Text('Sí', style: TextStyle(color: Colors.white) ),
+                                      const Text('Sí',
+                                          style:
+                                              TextStyle(color: Colors.white)),
                                     ],
                                   ),
                                   const SizedBox(width: 16),
@@ -195,7 +197,9 @@ class _CreateItemCategoryScreenState
                                         },
                                         activeColor: Colors.red,
                                       ),
-                                      const Text('No', style: TextStyle(color: Colors.white) ),
+                                      const Text('No',
+                                          style:
+                                              TextStyle(color: Colors.white)),
                                     ],
                                   ),
                                 ],
@@ -256,9 +260,10 @@ class _CreateItemCategoryScreenState
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B5CF6),
-                      disabledBackgroundColor: const Color(0xFF8B5CF6).withAlpha(100),
-                    ),
+                        backgroundColor: const Color(0xFF8B5CF6),
+                        disabledBackgroundColor:
+                            const Color(0xFF8B5CF6).withAlpha(100),
+                      ),
                       child: const Text(
                         'Agregar',
                         style: TextStyle(color: Colors.white),
