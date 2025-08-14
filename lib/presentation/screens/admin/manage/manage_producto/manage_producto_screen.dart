@@ -72,10 +72,11 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                     color: Colors.white70,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 24),
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
                   crossAxisCount: isTablet ? 4 : 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
@@ -106,64 +107,13 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                       },
                     ),
                     // Botón de combos deshabilitado
-                    Stack(
-                      children: [
-                        OptionButtonCard(
-                          icon: const Iconify(Ion.fast_food, size: 40),
-                          text: AppStrings.combosTitle,
-                          color: Colors.grey.shade600, // Color gris para indicar deshabilitado
-                          onTap: () {
-                            // No hace nada o muestra un mensaje
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Esta función no está disponible'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                        ),
-                        // Overlay con candado y listón
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color.fromRGBO(0, 0, 0, 0.6),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.lock,
-                                    color: Colors.white70,
-                                    size: 24,
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Próximamente',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Listón diagonal (opcional)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: CustomPaint(
-                              painter: DiagonalStripePainter(),
-                            ),
-                          ),
-                        ),
-                      ],
+                    OptionButtonCard(
+                      icon: const Iconify(Ion.fast_food, size: 40),
+                      text: AppStrings.combosTitle,
+                      color: const Color(0xFFF59E0B),
+                      onTap: () {
+                        context.push('/admin/manage/producto/manage-combos');
+                      },
                     ),
                   ],
                 ),

@@ -60,21 +60,34 @@ class _CreateItemProductoScreenState
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: theme.primaryColor,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_outlined,
-              color: Colors.black54),
+              color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
-      body: Align(
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F0F23),
+              Color(0xFF1A1A2E),
+              Color(0xFF16213E),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Align(
         alignment: Alignment.topCenter,
         child: SingleChildScrollView(
           padding: isTablet
-              ? const EdgeInsets.symmetric(vertical: 40, horizontal: 80)
-              : const EdgeInsets.all(16),
+                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
+                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -83,12 +96,13 @@ class _CreateItemProductoScreenState
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 AppStrings.createNewProductDescription,
-                style: TextStyle(fontSize: 16, color: theme.primaryColor),
+                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
               const SizedBox(height: 24),
 
@@ -98,7 +112,7 @@ class _CreateItemProductoScreenState
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: theme.primaryColor.withAlpha(50),
+                      backgroundColor: Colors.white.withAlpha(40),
                       backgroundImage:
                           profileImage != null ? FileImage(profileImage) : null,
                       child: profileImage == null
@@ -223,6 +237,7 @@ class _CreateItemProductoScreenState
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w400,
+                              color: Colors.white,
                             ),
                           ),
                           Expanded(
@@ -238,8 +253,9 @@ class _CreateItemProductoScreenState
                                           isAvailable = value;
                                         });
                                       },
+                                      activeColor: Colors.green,
                                     ),
-                                    const Text('Sí'),
+                                    const Text('Sí', style: TextStyle(color: Colors.white)),
                                   ],
                                 ),
                                 const SizedBox(width: 16),
@@ -253,8 +269,9 @@ class _CreateItemProductoScreenState
                                           isAvailable = value;
                                         });
                                       },
+                                      activeColor: Colors.red,
                                     ),
-                                    const Text('No'),
+                                    const Text('No', style: TextStyle(color: Colors.white)),
                                   ],
                                 ),
                               ],
@@ -279,11 +296,11 @@ class _CreateItemProductoScreenState
                     },
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.transparent,
-                      side: BorderSide(color: theme.primaryColor),
+                      side: const BorderSide(color: Colors.white),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Cancelar',
-                      style: TextStyle(color: theme.primaryColor),
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -313,7 +330,8 @@ class _CreateItemProductoScreenState
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      disabledBackgroundColor: const Color(0xFF8B5CF6).withAlpha(100),
                     ),
                     child: const Text(
                       'Agregar',
@@ -323,6 +341,7 @@ class _CreateItemProductoScreenState
                 ],
               ),
             ],
+            ),
           ),
         ),
       ),

@@ -53,8 +53,8 @@ class _CreateItemCategoryScreenState
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: theme.primaryColor,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_outlined,
@@ -62,192 +62,212 @@ class _CreateItemCategoryScreenState
           onPressed: () => context.pop(),
         ),
       ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: SingleChildScrollView(
-          padding: isTablet
-                    ? const EdgeInsets.symmetric(vertical: 40, horizontal: 80)
-                    : const EdgeInsets.all(16), 
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                AppStrings.registerCategory,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F0F23),
+              Color(0xFF1A1A2E),
+              Color(0xFF16213E),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: SingleChildScrollView(
+            padding: isTablet
+                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
+                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  AppStrings.registerCategory,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppStrings.registerCategoryDescription,
-                style: TextStyle(fontSize: 16, color: theme.primaryColor),
-              ),
-              const SizedBox(height: 24),
-          
-              // Foto de perfil (opcional)
-              Center(
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: theme.primaryColor.withAlpha(50),
-                      backgroundImage: profileImage != null
-                          ? FileImage(profileImage)
-                          : null,
-                      child: profileImage == null
-                          ? Icon(Icons.category,
-                              size: 50,
-                              color: theme.primaryColor.withAlpha(200))
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: theme.primaryColor,
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt,
-                              size: 18, color: Colors.white),
-                          onPressed: () async {
-                            await imageNotifier.pickImage();
-                          },
+                const SizedBox(height: 8),
+                const Text(
+                  AppStrings.registerCategoryDescription,
+                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                ),
+                const SizedBox(height: 24),
+
+                // Foto de perfil (opcional)
+                Center(
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.white.withAlpha(40),
+                        backgroundImage: profileImage != null
+                            ? FileImage(profileImage)
+                            : null,
+                        child: profileImage == null
+                            ? Icon(Icons.category,
+                                size: 50,
+                                color: theme.primaryColor.withAlpha(200))
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: theme.primaryColor,
+                          child: IconButton(
+                            icon: const Icon(Icons.camera_alt,
+                                size: 18, color: Colors.white),
+                            onPressed: () async {
+                              await imageNotifier.pickImage();
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-          
-              // Inputs de texto
-              Form(
-                key: _formKey,
-                child: Column(
+                const SizedBox(height: 24),
+
+                // Inputs de texto
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      CustomInputField(
+                          hintText: AppStrings.name,
+                          controller:
+                              registerCategoryController.nombreController,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Por favor ingrese un nombre'
+                              : AppConstants.nameRegex.hasMatch(value)
+                                  ? null
+                                  : 'El nombre no es válido'),
+                      const SizedBox(height: 12),
+                      // Checkbox de disponibilidad
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Disponible:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Radio<bool>(
+                                        value: true,
+                                        groupValue: isAvailable,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isAvailable = value;
+                                          });
+                                        },
+                                        activeColor: Colors.green,
+                                      ),
+                                      const Text('Sí', style: TextStyle(color: Colors.white) ),
+                                    ],
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Row(
+                                    children: [
+                                      Radio<bool>(
+                                        value: false,
+                                        groupValue: isAvailable,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isAvailable = value;
+                                          });
+                                        },
+                                        activeColor: Colors.red,
+                                      ),
+                                      const Text('No', style: TextStyle(color: Colors.white) ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Botones
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    CustomInputField(
-                        hintText: AppStrings.name,
-                        controller:
-                            registerCategoryController.nombreController,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Por favor ingrese un nombre'
-                            : AppConstants.nameRegex.hasMatch(value)
-                                ? null
-                                : 'El nombre no es válido'),
-                    const SizedBox(height: 12),
-                    // Checkbox de disponibilidad
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Disponible:',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Row(
-                                  children: [
-                                    Radio<bool>(
-                                      value: true,
-                                      groupValue: isAvailable,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isAvailable = value;
-                                        });
-                                      },
-                                    ),
-                                    const Text('Sí'),
-                                  ],
-                                ),
-                                const SizedBox(width: 16),
-                                Row(
-                                  children: [
-                                    Radio<bool>(
-                                      value: false,
-                                      groupValue: isAvailable,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isAvailable = value;
-                                        });
-                                      },
-                                    ),
-                                    const Text('No'),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    OutlinedButton(
+                      onPressed: () {
+                        registerCategoryController.nombreController.clear();
+                        context.pop();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        side: const BorderSide(color: Colors.white),
+                      ),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: areFieldsValid &&
+                              (_formKey.currentState?.validate() ?? false)
+                          ? () async {
+                              final result = await registerCategoryController
+                                  .registrarCategoria(
+                                ref,
+                                nombre: registerCategoryController
+                                    .nombreController.text,
+                                disponible: isAvailable!,
+                                foto: profileImage?.path ?? '',
+                              );
+
+                              if (result == null) {
+                                // Registro exitoso
+                                SnackbarHelper.showSnackBar(
+                                    'Categoría Agregada');
+                                context.pop();
+                                context.push(
+                                    '/admin/manage/producto/manage-categorys');
+                              } else {
+                                SnackbarHelper.showSnackBar(
+                                    'Error al registrar categoría');
+                              }
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      disabledBackgroundColor: const Color(0xFF8B5CF6).withAlpha(100),
+                    ),
+                      child: const Text(
+                        'Agregar',
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
                 ),
-              ),
-          
-              const SizedBox(height: 32),
-          
-              // Botones
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      registerCategoryController.nombreController.clear();
-                      context.pop();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      side: BorderSide(color: theme.primaryColor),
-                    ),
-                    child: Text(
-                      'Cancelar',
-                      style: TextStyle(color: theme.primaryColor),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: areFieldsValid &&
-                            (_formKey.currentState?.validate() ?? false)
-                        ? () async {
-                            final result = await registerCategoryController
-                                .registrarCategoria(
-                              ref,
-                              nombre: registerCategoryController
-                                  .nombreController.text,
-                              disponible: isAvailable!,
-                              foto: profileImage?.path ?? '',
-                            );
-          
-                            if (result == null) {
-                              // Registro exitoso
-                              SnackbarHelper.showSnackBar('Categoría Agregada');
-                              context.pop();
-                              context.push(
-                                  '/admin/manage/producto/manage-categorys');
-                            } else {
-                              SnackbarHelper.showSnackBar(
-                                  'Error al registrar categoría');
-                            }
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
-                    ),
-                    child: const Text(
-                      'Agregar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
