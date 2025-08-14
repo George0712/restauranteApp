@@ -135,7 +135,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: isTablet ? 4 : 2,
-                  childAspectRatio: isTablet ? 1.2 : 1.5,
+                  childAspectRatio: isTablet ? 1.2 : 1.6,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   children: [

@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_cocinero_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_credentials_cocinero.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/manage_cocinero_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/mesa/create_mesa_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesa/manage_mesa_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/historial/historial_mesero_screen.dart';
 
@@ -38,7 +39,9 @@ final GoRouter router = GoRouter(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
     ),
-    GoRoute(path: '/splash-screen',
+
+    GoRoute(
+      path: '/splash-screen',
       builder: (context, state) => const SplashScreen(),
     ),
 
@@ -55,70 +58,100 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const HomeCocineroScreen(),
     ),
 
-    GoRoute(path: '/admin/manage/mesero',
+    GoRoute(
+      path: '/admin/manage/mesero',
       builder: (context, state) => const ManageMeseroScreen(),
     ),
-    GoRoute(path: '/admin/manage/cocinero',
+    GoRoute(
+      path: '/admin/manage/cocinero',
       builder: (context, state) => const ManageCocineroScreen(),
     ),
-    GoRoute(path: '/admin/manage/mesas',
+    GoRoute(
+      path: '/admin/manage/mesas',
       builder: (context, state) => const AdminMesasScreen(),
     ),
-    
-    GoRoute(path: '/admin/manage/mesero/create-mesero',
+
+    GoRoute(
+      path: '/admin/manage/mesero/create-mesero',
       builder: (context, state) => const CreateMeseroScreen(),
     ),
-    GoRoute(path: '/admin/manage/cocinero/create-cocinero',
+    GoRoute(
+      path: '/admin/manage/cocinero/create-cocinero',
       builder: (context, state) => const CreateCocineroScreen(),
     ),
-    GoRoute(path: '/admin/manage/manage-productos',
+    GoRoute(
+      path: '/admin/manage/mesa/create-mesa',
+      builder: (context, state) => const CreateMesaScreen(),
+    ),
+
+    GoRoute(
+      path: '/admin/manage/manage-productos',
       builder: (context, state) => const ManageProductoScreen(),
     ),
-    GoRoute(path: '/admin/manage/producto/manage-categorys',
+    GoRoute(
+      path: '/admin/manage/producto/manage-categorys',
       builder: (context, state) => const ManageCategoryScreen(),
     ),
-    GoRoute(path: '/admin/manage/producto/manage-additionals',
+    GoRoute(
+      path: '/admin/manage/producto/manage-additionals',
       builder: (context, state) => const ManageAdditionalScreen(),
     ),
-    GoRoute(path: '/admin/manage/producto/manage-combos',
+    GoRoute(
+      path: '/admin/manage/producto/manage-combos',
       builder: (context, state) => const ManageComboScreen(),
     ),
-    GoRoute(path: '/admin/settings',
+
+    GoRoute(
+      path: '/admin/settings',
       builder: (context, state) => const SettingsUserScreen(),
     ),
 
-    GoRoute(path: '/admin/manage/mesero/create-credentials',
+    GoRoute(
+      path: '/admin/manage/mesero/create-credentials',
       builder: (context, state) => const CreateCredentialsMesero(),
     ),
-    GoRoute(path: '/admin/manage/cocinero/create-credentials',
+    GoRoute(
+      path: '/admin/manage/cocinero/create-credentials',
       builder: (context, state) => const CreateCredentialsCocinero(),
     ),
-    GoRoute(path: '/admin/manage/producto/productos',
-    builder: (context, state) => const CreateProductoScreen(),
+
+    GoRoute(
+      path: '/admin/manage/producto/productos',
+      builder: (context, state) => const CreateProductoScreen(),
     ),
-    GoRoute(path: '/admin/manage/producto/create-item-productos',
-    builder: (context, state) => const CreateItemProductoScreen(),
+
+    GoRoute(
+      path: '/admin/manage/producto/create-item-productos',
+      builder: (context, state) => const CreateItemProductoScreen(),
     ),
-    GoRoute(path: '/admin/manage/category/create-item-categorys',
-    builder: (context, state) => const CreateItemCategoryScreen(),
+    GoRoute(
+      path: '/admin/manage/category/create-item-categorys',
+      builder: (context, state) => const CreateItemCategoryScreen(),
     ),
-    GoRoute(path: '/admin/manage/additional/create-item-Additionals',
-    builder: (context, state) => const CreateItemAdditionalScreen(),
+    GoRoute(
+      path: '/admin/manage/additional/create-item-Additionals',
+      builder: (context, state) => const CreateItemAdditionalScreen(),
     ),
-    GoRoute(path: '/admin/manage/combo/create-item-Combos',
-    builder: (context, state) => const CreateItemComboScreen(),
+    GoRoute(
+      path: '/admin/manage/combo/create-item-Combos',
+      builder: (context, state) => const CreateItemComboScreen(),
     ),
-    GoRoute(path: '/admin/manage/combo/create-item-combo/products-item-combo',
-    builder: (context, state) => const ProductsItemComboScreen(),
+    GoRoute(
+      path: '/admin/manage/combo/create-item-combo/products-item-combo',
+      builder: (context, state) => const ProductsItemComboScreen(),
     ),
-    GoRoute(path: '/mesero/pedidos/mesas',
-    builder: (context, state) => const MesasScreen(),
+
+    GoRoute(
+      path: '/mesero/pedidos/mesas',
+      builder: (context, state) => const MesasScreen(),
     ),
-    GoRoute(path: '/mesero/pedidos/detalle/:mesaId/:pedidoId',
+    GoRoute(
+      path: '/mesero/pedidos/detalle/:mesaId/:pedidoId',
       builder: (context, state) => SeleccionProductosScreen(
         pedidoId: state.pathParameters['pedidoId']!,
       ),
     ),
+    
     GoRoute(
       path: '/mesero/historial',
       builder: (context, state) => const HistorialScreen(),

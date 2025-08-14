@@ -78,7 +78,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () => _mostrarFormularioMesa(nueva: true),
+                  onPressed: () => context.push('/admin/manage/mesa/create-mesa'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

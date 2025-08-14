@@ -76,7 +76,7 @@ Widget buildNeonStatCard(WidgetRef ref, String title, String subtitle,
           ],
         ),
 
-        const SizedBox(height: 8),
+        const SizedBox(height: 24),
 
         const Flexible(
           child: Text(

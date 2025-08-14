@@ -76,4 +76,7 @@ class AppStrings {
   static const createNewComboDescription = 'Completa el formulario para crear un nuevo combo';
   static const registerAdditional = 'Registrar Nuevo Adicional';
   static const registerAdditionalDescription = 'Completa el formulario para registrar un nuevo adicional';
+
+  static const manageTable = 'Gestionar Mesas';
+  static const manageTableDescription = 'Gestiona las mesas disponibles en tu restaurante.';
 }
