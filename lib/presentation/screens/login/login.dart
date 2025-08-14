@@ -54,11 +54,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               Text(
                 AppStrings.signInToYourNAccount,
-                style: theme.textTheme.titleLarge,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 6),
               Text(AppStrings.signInToYourAccount,
-                  style: theme.textTheme.bodySmall),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white70,
+                  )),
             ],
           ),
           const SizedBox(height: 20),
@@ -110,7 +115,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
                         size: 20,
-                        color: theme.primaryColor.withAlpha(200),
+                        color: Colors.black54,
                       ),
                     ),
                   ),
@@ -119,7 +124,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Text(
                       AppStrings.forgotPassword, 
                       style: TextStyle(
-                        color: theme.secondaryHeaderColor.withAlpha(200)
+                        color: theme.primaryColor.withAlpha(200)
                       ),
                     ),
                   ),

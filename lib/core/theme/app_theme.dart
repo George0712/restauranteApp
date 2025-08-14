@@ -4,16 +4,14 @@ class AppTheme {
   AppTheme._();
 
   static const _primaryColor = Color(0xFF8B5CF6);
-  static const _grayColor = Color(0xFF424242);
-  static const _accentColor = Color(0xFFFFA726); 
-  static const _secondaryColor = Colors.orange;
+  static const _accentColor = Colors.orange;
+  static const _secondaryColor = Colors.deepOrange;
   
   
 
   static final List<Color> lightGradient = [
     _primaryColor.withAlpha(230), 
-    _grayColor.withAlpha(190),        // Suave gris oscuro
-    _accentColor.withAlpha(180),
+    _accentColor.withAlpha(190),
     _secondaryColor.withAlpha(200),
 
   ];
