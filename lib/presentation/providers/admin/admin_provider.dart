@@ -10,11 +10,13 @@ import 'package:restaurante_app/presentation/controllers/admin/manage_products_c
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
+import 'package:restaurante_app/data/models/mesa_model.dart';
 
 import 'package:restaurante_app/data/models/user_model.dart';
 
 import 'package:restaurante_app/presentation/controllers/admin/admin_controller.dart';
 import 'package:restaurante_app/presentation/controllers/admin/register_user_controller.dart';
+import 'package:restaurante_app/presentation/controllers/admin/mesa_controller.dart';
 
 //Providers Admin
 final adminControllerProvider =
@@ -219,4 +221,50 @@ final registerComboControllerProvider = Provider<RegisterComboController>((ref) 
 
 final registerComboControllerNotifierProvider = StateNotifierProvider<RegisterComboController, void>((ref) {
   return RegisterComboController();
+});
+
+//Providers Mesas
+final mesaControllerProvider = Provider<MesaController>((ref) {
+  final controller = MesaController();
+  ref.onDispose(() {
+    controller.dispose();
+  });
+  return controller;
+});
+
+final isMesaFieldsValidProvider = StateProvider<bool>((ref) => false);
+
+final mesasProvider = StreamProvider<List<MesaModel>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('mesa').snapshots().map((snapshot) {
+    return snapshot.docs.map((doc) {
+      return MesaModel.fromMap(doc.data(), doc.id);
+    }).toList();
+  });
+});
+
+final mesasDisponiblesProvider = StreamProvider<List<MesaModel>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('mesa')
+      .where('estado', isEqualTo: 'disponible')
+      .snapshots()
+      .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          return MesaModel.fromMap(doc.data(), doc.id);
+        }).toList();
+      });
+});
+
+final mesasOcupadasProvider = StreamProvider<List<MesaModel>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('mesa')
+      .where('estado', isEqualTo: 'ocupada')
+      .snapshots()
+      .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          return MesaModel.fromMap(doc.data(), doc.id);
+        }).toList();
+      });
 });

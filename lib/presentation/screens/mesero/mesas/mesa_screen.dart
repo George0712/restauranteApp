@@ -40,29 +40,98 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final mesas = ref.watch(mesasProvider);
+    final mesasAsync = ref.watch(mesasStreamProvider);
     final notifier = ref.read(mesasProvider.notifier);
-    final mesasFiltradas = filtro == 'Todas'
-        ? mesas
-        : mesas.where((m) => m.estado == filtro).toList();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: _buildAppBar(theme, notifier),
-      body: Column(
-        children: [
-          _buildEstadisticas(notifier),
-          _buildFiltros(),
-          Expanded(
-            child: _buildGridMesas(mesasFiltradas),
+    return mesasAsync.when(
+      data: (mesas) {
+        final mesasFiltradas = filtro == 'Todas'
+            ? mesas
+            : mesas.where((m) => m.estado == filtro).toList();
+
+        return Scaffold(
+          backgroundColor: const Color(0xFF121212),
+          appBar: _buildAppBar(notifier),
+          body: Column(
+            children: [
+              _buildEstadisticas(notifier, mesas),
+              _buildFiltros(),
+              Expanded(
+                child: _buildGridMesas(mesasFiltradas),
+              ),
+            ],
           ),
-        ],
+        );
+      },
+      loading: () => const Scaffold(
+        backgroundColor: Color(0xFF121212),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF8B5CF6),
+          ),
+        ),
       ),
-    );
+      error: (error, stack) => Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white70),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text(
+            'Gestión de Mesas',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 24,
+            ),
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.red,
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Error al cargar las mesas',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: const TextStyle(color: Colors.white70),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => ref.refresh(mesasStreamProvider),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF8B5CF6),
+                ),
+                child: const Text(
+                  'Reintentar',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+        );
   }
 
-  PreferredSizeWidget _buildAppBar(ThemeData theme, MesasNotifier notifier) {
+  PreferredSizeWidget _buildAppBar(MesasNotifier notifier) {
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.transparent,
@@ -82,13 +151,17 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
       actions: [
         IconButton(
           icon: const Icon(Icons.refresh_outlined, color: Colors.white70),
-          onPressed: () => setState(() {}),
+          onPressed: () => ref.refresh(mesasStreamProvider),
         ),
       ],
     );
   }
 
-  Widget _buildEstadisticas(MesasNotifier notifier) {
+  Widget _buildEstadisticas(MesasNotifier notifier, List<MesaModel> mesas) {
+    final disponibles = mesas.where((m) => m.estado == 'disponible').length;
+    final ocupadas = mesas.where((m) => m.estado == 'ocupada').length;
+    final reservadas = mesas.where((m) => m.estado == 'reservada').length;
+    
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -124,19 +197,19 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
             children: [
               buildEstadisticaItem(
                 'Disponibles',
-                notifier.mesasDisponibles.toString(),
+                disponibles.toString(),
                 Colors.green,
                 Icons.check_circle_outline,
               ),
               buildEstadisticaItem(
                 'Ocupadas',
-                notifier.mesasOcupadas.toString(),
+                ocupadas.toString(),
                 Colors.orange,
                 Icons.people_outline,
               ),
               buildEstadisticaItem(
                 'Reservadas',
-                notifier.mesasReservadas.toString(),
+                reservadas.toString(),
                 Colors.blue,
                 Icons.event_outlined,
               ),
@@ -148,7 +221,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
   }
 
   Widget _buildFiltros() {
-    final filtros = ['Todas', 'Disponible', 'Ocupada', 'Reservada'];
+    final filtros = ['Todas', 'disponible', 'ocupada', 'reservada'];
 
     return Container(
       height: 50,
@@ -265,15 +338,15 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
     IconData iconoEstado;
 
     switch (mesa.estado) {
-      case 'Disponible':
+      case 'disponible':
         colorEstado = Colors.green;
         iconoEstado = Icons.check_circle;
         break;
-      case 'Ocupada':
+      case 'ocupada':
         colorEstado = Colors.orange;
         iconoEstado = Icons.people;
         break;
-      case 'Reservada':
+      case 'reservada':
         colorEstado = Colors.blue;
         iconoEstado = Icons.event;
         break;
@@ -376,50 +449,50 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
                         ),
                       ],
                     ),
-                    if (mesa.estado != 'Disponible') ...[
-                      Text(
-                        mesa.cliente ?? '',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: Colors.white70,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (mesa.estado == 'Ocupada') ...[
-                        Row(
-                          children: [
-                            Icon(Icons.access_time,
-                                size: 12, color: colorEstado),
-                            const SizedBox(width: 4),
-                            Text(
-                              mesa.tiempoTranscurrido,
-                              style: TextStyle(
-                                color: colorEstado,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ] else if (mesa.estado == 'Reservada') ...[
-                        Row(
-                          children: [
-                            Icon(Icons.schedule, size: 12, color: colorEstado),
-                            const SizedBox(width: 4),
-                            Text(
-                              mesa.tiempo ?? '',
-                              style: TextStyle(
-                                color: colorEstado,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
+                                         if (mesa.estado != 'disponible') ...[
+                       Text(
+                         mesa.cliente ?? '',
+                         style: const TextStyle(
+                           fontWeight: FontWeight.w600,
+                           fontSize: 13,
+                           color: Colors.white70,
+                         ),
+                         maxLines: 1,
+                         overflow: TextOverflow.ellipsis,
+                       ),
+                       if (mesa.estado == 'ocupada') ...[
+                         Row(
+                           children: [
+                             Icon(Icons.access_time,
+                                 size: 12, color: colorEstado),
+                             const SizedBox(width: 4),
+                             Text(
+                               mesa.tiempoTranscurrido,
+                               style: TextStyle(
+                                 color: colorEstado,
+                                 fontSize: 11,
+                                 fontWeight: FontWeight.w600,
+                               ),
+                             ),
+                           ],
+                         ),
+                       ] else if (mesa.estado == 'reservada') ...[
+                         Row(
+                           children: [
+                             Icon(Icons.schedule, size: 12, color: colorEstado),
+                             const SizedBox(width: 4),
+                             Text(
+                               mesa.tiempo ?? '',
+                               style: TextStyle(
+                                 color: colorEstado,
+                                 fontSize: 11,
+                                 fontWeight: FontWeight.w600,
+                               ),
+                             ),
+                           ],
+                         ),
+                       ],
+                     ],
                   ],
                 ),
               ),
@@ -494,7 +567,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
 
   List<Widget> _buildOpcionesSegunEstado(MesaModel mesa) {
     switch (mesa.estado) {
-      case 'Disponible':
+      case 'disponible':
         return [
           _buildBotonOpcion(
             'Ocupar Mesa',
@@ -511,7 +584,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           ),
         ];
 
-      case 'Ocupada':
+      case 'ocupada':
         return [
           _buildBotonOpcion(
             'Ver Pedido',
@@ -535,7 +608,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           ),
         ];
 
-      case 'Reservada':
+      case 'reservada':
         return [
           _buildBotonOpcion(
             'Confirmar Llegada',
@@ -595,12 +668,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
             estado: 'pendiente',
           );
 
-          final mesaActualizada = mesa.copyWith(
-            estado: 'Ocupada',
-            cliente: cliente,
-            pedidoId: pedidoId,
-            horaOcupacion: DateTime.now(),
-          );
+                     final mesaActualizada = mesa.copyWith(
+             estado: 'ocupada',
+             cliente: cliente,
+             pedidoId: pedidoId,
+             horaOcupacion: DateTime.now(),
+           );
 
           ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
           ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
@@ -618,12 +691,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
       builder: (context) => ReservarMesaDialog(
         mesa: mesa,
         onReservar: (cliente, fecha, hora) {
-          final mesaActualizada = mesa.copyWith(
-            estado: 'Reservada',
-            cliente: cliente,
-            fechaReserva: fecha,
-            tiempo: hora,
-          );
+                     final mesaActualizada = mesa.copyWith(
+             estado: 'reservada',
+             cliente: cliente,
+             fechaReserva: fecha,
+             tiempo: hora,
+           );
           ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
         },
       ),
@@ -674,14 +747,14 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           ),
           ElevatedButton(
             onPressed: () {
-              final mesaActualizada = mesa.copyWith(
-                estado: 'Disponible',
-                cliente: null,
-                tiempo: null,
-                pedidoId: null,
-                horaOcupacion: null,
-                total: null,
-              );
+                             final mesaActualizada = mesa.copyWith(
+                 estado: 'disponible',
+                 cliente: null,
+                 tiempo: null,
+                 pedidoId: null,
+                 horaOcupacion: null,
+                 total: null,
+               );
               ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
               Navigator.pop(context);
             },
@@ -715,12 +788,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
       estado: 'pendiente',
     );
 
-    // Actualizar mesa
-    final mesaActualizada = mesa.copyWith(
-      estado: 'Ocupada',
-      horaOcupacion: DateTime.now(),
-      pedidoId: pedidoId,
-    );
+         // Actualizar mesa
+     final mesaActualizada = mesa.copyWith(
+       estado: 'ocupada',
+       horaOcupacion: DateTime.now(),
+       pedidoId: pedidoId,
+     );
 
     // Guardar cambios
     ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
@@ -760,12 +833,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           ),
           ElevatedButton(
             onPressed: () {
-              final mesaActualizada = mesa.copyWith(
-                estado: 'Disponible',
-                cliente: null,
-                tiempo: null,
-                fechaReserva: null,
-              );
+                             final mesaActualizada = mesa.copyWith(
+                 estado: 'disponible',
+                 cliente: null,
+                 tiempo: null,
+                 fechaReserva: null,
+               );
               ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
               Navigator.pop(context);
             },

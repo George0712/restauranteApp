@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Reglas para la colección de mesas
+    match /mesas/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Reglas para usuarios
+    match /usuario/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Reglas para productos
+    match /producto/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Reglas para categorías
+    match /categoria/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Reglas para adicionales
+    match /adicional/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Reglas para combos
+    match /combo/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Reglas para pedidos
+    match /pedido/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Reglas para órdenes
+    match /orden/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

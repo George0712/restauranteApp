@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/data/models/mesa_model.dart';
-import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
+import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 
 class AdminMesasScreen extends ConsumerStatefulWidget {
   const AdminMesasScreen({super.key});
@@ -23,83 +23,158 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
 
   @override
   Widget build(BuildContext context) {
-    final mesas = ref.watch(mesasProvider);
-    final mesasFiltradas = filtro == 'Todas' ? mesas : mesas.where((m) => m.estado == filtro).toList();
+    final mesasAsync = ref.watch(mesasProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF0F0F23),
-              Color(0xFF1A1A2E),
-              Color(0xFF16213E),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return mesasAsync.when(
+      data: (mesas) {
+        final mesasFiltradas = filtro == 'Todas' ? mesas : mesas.where((m) => m.estado == filtro).toList();
+        
+        return Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+              onPressed: () => context.pop(),
+            ),
+          ),
+          extendBodyBehindAppBar: true,
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF0F0F23),
+                  Color(0xFF1A1A2E),
+                  Color(0xFF16213E),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SingleChildScrollView(
+                padding: isTablet
+                    ? const EdgeInsets.symmetric(vertical: 100, horizontal: 80)
+                    : const EdgeInsets.fromLTRB(16, 100, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Administrar Mesas',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Gestiona las mesas del restaurante, crea nuevas mesas y edita la información existente.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () => context.push('/admin/manage/mesa/create-mesa'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B5CF6),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Nueva Mesa',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildGridMesas(mesasFiltradas, isTablet),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF8B5CF6),
           ),
         ),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: SingleChildScrollView(
-            padding: isTablet
-                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 80)
-                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
+      ),
+      error: (error, stack) => Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        extendBodyBehindAppBar: true,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0F0F23),
+                Color(0xFF1A1A2E),
+                Color(0xFF16213E),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.red,
+                  size: 64,
+                ),
+                const SizedBox(height: 16),
                 const Text(
-                  'Administrar Mesas',
+                  'Error al cargar las mesas',
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
                     color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Gestiona las mesas del restaurante, crea nuevas mesas y edita la información existente.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
+                Text(
+                  error.toString(),
+                  style: const TextStyle(color: Colors.white70),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () => context.push('/admin/manage/mesa/create-mesa'),
+                  onPressed: () => ref.refresh(mesasProvider),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Nueva Mesa',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ],
+                  child: const Text(
+                    'Reintentar',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
-                const SizedBox(height: 24),
-                _buildGridMesas(mesasFiltradas, isTablet),
               ],
             ),
           ),
@@ -109,57 +184,6 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
   }
 
   Widget _buildGridMesas(List<MesaModel> mesas, bool isTablet) {
-    if (mesas.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.1),
-                    Colors.white.withOpacity(0.05),
-                  ],
-                ),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                ),
-              ),
-              child: const Icon(
-                Icons.table_restaurant_outlined,
-                size: 64,
-                color: Colors.white70,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              filtro == 'Todas' ? 'No hay mesas registradas' : 'No hay mesas ${filtro.toLowerCase()}',
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              filtro == 'Todas' 
-                ? 'Crea tu primera mesa presionando el botón "Nueva Mesa"'
-                : 'Cambia de filtro para ver otras mesas',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.white70,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
     return GridView.builder(
       controller: _scrollController,
       shrinkWrap: true,
@@ -184,15 +208,15 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
     IconData iconoEstado;
 
     switch(mesa.estado) {
-      case 'Disponible':
+      case 'disponible':
         colorEstado = Colors.green;
         iconoEstado = Icons.check_circle;
         break;
-      case 'Ocupada':
+      case 'ocupada':
         colorEstado = Colors.orange;
         iconoEstado = Icons.people;
         break;
-      case 'Reservada':
+      case 'reservada':
         colorEstado = Colors.blue;
         iconoEstado = Icons.event;
         break;
@@ -283,7 +307,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                       ],
                     ),
                     
-                    if (mesa.estado != 'Disponible') ...[
+                    if (mesa.estado != 'disponible') ...[
                       Text(
                         mesa.cliente ?? '',
                         style: const TextStyle(
@@ -295,7 +319,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                         overflow: TextOverflow.ellipsis,
                       ),
                       
-                      if (mesa.estado == 'Ocupada') ...[
+                      if (mesa.estado == 'ocupada') ...[
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
@@ -318,7 +342,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                             ],
                           ),
                         ),
-                      ] else if (mesa.estado == 'Reservada') ...[
+                      ] else if (mesa.estado == 'reservada') ...[
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
@@ -365,13 +389,13 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
   Widget _buildOpcionesBottomSheet(MesaModel mesa) {
     Color colorEstado;
     switch(mesa.estado) {
-      case 'Disponible':
+      case 'disponible':
         colorEstado = Colors.green;
         break;
-      case 'Ocupada':
+      case 'ocupada':
         colorEstado = Colors.orange;
         break;
-      case 'Reservada':
+      case 'reservada':
         colorEstado = Colors.blue;
         break;
       default:
@@ -529,14 +553,30 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
       builder: (context) => _FormularioMesaDialog(
         mesa: mesa,
         esNueva: nueva,
-        onGuardar: (mesaActualizada) {
-          final notifier = ref.read(mesasProvider.notifier);
+        onGuardar: (mesaActualizada) async {
+          final mesaController = ref.read(mesaControllerProvider);
           if (nueva) {
-            notifier.agregarMesa(mesaActualizada);
+            final error = await mesaController.crearMesa(
+              numeroMesa: mesaActualizada.id,
+              capacidad: mesaActualizada.capacidad,
+            );
+            if (error != null) {
+              _mostrarError(error);
+            }
           } else {
-            notifier.editarMesa(mesaActualizada);
+            // Para editar necesitaríamos el documentId, por ahora solo refrescamos
+            ref.refresh(mesasProvider);
           }
         },
+      ),
+    );
+  }
+
+  void _mostrarError(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: Colors.red,
       ),
     );
   }
@@ -572,7 +612,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
               style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 12),
-            if (mesa.estado != 'Disponible') ...[
+            if (mesa.estado != 'disponible') ...[
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -586,7 +626,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'La mesa está ${mesa.estado.toLowerCase()}. Esta acción liberará la mesa.',
+                        'La mesa está ${mesa.estado}. Esta acción liberará la mesa.',
                         style: TextStyle(color: Colors.orange.shade300, fontSize: 12),
                       ),
                     ),
@@ -614,8 +654,9 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              ref.read(mesasProvider.notifier).eliminarMesa(mesa.id);
+            onPressed: () async {
+              // Por ahora solo refrescamos, necesitaríamos el documentId para eliminar
+              ref.refresh(mesasProvider);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -738,15 +779,6 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                 if (value?.isEmpty ?? true) return 'Ingrese el número de mesa';
                 if (int.tryParse(value!) == null) return 'Ingrese un número válido';
                 if (int.parse(value) <= 0) return 'El número debe ser mayor a 0';
-                
-                // Verificar que no exista otra mesa con el mismo ID
-                final mesas = ref.read(mesasProvider);
-                final mesaExistente = mesas.any((m) => 
-                  m.id == int.parse(value) && 
-                  (widget.mesa == null || m.id != widget.mesa!.id)
-                );
-                if (mesaExistente) return 'Ya existe una mesa con este número';
-                
                 return null;
               },
             ),
@@ -823,7 +855,7 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
       final mesa = MesaModel(
         id: int.parse(_idController.text),
         capacidad: int.parse(_capacidadController.text),
-        estado: widget.mesa?.estado ?? 'Disponible',
+        estado: widget.mesa?.estado ?? 'disponible',
         cliente: widget.mesa?.cliente,
         tiempo: widget.mesa?.tiempo,
         total: widget.mesa?.total,

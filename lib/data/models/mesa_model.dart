@@ -53,4 +53,38 @@ class MesaModel {
     final minutos = duracion.inMinutes % 60;
     return '${horas.toString().padLeft(2, '0')}:${minutos.toString().padLeft(2, '0')}';
   }
+
+  // Método para convertir a Map para Firestore
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'estado': estado,
+      'capacidad': capacidad,
+      'cliente': cliente,
+      'tiempo': tiempo,
+      'total': total,
+      'pedidoId': pedidoId,
+      'fechaReserva': fechaReserva?.toIso8601String(),
+      'horaOcupacion': horaOcupacion?.toIso8601String(),
+    };
+  }
+
+  // Método para crear desde Map de Firestore
+  factory MesaModel.fromMap(Map<String, dynamic> map, String documentId) {
+    return MesaModel(
+      id: map['id'] ?? 0,
+      estado: map['estado'] ?? 'disponible',
+      capacidad: map['capacidad'] ?? 0,
+      cliente: map['cliente'],
+      tiempo: map['tiempo'],
+      total: map['total']?.toDouble(),
+      pedidoId: map['pedidoId'],
+      fechaReserva: map['fechaReserva'] != null 
+          ? DateTime.parse(map['fechaReserva']) 
+          : null,
+      horaOcupacion: map['horaOcupacion'] != null 
+          ? DateTime.parse(map['horaOcupacion']) 
+          : null,
+    );
+  }
 }

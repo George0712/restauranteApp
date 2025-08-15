@@ -8,15 +8,19 @@ class OrderItem {
   final String? notes;
   final List<String> modifications; // Para manejar modificaciones/adicionales
   final String? image; // Para mostrar imagen del producto
+  final int? preparationTime; // Tiempo de preparación en minutos
+  final String meseroId; // Nombre del mesero que tomó el pedido
 
   OrderItem({
     required this.productId,
     required this.name,
     required this.price,
     required this.quantity,
+    required this.meseroId,
     this.notes,
     this.modifications = const [],
     this.image,
+    this.preparationTime,
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
@@ -28,6 +32,8 @@ class OrderItem {
       notes: json['notes'] ?? json['notas'],
       modifications: List<String>.from(json['modifications'] ?? json['modificaciones'] ?? []),
       image: json['image'] ?? json['imagen'],
+      preparationTime: json['preparationTime'] ?? json['tiempoPreparacion'] ?? json['time'],
+      meseroId: json['meseroId'] ?? json['mesero'] ?? 'Desconocido', // Maneja ambos casos
     );
   }
 
@@ -40,6 +46,8 @@ class OrderItem {
       if (notes != null) 'notes': notes,
       'modifications': modifications,
       if (image != null) 'image': image,
+      if (preparationTime != null) 'preparationTime': preparationTime,
+      'meseroId': meseroId, // Asegúrate de incluir el ID del mesero
     };
   }
 
@@ -51,6 +59,8 @@ class OrderItem {
     String? notes,
     List<String>? modifications,
     String? image,
+    int? preparationTime,
+    String? meseroId, // Permite cambiar el ID del mesero si es necesario
   }) {
     return OrderItem(
       productId: productId ?? this.productId,
@@ -60,6 +70,8 @@ class OrderItem {
       notes: notes ?? this.notes,
       modifications: modifications ?? this.modifications,
       image: image ?? this.image,
+      preparationTime: preparationTime ?? this.preparationTime,
+      meseroId: meseroId ?? this.meseroId, // Permite cambiar el ID del mesero si es necesario
     );
   }
 
@@ -97,6 +109,7 @@ class Order {
   final Timestamp? updatedAt;
   final Timestamp? completedAt;
   final Timestamp? cancelledAt;
+  final String? meseroId; // Nombre del mesero que tomó el pedido
 
   Order({
     this.id,
@@ -114,6 +127,7 @@ class Order {
     this.updatedAt,
     this.completedAt,
     this.cancelledAt,
+    this.meseroId,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -159,6 +173,7 @@ class Order {
       updatedAt: json['updatedAt'] ?? json['fechaActualizacion'],
       completedAt: json['completedAt'] ?? json['fechaCompletado'],
       cancelledAt: json['cancelledAt'] ?? json['fechaCancelado'],
+      meseroId: json['meseroId'] ?? json['mesero'],
     );
   }
 
@@ -179,6 +194,7 @@ class Order {
       if (updatedAt != null) 'updatedAt': updatedAt,
       if (completedAt != null) 'completedAt': completedAt,
       if (cancelledAt != null) 'cancelledAt': cancelledAt,
+      if (meseroId != null) 'meseroId': meseroId,
     };
   }
 
@@ -198,6 +214,7 @@ class Order {
     Timestamp? updatedAt,
     Timestamp? completedAt,
     Timestamp? cancelledAt,
+    String? meseroId,
   }) {
     return Order(
       id: id ?? this.id,
@@ -215,6 +232,7 @@ class Order {
       updatedAt: updatedAt ?? this.updatedAt,
       completedAt: completedAt ?? this.completedAt,
       cancelledAt: cancelledAt ?? this.cancelledAt,
+      meseroId: meseroId ?? this.meseroId,
     );
   }
 

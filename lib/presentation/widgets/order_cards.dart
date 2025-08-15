@@ -18,7 +18,7 @@ class OrderCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLoading = ref.watch(ordersNotifierProvider);
-    
+
     return Card(
       margin: const EdgeInsets.all(8.0),
       elevation: 4,
@@ -48,13 +48,15 @@ class OrderCard extends ConsumerWidget {
   }
 
   Widget _buildHeader() {
+    final statusColor = _getStatusColor(order.status);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: _getStatusColor(order.status),
+            color: statusColor,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -71,11 +73,7 @@ class OrderCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.access_time,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
+                Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
                   _getTimeDisplay(),
@@ -91,18 +89,13 @@ class OrderCard extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Color.fromRGBO(
-                  _getStatusColor(order.status).red,
-                  _getStatusColor(order.status).green,
-                  _getStatusColor(order.status).blue,
-                  0.1,
-                ),
+                color: statusColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 _getStatusText(order.status),
                 style: TextStyle(
-                  color: _getStatusColor(order.status),
+                  color: statusColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),
@@ -121,37 +114,86 @@ class OrderCard extends ConsumerWidget {
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            _getModeIcon(order.mode),
-            color: Colors.grey[700],
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _getModeText(order.mode),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
-                    fontSize: 14,
-                  ),
+          Row(
+            children: [
+              Icon(
+                _getModeIcon(order.mode),
+                color: Colors.grey[700],
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getModeText(order.mode),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      _getCustomerDisplay(),
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ],
+          ),
+          // Mostrar nombre del cliente si está disponible
+          if (order.customerName != null && order.customerName!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  Icons.person,
+                  color: Colors.grey[600],
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
                 Text(
-                  _getCustomerDisplay(),
+                  'Cliente: ${order.customerName}',
                   style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
-          ),
+          ],
+          // Mostrar nombre del mesero si está disponible
+          if (order.meseroId != null && order.meseroId!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  color: Colors.grey[600],
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Mesero: ${order.meseroId}',
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -183,6 +225,15 @@ class OrderCard extends ConsumerWidget {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'Tiempo: ${_getTotalPreparationTime()} min',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.orange[700],
                   ),
                 ),
               ],
@@ -234,6 +285,28 @@ class OrderCard extends ConsumerWidget {
                     fontSize: 14,
                   ),
                 ),
+                if (item.preparationTime != null &&
+                    item.preparationTime! > 0) ...[
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.timer,
+                        size: 12,
+                        color: Colors.orange[600],
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${item.preparationTime} min',
+                        style: TextStyle(
+                          color: Colors.orange[600],
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 if (item.notes != null && item.notes!.isNotEmpty)
                   Text(
                     'Nota: ${item.notes}',
@@ -257,7 +330,8 @@ class OrderCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, WidgetRef ref, bool isLoading) {
+  Widget _buildActionButtons(
+      BuildContext context, WidgetRef ref, bool isLoading) {
     if (isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -292,7 +366,7 @@ class OrderCard extends ConsumerWidget {
             ),
           ],
         );
-      
+
       case 'preparando':
         return Row(
           children: [
@@ -320,7 +394,7 @@ class OrderCard extends ConsumerWidget {
             ),
           ],
         );
-      
+
       case 'cancelado':
         return ElevatedButton.icon(
           onPressed: () => _reactivateOrder(ref),
@@ -335,7 +409,7 @@ class OrderCard extends ConsumerWidget {
             ),
           ),
         );
-      
+
       default:
         return Container(
           padding: const EdgeInsets.all(12),
@@ -378,7 +452,8 @@ class OrderCard extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancelar Orden'),
-        content: Text('¿Estás seguro de que quieres cancelar la orden #${order.id?.substring(0, 6).toUpperCase()}?'),
+        content: Text(
+            '¿Estás seguro de que quieres cancelar la orden #${order.id?.substring(0, 6).toUpperCase()}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -470,7 +545,7 @@ class OrderCard extends ConsumerWidget {
     final now = DateTime.now();
     final orderTime = order.createdAt.toDate();
     final difference = now.difference(orderTime);
-    
+
     if (difference.inMinutes < 60) {
       return '${difference.inMinutes} min';
     } else if (difference.inHours < 24) {
@@ -478,5 +553,16 @@ class OrderCard extends ConsumerWidget {
     } else {
       return DateFormat('HH:mm').format(orderTime);
     }
+  }
+
+  // Calcular el tiempo total de preparación de todos los productos
+  int _getTotalPreparationTime() {
+    int totalTime = 0;
+    for (final item in order.items) {
+      if (item.preparationTime != null) {
+        totalTime += (item.preparationTime! * item.quantity).toInt();
+      }
+    }
+    return totalTime;
   }
 }

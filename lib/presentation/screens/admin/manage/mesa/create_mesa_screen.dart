@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
 
-import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/data/models/user_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
@@ -14,36 +12,33 @@ class CreateMesaScreen extends ConsumerStatefulWidget {
   const CreateMesaScreen({super.key});
 
   @override
-  ConsumerState<CreateMesaScreen> createState() => _CreateMeseroScreenState();
+  ConsumerState<CreateMesaScreen> createState() => _CreateMesaScreenState();
 }
 
-class _CreateMeseroScreenState extends ConsumerState<CreateMesaScreen> {
+class _CreateMesaScreenState extends ConsumerState<CreateMesaScreen> {
   final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    final registerUserController = ref.read(registerUserControllerProvider);
-    registerUserController.nombreController.addListener(_validateFields);
-    registerUserController.apellidosController.addListener(_validateFields);
-    registerUserController.telefonoController.addListener(_validateFields);
-    registerUserController.direccionController.addListener(_validateFields);
+    final mesaController = ref.read(mesaControllerProvider);
+    mesaController.numeroMesaController.addListener(_validateFields);
+    mesaController.capacidadController.addListener(_validateFields);
   }
 
   void _validateFields() {
     if (!mounted) return;
-    final registerUserController = ref.read(registerUserControllerProvider);
-    final isValid = registerUserController.areFieldsContactDataValid();
-    ref.read(isContactInfoValidProvider.notifier).state = isValid;
+    final mesaController = ref.read(mesaControllerProvider);
+    final isValid = mesaController.areFieldsValid();
+    ref.read(isMesaFieldsValidProvider.notifier).state = isValid;
   }
 
   @override
   Widget build(BuildContext context) {
-    final registerUserController = ref.watch(registerUserControllerProvider);
-    final areFieldsValid = ref.watch(isContactInfoValidProvider);
+    final mesaController = ref.watch(mesaControllerProvider);
+    final areFieldsValid = ref.watch(isMesaFieldsValidProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-    const rol = 'mesero';
 
     return Scaffold(
       appBar: AppBar(
@@ -102,23 +97,32 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMesaScreen> {
                     child: Column(
                       children: [
                         CustomInputField(
-                            hintText: 'número de mesa',
-                            controller: registerUserController.nombreController,
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Por favor ingrese un número'
-                                : AppConstants.nameRegex.hasMatch(value)
-                                    ? null
-                                    : 'No es válido'),
+                            hintText: 'Número de mesa',
+                            controller: mesaController.numeroMesaController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Por favor ingrese un número de mesa';
+                              }
+                              final numeroMesaRegex = RegExp(r'^[1-9]\d*$');
+                              if (!numeroMesaRegex.hasMatch(value)) {
+                                return 'El número de mesa debe ser un número válido';
+                              }
+                              return null;
+                            }),
                         const SizedBox(height: 12),
                         CustomInputField(
                           hintText: 'Capacidad de la mesa',
-                          controller:
-                              registerUserController.apellidosController,
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Por favor ingrese una cantidad'
-                              : AppConstants.surnameRegex.hasMatch(value)
-                                  ? null
-                                  : 'No es válido',
+                          controller: mesaController.capacidadController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor ingrese la capacidad';
+                            }
+                            final capacidadRegex = RegExp(r'^([1-9]|1[0-9]|20)$');
+                            if (!capacidadRegex.hasMatch(value)) {
+                              return 'La capacidad debe ser entre 1 y 20 personas';
+                            }
+                            return null;
+                          },
                         ),
                       ],
                     ),
@@ -132,8 +136,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMesaScreen> {
                     children: [
                       OutlinedButton(
                         onPressed: () {
-                          registerUserController.nombreController.clear();
-                          registerUserController.apellidosController.clear();
+                          mesaController.limpiarFormulario();
                           context.pop();
                         },
                         style: OutlinedButton.styleFrom(
@@ -149,29 +152,27 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMesaScreen> {
                       ElevatedButton(
                         onPressed: areFieldsValid &&
                                 (_formKey.currentState?.validate() ?? false)
-                            ? () {
-                                final partialUser = UserModel(
-                                    uid: '',
-                                    nombre: registerUserController
-                                        .nombreController.text
-                                        .trim(),
-                                    apellidos: registerUserController
-                                        .apellidosController.text
-                                        .trim(),
-                                    telefono: registerUserController
-                                        .telefonoController.text
-                                        .trim(),
-                                    direccion: registerUserController
-                                        .direccionController.text
-                                        .trim(),
-                                    email: '',
-                                    username: '',
-                                    rol: rol);
-                                // 2. Guarda en el provider temporal
-                                ref.read(userTempProvider.notifier).state =
-                                    partialUser;
-                                context.push(
-                                    '/admin/manage/mesas');
+                            ? () async {
+                                final numeroMesa = int.parse(mesaController.numeroMesaController.text.trim());
+                                final capacidad = int.parse(mesaController.capacidadController.text.trim());
+                                
+                                final error = await mesaController.crearMesa(
+                                  numeroMesa: numeroMesa,
+                                  capacidad: capacidad,
+                                );
+                                
+                                if (error == null) {
+                                  mesaController.limpiarFormulario();
+                                  context.pop();
+                                } else {
+                                  // Mostrar error
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(error),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               }
                             : null,
                         style: ElevatedButton.styleFrom(
@@ -180,7 +181,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMesaScreen> {
                               const Color(0xFF8B5CF6).withAlpha(100),
                         ),
                         child: const Text(
-                          'Continuar',
+                          'Agregar',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
