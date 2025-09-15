@@ -8,7 +8,7 @@ final orderStatusFilterProvider = StateProvider<String>((ref) => 'all');
 // StreamProvider para obtener órdenes en tiempo real - ASEGÚRATE DE QUE SEA LA COLECCIÓN CORRECTA
 final ordersStreamProvider = StreamProvider<List<Order>>((ref) {
   return FirebaseFirestore.instance
-      .collection('pedido') // Cambia esto por la colección correcta: 'pedidos' en lugar de 'pedido'
+      .collection('pedido')
       .orderBy('createdAt', descending: false)
       .snapshots()
       .map((snapshot) {

@@ -14,9 +14,10 @@ class CarritoItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final modsPrecio = item.adicionales?.fold<double>(
-      0,
-      (sum, adicional) => sum + adicional.price,
-    ) ?? 0;
+          0,
+          (sum, adicional) => sum + adicional.price,
+        ) ??
+        0;
     final totalItem = (item.precioUnitario + modsPrecio) * item.cantidad;
 
     return Card(
@@ -34,19 +35,25 @@ class CarritoItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (nombresAdicionales.isNotEmpty)
-              Text('Adicionales: ${nombresAdicionales.join(", ")}'),
+              Text('Adicionales: ${nombresAdicionales.join(", ")}',
+                  style: const TextStyle(fontSize: 12)),
             if (item.notas?.isNotEmpty ?? false)
-              Text('Nota: ${item.notas}'),
+              Text('Nota: ${item.notas}',
+                  style: const TextStyle(
+                      fontSize: 12, fontStyle: FontStyle.italic)),
           ],
         ),
         trailing: Text(
-          '\$${totalItem.toStringAsFixed(2)}',
-          style: TextStyle(
+          '\$${totalItem.toStringAsFixed(0).replaceAllMapped(
+                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                (Match m) => '${m[1]}.',
+              )}',
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).primaryColor,
+            fontSize: 15,
           ),
         ),
       ),
     );
   }
-} 
+}

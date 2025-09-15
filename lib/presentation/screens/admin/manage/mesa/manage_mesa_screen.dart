@@ -294,7 +294,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.people_outline, color: Colors.white70, size: 14),
+                        const Icon(Icons.people_outline, color: Colors.white70, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           '${mesa.capacidad} personas',
@@ -565,7 +565,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
             }
           } else {
             // Para editar necesitaríamos el documentId, por ahora solo refrescamos
-            ref.refresh(mesasProvider);
+            void _ = ref.refresh(mesasProvider);
           }
         },
       ),
@@ -590,11 +590,11 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.warning, color: Colors.red, size: 28),
-            const SizedBox(width: 12),
-            const Text(
+            SizedBox(width: 12),
+            Text(
               'Eliminar Mesa',
               style: TextStyle(
                 color: Colors.white,
@@ -622,7 +622,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                    const Icon(Icons.warning_amber, color: Colors.orange, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -656,7 +656,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
           ElevatedButton(
             onPressed: () async {
               // Por ahora solo refrescamos, necesitaríamos el documentId para eliminar
-              ref.refresh(mesasProvider);
+              void _ = ref.refresh(mesasProvider);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(

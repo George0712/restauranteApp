@@ -94,7 +94,7 @@ class ListCardsProducts extends ConsumerWidget {
                         end: Alignment.bottomRight,
                       ),
                       border: Border.all(
-                        color: producto.disponible 
+                        color: producto.disponible
                             ? const Color(0xFF10B981).withOpacity(0.3)
                             : const Color(0xFFEF4444).withOpacity(0.3),
                         width: 1.5,
@@ -458,7 +458,7 @@ class ProductOptionsBottomSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Título
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -492,7 +492,10 @@ class ProductOptionsBottomSheet extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          '\$${producto.price.toStringAsFixed(0)}',
+                          '\$${producto.price.toStringAsFixed(0).replaceAllMapped(
+                                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                (Match m) => '${m[1]}.',
+                              )}',
                           style: const TextStyle(
                             fontSize: 16,
                             color: Color(0xFF10B981),
@@ -505,9 +508,9 @@ class ProductOptionsBottomSheet extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Opciones
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -522,7 +525,8 @@ class ProductOptionsBottomSheet extends StatelessWidget {
                     onTap: () {
                       Navigator.pop(context);
                       // Navegar a detalles del producto
-                      context.push('/admin/manage/producto/detalle/${producto.id}');
+                      context.push(
+                          '/admin/manage/producto/detalle/${producto.id}');
                     },
                   ),
                   const SizedBox(height: 16),
@@ -535,23 +539,24 @@ class ProductOptionsBottomSheet extends StatelessWidget {
                     onTap: () {
                       Navigator.pop(context);
                       // Navegar a editar producto
-                      context.push('/admin/manage/producto/editar/${producto.id}');
+                      context
+                          .push('/admin/manage/producto/editar/${producto.id}');
                     },
                   ),
                   const SizedBox(height: 16),
                   _buildOptionTile(
                     context,
-                    icon: producto.disponible 
-                        ? Icons.visibility_off_outlined 
+                    icon: producto.disponible
+                        ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined,
-                    title: producto.disponible 
-                        ? 'Desactivar producto' 
+                    title: producto.disponible
+                        ? 'Desactivar producto'
                         : 'Activar producto',
-                    subtitle: producto.disponible 
-                        ? 'Ocultar del menú de clientes' 
+                    subtitle: producto.disponible
+                        ? 'Ocultar del menú de clientes'
                         : 'Mostrar en el menú de clientes',
-                    color: producto.disponible 
-                        ? const Color(0xFFF59E0B) 
+                    color: producto.disponible
+                        ? const Color(0xFFF59E0B)
                         : const Color(0xFF10B981),
                     onTap: () {
                       Navigator.pop(context);
@@ -573,7 +578,7 @@ class ProductOptionsBottomSheet extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
           ],
         ),
@@ -654,12 +659,10 @@ class ProductOptionsBottomSheet extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          producto.disponible 
-              ? 'Producto desactivado' 
-              : 'Producto activado',
+          producto.disponible ? 'Producto desactivado' : 'Producto activado',
         ),
-        backgroundColor: producto.disponible 
-            ? const Color(0xFFF59E0B) 
+        backgroundColor: producto.disponible
+            ? const Color(0xFFF59E0B)
             : const Color(0xFF10B981),
       ),
     );
