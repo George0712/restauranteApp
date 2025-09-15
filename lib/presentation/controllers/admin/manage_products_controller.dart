@@ -6,9 +6,8 @@ import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/data/models/combo_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import 'package:uuid/uuid.dart';
+import 'package:restaurante_app/presentation/providers/images/cloudinary_service.dart';
 
 class RegisterCategoryController {
   final TextEditingController nombreController = TextEditingController();
@@ -80,22 +79,39 @@ class RegisterProductoController {
     required String ingredientes,
     required String categoria,
     required bool disponible,
-    required String foto,
+    required String? foto,
+    Function(double)? onUploadProgress,
   }) async {
     try {
       String? photoUrl;
       
-      // Si hay una imagen, subirla a Firebase Storage
-      if (foto.isNotEmpty) {
+      // Si hay una imagen, subirla a Cloudinary
+      if (foto != null && foto.isNotEmpty) {
+        print('Subiendo imagen a Cloudinary: $foto');
+        onUploadProgress?.call(0.1);
+        
         final file = File(foto);
-        final storageRef = FirebaseStorage.instance.ref();
-        final imageRef = storageRef.child('productos/${const Uuid().v4()}.jpg');
         
-        // Subir la imagen
-        await imageRef.putFile(file);
+        if (!await file.exists()) {
+          throw Exception('El archivo de imagen no existe');
+        }
         
-        // Obtener la URL de la imagen
-        photoUrl = await imageRef.getDownloadURL();
+        // Subir imagen con progreso
+        photoUrl = await CloudinaryService.uploadImage(
+          file,
+          onProgress: (progress) {
+            // Mapear progreso de subida (0.1 a 0.8)
+            final mappedProgress = 0.1 + (progress * 0.7);
+            onUploadProgress?.call(mappedProgress);
+          },
+        );
+        
+        if (photoUrl == null) {
+          throw Exception('Error al subir la imagen a Cloudinary');
+        }
+        
+        print('Imagen subida exitosamente: $photoUrl');
+        onUploadProgress?.call(0.9);
       }
 
       final productoData = {
@@ -103,16 +119,23 @@ class RegisterProductoController {
         'price': precio,
         'time': tiempoPreparacion,
         'ingredients': ingredientes,
-        'category': categoria,
+        'categoryId': categoria,
         'disponible': disponible,
-        'photo': photoUrl, // Guardar la URL de la imagen en lugar de la ruta local
+        'photo': photoUrl, // URL de Cloudinary
+        'createdAt': FieldValue.serverTimestamp(),
       };
 
+      print('Guardando producto: $productoData');
+
       final db = FirebaseFirestore.instance;
-      await db.collection('producto').add(productoData);
+      final docRef = await db.collection('producto').add(productoData);
+      
+      onUploadProgress?.call(1.0);
+      print('Producto guardado con ID: ${docRef.id}');
 
       return null; // Éxito
     } catch (e) {
+      print('Error al registrar producto: $e');
       return e.toString();
     }
   }

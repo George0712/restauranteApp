@@ -9,6 +9,7 @@ import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/providers/admin/permission_service.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateItemProductoScreen extends ConsumerStatefulWidget {
@@ -46,6 +47,113 @@ class _CreateItemProductoScreenState
     ref.read(isValidFieldsProvider.notifier).state = isValid;
   }
 
+  // Método principal para manejar la selección de imagen
+  Future<void> _handleImageSelection() async {
+    try {
+      await PermissionService.showImageSourceDialog(
+        context, 
+        (bool fromCamera) async {
+          final imageNotifier = ref.read(profileImageProvider.notifier);
+          
+          if (fromCamera) {
+            await imageNotifier.pickImageFromCamera();
+          } else {
+            await imageNotifier.pickImage(); // Método existente para galería
+          }
+        }
+      );
+    } catch (e) {
+      SnackbarHelper.showSnackBar('Error al seleccionar imagen: $e');
+    }
+  }
+
+  // Método para mostrar opciones adicionales (opcional)
+  void _showImageOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'Imagen del Producto',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.blue),
+                title: const Text('Seleccionar de Galería'),
+                subtitle: const Text('Elegir una imagen existente'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _selectFromGallery();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.green),
+                title: const Text('Tomar Foto'),
+                subtitle: const Text('Capturar con la cámara'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _takePhoto();
+                },
+              ),
+              if (ref.watch(profileImageProvider) != null)
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Colors.red),
+                  title: const Text('Quitar Imagen'),
+                  subtitle: const Text('Eliminar imagen actual'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _removeImage();
+                  },
+                ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Métodos individuales para cada acción
+  Future<void> _selectFromGallery() async {
+    try {
+      final imageNotifier = ref.read(profileImageProvider.notifier);
+      await imageNotifier.pickImage();
+    } catch (e) {
+      SnackbarHelper.showSnackBar('Error al seleccionar imagen: $e');
+    }
+  }
+
+  Future<void> _takePhoto() async {
+    try {
+      final imageNotifier = ref.read(profileImageProvider.notifier);
+      await imageNotifier.pickImageFromCamera();
+    } catch (e) {
+      SnackbarHelper.showSnackBar('Error al tomar foto: $e');
+    }
+  }
+
+  void _removeImage() {
+    final imageNotifier = ref.read(profileImageProvider.notifier);
+    imageNotifier.clearImage();
+    SnackbarHelper.showSnackBar('Imagen eliminada');
+  }
+
   @override
   Widget build(BuildContext context) {
     final registerProductController =
@@ -53,7 +161,6 @@ class _CreateItemProductoScreenState
     final categoryAsync = ref.watch(categoryDisponibleProvider);
     final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
-    final imageNotifier = ref.read(profileImageProvider.notifier);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
@@ -106,39 +213,112 @@ class _CreateItemProductoScreenState
               ),
               const SizedBox(height: 24),
 
-              // Foto de perfil (opcional)
-              Center(
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.white.withAlpha(40),
-                      backgroundImage:
-                          profileImage != null ? FileImage(profileImage) : null,
-                      child: profileImage == null
-                          ? Iconify(Bi.box_fill,
-                              size: 50,
-                              color: theme.primaryColor.withAlpha(200))
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: theme.primaryColor,
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt,
-                              size: 18, color: Colors.white),
-                          onPressed: () async {
-                            await imageNotifier.pickImage();
-                          },
+              // Foto de perfil (mejorada)
+                Center(
+                  child: GestureDetector(
+                    onTap: _handleImageSelection, // También permite tap en toda la imagen
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: theme.primaryColor.withOpacity(0.3),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.white.withAlpha(40),
+                            backgroundImage: profileImage != null 
+                                ? FileImage(profileImage) 
+                                : null,
+                            child: profileImage == null
+                                ? Iconify(
+                                    Bi.box_fill,
+                                    size: 50,
+                                    color: theme.primaryColor.withAlpha(200),
+                                  )
+                                : null,
+                          ),
                         ),
-                      ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _handleImageSelection,
+                            onLongPress: _showImageOptions, // Opción adicional con long press
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: theme.primaryColor,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 18,
+                                backgroundColor: theme.primaryColor,
+                                child: Icon(
+                                  profileImage == null 
+                                      ? Icons.add_a_photo 
+                                      : Icons.edit,
+                                  size: 18, 
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Indicador de que hay imagen
+                        if (profileImage != null)
+                          Positioned(
+                            top: 0,
+                            left: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                              ),
+                              child: const Icon(
+                                Icons.check,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                
+                // Texto informativo debajo de la imagen
+                const SizedBox(height: 8),
+                Center(
+                  child: Text(
+                    profileImage == null 
+                        ? 'Toca para agregar una imagen del producto'
+                        : 'Toca para cambiar la imagen',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                ),
+                
               const SizedBox(height: 24),
 
               // Inputs de texto

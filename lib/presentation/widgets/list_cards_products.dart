@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/widgets/cloudinary_image_widget.dart';
 
 class ListCardsProducts extends ConsumerWidget {
   const ListCardsProducts({super.key});
@@ -109,89 +110,69 @@ class ListCardsProducts extends ConsumerWidget {
                               flex: 3,
                               child: Stack(
                                 children: [
-                                  ClipRRect(
+                                  CloudinaryImageWidget(
+                                    imageUrl: producto.photo,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    fit: BoxFit.cover,
                                     borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(16)),
-                                    child: producto.photo != null &&
-                                            producto.photo!.isNotEmpty
-                                        ? Image.network(
-                                            producto.photo!,
-                                            fit: BoxFit.cover,
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            loadingBuilder: (context, child,
-                                                loadingProgress) {
-                                              if (loadingProgress == null) {
-                                                return child;
-                                              }
-                                              return Container(
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: [
-                                                      Colors.grey.shade200,
-                                                      Colors.grey.shade100,
-                                                    ],
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                  ),
-                                                ),
-                                                child: const Center(
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              return Container(
-                                                width: double.infinity,
-                                                height: double.infinity,
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    colors: [
-                                                      theme.primaryColor
-                                                          .withOpacity(0.1),
-                                                      theme.primaryColor
-                                                          .withOpacity(0.05),
-                                                    ],
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                  ),
-                                                ),
-                                                child: Icon(
-                                                  Icons.fastfood_rounded,
-                                                  size: 80,
-                                                  color: theme.primaryColor
-                                                      .withOpacity(0.7),
-                                                ),
-                                              );
-                                            },
-                                          )
-                                        : Container(
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  theme.primaryColor
-                                                      .withOpacity(0.1),
-                                                  theme.primaryColor
-                                                      .withOpacity(0.05),
-                                                ],
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                              ),
-                                            ),
-                                            child: Icon(
-                                              Icons.fastfood_rounded,
-                                              size: 80,
-                                              color: theme.primaryColor
-                                                  .withOpacity(0.7),
-                                            ),
-                                          ),
+                                      top: Radius.circular(16),
+                                    ),
+                                    placeholder: Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.grey.shade200,
+                                            Colors.grey.shade100,
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                      ),
+                                      child: const Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                    errorWidget: Container(
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            theme.primaryColor.withOpacity(0.1),
+                                            theme.primaryColor.withOpacity(0.05),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.fastfood_rounded,
+                                        size: 80,
+                                        color: theme.primaryColor.withOpacity(0.7),
+                                      ),
+                                    ),
                                   ),
+                                  
+                                  // Overlay sutil para mejorar la legibilidad del texto sobre la imagen
+                                  if (producto.photo != null && producto.photo!.isNotEmpty)
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: const BorderRadius.vertical(
+                                          top: Radius.circular(16),
+                                        ),
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Colors.transparent,
+                                            Colors.black.withOpacity(0.1),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
