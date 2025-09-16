@@ -50,18 +50,16 @@ class _CreateItemProductoScreenState
   // Método principal para manejar la selección de imagen
   Future<void> _handleImageSelection() async {
     try {
-      await PermissionService.showImageSourceDialog(
-        context, 
-        (bool fromCamera) async {
-          final imageNotifier = ref.read(profileImageProvider.notifier);
-          
-          if (fromCamera) {
-            await imageNotifier.pickImageFromCamera();
-          } else {
-            await imageNotifier.pickImage(); // Método existente para galería
-          }
+      await PermissionService.showImageSourceDialog(context,
+          (bool fromCamera) async {
+        final imageNotifier = ref.read(profileImageProvider.notifier);
+
+        if (fromCamera) {
+          await imageNotifier.pickImageFromCamera();
+        } else {
+          await imageNotifier.pickImage(); // Método existente para galería
         }
-      );
+      });
     } catch (e) {
       SnackbarHelper.showSnackBar('Error al seleccionar imagen: $e');
     }
@@ -190,33 +188,34 @@ class _CreateItemProductoScreenState
           ),
         ),
         child: Align(
-        alignment: Alignment.topCenter,
-        child: SingleChildScrollView(
-          padding: isTablet
+          alignment: Alignment.topCenter,
+          child: SingleChildScrollView(
+            padding: isTablet
                 ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
                 : const EdgeInsets.fromLTRB(16, 100, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                AppStrings.createNewProduct,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  AppStrings.createNewProduct,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                AppStrings.createNewProductDescription,
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                const Text(
+                  AppStrings.createNewProductDescription,
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+                const SizedBox(height: 24),
 
-              // Foto de perfil (mejorada)
+                // Foto de perfil (mejorada)
                 Center(
                   child: GestureDetector(
-                    onTap: _handleImageSelection, // También permite tap en toda la imagen
+                    onTap:
+                        _handleImageSelection, // También permite tap en toda la imagen
                     child: Stack(
                       children: [
                         Container(
@@ -237,8 +236,8 @@ class _CreateItemProductoScreenState
                           child: CircleAvatar(
                             radius: 50,
                             backgroundColor: Colors.white.withAlpha(40),
-                            backgroundImage: profileImage != null 
-                                ? FileImage(profileImage) 
+                            backgroundImage: profileImage != null
+                                ? FileImage(profileImage)
                                 : null,
                             child: profileImage == null
                                 ? Iconify(
@@ -254,7 +253,8 @@ class _CreateItemProductoScreenState
                           right: 0,
                           child: GestureDetector(
                             onTap: _handleImageSelection,
-                            onLongPress: _showImageOptions, // Opción adicional con long press
+                            onLongPress:
+                                _showImageOptions, // Opción adicional con long press
                             child: Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
@@ -271,45 +271,26 @@ class _CreateItemProductoScreenState
                                 radius: 18,
                                 backgroundColor: theme.primaryColor,
                                 child: Icon(
-                                  profileImage == null 
-                                      ? Icons.add_a_photo 
+                                  profileImage == null
+                                      ? Icons.add_a_photo
                                       : Icons.edit,
-                                  size: 18, 
+                                  size: 18,
                                   color: Colors.white,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                        // Indicador de que hay imagen
-                        if (profileImage != null)
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: const Icon(
-                                Icons.check,
-                                size: 12,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                   ),
                 ),
-                
+
                 // Texto informativo debajo de la imagen
                 const SizedBox(height: 8),
                 Center(
                   child: Text(
-                    profileImage == null 
+                    profileImage == null
                         ? 'Toca para agregar una imagen del producto'
                         : 'Toca para cambiar la imagen',
                     style: TextStyle(
@@ -318,209 +299,217 @@ class _CreateItemProductoScreenState
                     ),
                   ),
                 ),
-                
-              const SizedBox(height: 24),
 
-              // Inputs de texto
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    CustomInputField(
-                        hintText: AppStrings.name,
-                        controller: registerProductController.nombreController,
+                const SizedBox(height: 24),
+
+                // Inputs de texto
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      CustomInputField(
+                          hintText: AppStrings.name,
+                          controller:
+                              registerProductController.nombreController,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Por favor ingrese un nombre'
+                              : AppConstants.nameRegex.hasMatch(value)
+                                  ? null
+                                  : 'Este campo no es válido'),
+                      const SizedBox(height: 12),
+                      CustomInputField(
+                        hintText: AppStrings.price,
+                        keyboardType: TextInputType.number,
+                        controller: registerProductController.precioController,
                         validator: (value) => value == null || value.isEmpty
-                            ? 'Por favor ingrese un nombre'
-                            : AppConstants.nameRegex.hasMatch(value)
+                            ? 'Por favor ingrese un valor'
+                            : AppConstants.priceRegex.hasMatch(value)
                                 ? null
-                                : 'Este campo no es válido'),
-                    const SizedBox(height: 12),
-                    CustomInputField(
-                      hintText: AppStrings.price,
-                      keyboardType: TextInputType.number,
-                      controller: registerProductController.precioController,
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Por favor ingrese un valor'
-                          : AppConstants.priceRegex.hasMatch(value)
-                              ? null
-                              : 'Este campo no es válida',
-                    ),
-                    const SizedBox(height: 12),
-                    // Categoría - Dropdown
-                    categoryAsync.when(
-                      data: (categories) {
-                        return DropdownButtonFormField<String>(
-                          value: selectedCategory,
-                          decoration: InputDecoration(
-                            hintText: AppStrings.category,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(32),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(32),
-                              borderSide: BorderSide(
-                                color: theme.primaryColor.withAlpha(200),
+                                : 'Este campo no es válida',
+                      ),
+                      const SizedBox(height: 12),
+                      // Categoría - Dropdown
+                      categoryAsync.when(
+                        data: (categories) {
+                          return DropdownButtonFormField<String>(
+                            value: selectedCategory,
+                            decoration: InputDecoration(
+                              hintText: AppStrings.category,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(32),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(32),
+                                borderSide: BorderSide(
+                                  color: theme.primaryColor.withAlpha(200),
+                                ),
                               ),
                             ),
-                          ),
-                          items: categories.map((category) {
-                            return DropdownMenuItem<String>(
-                              value: category.id, // O el id si prefieres
-                              child: Text(category.name),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedCategory = value;
-                            });
-                          },
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Seleccione una categoría'
-                              : null,
-                        );
+                            items: categories.map((category) {
+                              return DropdownMenuItem<String>(
+                                value: category.id, // O el id si prefieres
+                                child: Text(category.name),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedCategory = value;
+                              });
+                            },
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Seleccione una categoría'
+                                : null,
+                          );
+                        },
+                        loading: () => const CircularProgressIndicator(),
+                        error: (error, stack) =>
+                            const Text('Error cargando categorías'),
+                      ),
+                      const SizedBox(height: 12),
+                      CustomInputField(
+                        hintText: AppStrings.timePreparation,
+                        controller: registerProductController
+                            .tiempoPreparacionController,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Ingrese el tiempo de preapación'
+                            : AppConstants.timePreparationRegex.hasMatch(value)
+                                ? null
+                                : 'Este campo no es válido',
+                      ),
+                      const SizedBox(height: 12),
+                      CustomInputField(
+                        hintText: AppStrings.ingredients,
+                        controller:
+                            registerProductController.ingredientesController,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Ingrese al menos 3 ingredientes'
+                            : AppConstants.ingredientesRegex.hasMatch(value)
+                                ? null
+                                : 'Este campo no es válido',
+                      ),
+                      const SizedBox(height: 12),
+                      // Checkbox de disponibilidad
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Disponible:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Radio<bool>(
+                                        value: true,
+                                        groupValue: isAvailable,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isAvailable = value;
+                                          });
+                                        },
+                                        activeColor: Colors.green,
+                                      ),
+                                      const Text('Sí',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Row(
+                                    children: [
+                                      Radio<bool>(
+                                        value: false,
+                                        groupValue: isAvailable,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isAvailable = value;
+                                          });
+                                        },
+                                        activeColor: Colors.red,
+                                      ),
+                                      const Text('No',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Botones
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () {
+                        context.pop();
                       },
-                      loading: () => const CircularProgressIndicator(),
-                      error: (error, stack) =>
-                          const Text('Error cargando categorías'),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        side: const BorderSide(color: Colors.white),
+                      ),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    CustomInputField(
-                      hintText: AppStrings.timePreparation,
-                      controller:
-                          registerProductController.tiempoPreparacionController,
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Ingrese el tiempo de preapación'
-                          : AppConstants.timePreparationRegex.hasMatch(value)
-                              ? null
-                              : 'Este campo no es válido',
-                    ),
-                    const SizedBox(height: 12),
-                    CustomInputField(
-                      hintText: AppStrings.ingredients,
-                      controller:
-                          registerProductController.ingredientesController,
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Ingrese al menos 3 ingredientes'
-                          : AppConstants.ingredientesRegex.hasMatch(value)
-                              ? null
-                              : 'Este campo no es válido',
-                    ),
-                    const SizedBox(height: 12),
-                    // Checkbox de disponibilidad
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Disponible:',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Row(
-                                  children: [
-                                    Radio<bool>(
-                                      value: true,
-                                      groupValue: isAvailable,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isAvailable = value;
-                                        });
-                                      },
-                                      activeColor: Colors.green,
-                                    ),
-                                    const Text('Sí', style: TextStyle(color: Colors.white)),
-                                  ],
-                                ),
-                                const SizedBox(width: 16),
-                                Row(
-                                  children: [
-                                    Radio<bool>(
-                                      value: false,
-                                      groupValue: isAvailable,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isAvailable = value;
-                                        });
-                                      },
-                                      activeColor: Colors.red,
-                                    ),
-                                    const Text('No', style: TextStyle(color: Colors.white)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: areFieldsValid &&
+                              (_formKey.currentState?.validate() ?? false)
+                          ? () async {
+                              await registerProductController.registrarProducto(
+                                  ref,
+                                  nombre: registerProductController
+                                      .nombreController.text
+                                      .trim(),
+                                  precio: double.parse(registerProductController
+                                      .precioController.text),
+                                  tiempoPreparacion: int.parse(
+                                      registerProductController
+                                          .tiempoPreparacionController.text),
+                                  ingredientes: registerProductController
+                                      .ingredientesController.text
+                                      .trim(),
+                                  categoria: selectedCategory!,
+                                  disponible: isAvailable!,
+                                  foto: profileImage?.path ?? '');
+                              SnackbarHelper.showSnackBar(
+                                  'Producto agregado correctamente');
+
+                              context.pop();
+                              context.push('/admin/manage/producto/productos');
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B5CF6),
+                        disabledBackgroundColor:
+                            const Color(0xFF8B5CF6).withAlpha(100),
+                      ),
+                      child: const Text(
+                        'Agregar',
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
                 ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Botones
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      context.pop();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      side: const BorderSide(color: Colors.white),
-                    ),
-                    child: const Text(
-                      'Cancelar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: areFieldsValid &&
-                            (_formKey.currentState?.validate() ?? false)
-                        ? () async {
-                            await registerProductController.registrarProducto(
-                                ref,
-                                nombre: registerProductController
-                                    .nombreController.text.trim(),
-                                precio: double.parse(registerProductController
-                                    .precioController.text),
-                                tiempoPreparacion: int.parse(
-                                    registerProductController
-                                        .tiempoPreparacionController.text),
-                                ingredientes: registerProductController
-                                    .ingredientesController.text.trim(),
-                                categoria: selectedCategory!,
-                                disponible: isAvailable!,
-                                foto: profileImage?.path ?? '');
-                              SnackbarHelper.showSnackBar(
-                                  'Producto agregado correctamente');
-                                  
-                            context.pop();
-                            context.push('/admin/manage/producto/productos');
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B5CF6),
-                      disabledBackgroundColor: const Color(0xFF8B5CF6).withAlpha(100),
-                    ),
-                    child: const Text(
-                      'Agregar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
             ),
           ),
         ),

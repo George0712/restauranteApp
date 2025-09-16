@@ -26,11 +26,6 @@ class CloudinaryImageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // Debug: Imprimir la URL que llega
-    print('=== CLOUDINARY DEBUG ===');
-    print('URL recibida: $imageUrl');
-    print('Width: $width, Height: $height');
     
     Widget fallbackWidget = Container(
       width: width,
@@ -54,13 +49,11 @@ class CloudinaryImageWidget extends StatelessWidget {
     );
 
     if (imageUrl == null || imageUrl!.isEmpty) {
-      print('URL vacía o null');
       return fallbackWidget;
     }
 
     // Generar URL optimizada
     final optimizedUrl = _getValidOptimizedUrl(imageUrl!);
-    print('URL optimizada: $optimizedUrl');
 
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.zero,
@@ -70,7 +63,6 @@ class CloudinaryImageWidget extends StatelessWidget {
         height: height,
         fit: fit,
         placeholder: (context, url) {
-          print('Cargando imagen: $url');
           return Container(
             width: width,
             height: height,
@@ -84,9 +76,6 @@ class CloudinaryImageWidget extends StatelessWidget {
           );
         },
         errorWidget: (context, url, error) {
-          print('ERROR CARGANDO IMAGEN:');
-          print('URL: $url');
-          print('Error: $error');
           return Container(
             width: width,
             height: height,
@@ -109,7 +98,6 @@ class CloudinaryImageWidget extends StatelessWidget {
         },
         // Agregar callback para éxito
         imageBuilder: (context, imageProvider) {
-          print('✅ Imagen cargada exitosamente: $optimizedUrl');
           return Container(
             decoration: BoxDecoration(
               borderRadius: borderRadius,
@@ -126,8 +114,6 @@ class CloudinaryImageWidget extends StatelessWidget {
 
   String _getValidOptimizedUrl(String originalUrl) {
     try {
-      print('Procesando URL original: $originalUrl');
-      
       // Validar dimensiones
       int? validWidth;
       int? validHeight;
@@ -140,11 +126,8 @@ class CloudinaryImageWidget extends StatelessWidget {
         validHeight = height!.toInt();
       }
 
-      print('Dimensiones válidas - Width: $validWidth, Height: $validHeight');
-
       // Si no hay dimensiones válidas, usar la URL original
       if (validWidth == null && validHeight == null) {
-        print('Sin dimensiones válidas, usando URL original');
         return originalUrl;
       }
 
@@ -156,11 +139,9 @@ class CloudinaryImageWidget extends StatelessWidget {
         format: 'auto',
       );
       
-      print('URL final optimizada: $optimizedUrl');
       return optimizedUrl;
       
     } catch (e) {
-      print('Error generando URL optimizada: $e');
       return originalUrl;
     }
   }

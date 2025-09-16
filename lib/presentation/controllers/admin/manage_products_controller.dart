@@ -87,7 +87,6 @@ class RegisterProductoController {
       
       // Si hay una imagen, subirla a Cloudinary
       if (foto != null && foto.isNotEmpty) {
-        print('Subiendo imagen a Cloudinary: $foto');
         onUploadProgress?.call(0.1);
         
         final file = File(foto);
@@ -109,8 +108,6 @@ class RegisterProductoController {
         if (photoUrl == null) {
           throw Exception('Error al subir la imagen a Cloudinary');
         }
-        
-        print('Imagen subida exitosamente: $photoUrl');
         onUploadProgress?.call(0.9);
       }
 
@@ -125,17 +122,13 @@ class RegisterProductoController {
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-      print('Guardando producto: $productoData');
-
       final db = FirebaseFirestore.instance;
-      final docRef = await db.collection('producto').add(productoData);
+      await db.collection('producto').add(productoData);
       
       onUploadProgress?.call(1.0);
-      print('Producto guardado con ID: ${docRef.id}');
 
       return null; // Éxito
     } catch (e) {
-      print('Error al registrar producto: $e');
       return e.toString();
     }
   }
@@ -258,6 +251,30 @@ class RegisterComboController extends StateNotifier<void> {
       await docRef.set(combo.toMap());
 
       return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+}
+
+class ProductManagementController {
+  Future<String?> toggleProductAvailability(String productId, bool currentDisponible) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('producto').doc(productId).update({
+        'disponible': !currentDisponible,
+      });
+      return null; // Success
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> deleteProduct(String productId) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('producto').doc(productId).delete();
+      return null; // Success
     } catch (e) {
       return e.toString();
     }
