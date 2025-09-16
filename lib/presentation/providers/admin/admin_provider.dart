@@ -294,6 +294,30 @@ final productsProviderCategory = StreamProvider.family<List<ProductModel>, Strin
       });
 });
 
+final productManagementControllerProvider = Provider<ProductManagementController>((ref) {
+  return ProductManagementController();
+});
+
+// Provider para obtener un producto específico por ID
+final productByIdProvider = StreamProvider.family<ProductModel?, String>((ref, productId) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('producto')
+      .doc(productId)
+      .snapshots()
+      .map((snapshot) {
+        if (snapshot.exists && snapshot.data() != null) {
+          return ProductModel.fromMap(snapshot.data()!, snapshot.id);
+        }
+        return null;
+      });
+});
+
+// Provider para el controller de edición
+final editProductControllerProvider = Provider<EditProductController>((ref) {
+  return EditProductController();
+});
+
 //Providers Additionals
 final registerAdditionalControllerProvider = Provider<RegisterAdditionalController>((ref) {
   final controller = RegisterAdditionalController();

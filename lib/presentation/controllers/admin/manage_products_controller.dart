@@ -60,6 +60,13 @@ class RegisterProductoController {
     ingredientesController.dispose();
   }
 
+  void clearAllFields() {
+    nombreController.clear();
+    precioController.clear();
+    tiempoPreparacionController.clear();
+    ingredientesController.clear();
+  }
+
   bool areFieldsValid() {
     final nombre = nombreController.text.trim();
     final precio = precioController.text.trim();
@@ -116,7 +123,7 @@ class RegisterProductoController {
         'price': precio,
         'time': tiempoPreparacion,
         'ingredients': ingredientes,
-        'categoryId': categoria,
+        'category': categoria,
         'disponible': disponible,
         'photo': photoUrl, // URL de Cloudinary
         'createdAt': FieldValue.serverTimestamp(),
@@ -124,6 +131,69 @@ class RegisterProductoController {
 
       final db = FirebaseFirestore.instance;
       await db.collection('producto').add(productoData);
+      
+      onUploadProgress?.call(1.0);
+
+      return null; // Éxito
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> updateProduct(
+    WidgetRef ref, {
+    required String productId,
+    required String nombre,
+    required double precio,
+    required int tiempoPreparacion,
+    required String ingredientes,
+    required String categoria,
+    required bool disponible,
+    String? newPhoto,
+    Function(double)? onUploadProgress,
+  }) async {
+    try {
+      String? photoUrl = newPhoto; // Mantener la foto actual si no hay nueva
+      
+      // Si hay una nueva imagen, subirla a Cloudinary
+      if (newPhoto != null && newPhoto.isNotEmpty && !newPhoto.startsWith('http')) {
+        onUploadProgress?.call(0.1);
+        
+        final file = File(newPhoto);
+        
+        if (!await file.exists()) {
+          throw Exception('El archivo de imagen no existe');
+        }
+        
+        // Subir nueva imagen con progreso
+        photoUrl = await CloudinaryService.uploadImage(
+          file,
+          onProgress: (progress) {
+            final mappedProgress = 0.1 + (progress * 0.7);
+            onUploadProgress?.call(mappedProgress);
+          },
+        );
+        
+        if (photoUrl == null) {
+          throw Exception('Error al subir la imagen a Cloudinary');
+        }
+
+        onUploadProgress?.call(0.9);
+      }
+
+      final productoData = {
+        'name': nombre,
+        'price': precio,
+        'time': tiempoPreparacion,
+        'ingredients': ingredientes,
+        'category': categoria,
+        'disponible': disponible,
+        'photo': photoUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final db = FirebaseFirestore.instance;
+      await db.collection('producto').doc(productId).update(productoData);
       
       onUploadProgress?.call(1.0);
 
@@ -275,6 +345,109 @@ class ProductManagementController {
       final db = FirebaseFirestore.instance;
       await db.collection('producto').doc(productId).delete();
       return null; // Success
+    } catch (e) {
+      return e.toString();
+    }
+  }
+}
+
+class EditProductController {
+  final TextEditingController nombreController = TextEditingController();
+  final TextEditingController precioController = TextEditingController();
+  final TextEditingController tiempoPreparacionController = TextEditingController();
+  final TextEditingController ingredientesController = TextEditingController();
+
+  void dispose() {
+    nombreController.dispose();
+    precioController.dispose();
+    tiempoPreparacionController.dispose();
+    ingredientesController.dispose();
+  }
+
+  // Cargar datos del producto en los controladores
+  void loadProductData(ProductModel producto) {
+    nombreController.text = producto.name;
+    precioController.text = producto.price.toString();
+    tiempoPreparacionController.text = producto.tiempoPreparacion.toString();
+    ingredientesController.text = producto.ingredientes;
+  }
+
+  // Limpiar todos los campos
+  void clearAllFields() {
+    nombreController.clear();
+    precioController.clear();
+    tiempoPreparacionController.clear();
+    ingredientesController.clear();
+  }
+
+  bool areFieldsValid() {
+    final nombre = nombreController.text.trim();
+    final precio = precioController.text.trim();
+    final tiempoPreparacion = tiempoPreparacionController.text.trim();
+    final ingredientes = ingredientesController.text.trim();
+    return AppConstants.nameRegex.hasMatch(nombre) &&
+        AppConstants.priceRegex.hasMatch(precio) &&
+        AppConstants.timePreparationRegex.hasMatch(tiempoPreparacion) &&
+        AppConstants.ingredientesRegex.hasMatch(ingredientes);
+  }
+
+  Future<String?> updateProduct(
+    WidgetRef ref, {
+    required String productId,
+    required String nombre,
+    required double precio,
+    required int tiempoPreparacion,
+    required String ingredientes,
+    required String categoria,
+    required bool disponible,
+    String? newPhoto,
+    Function(double)? onUploadProgress,
+  }) async {
+    try {
+      String? photoUrl = newPhoto; // Mantener la foto actual si no hay nueva
+      
+      // Si hay una nueva imagen, subirla a Cloudinary
+      if (newPhoto != null && newPhoto.isNotEmpty && !newPhoto.startsWith('http')) {
+        onUploadProgress?.call(0.1);
+        
+        final file = File(newPhoto);
+        
+        if (!await file.exists()) {
+          throw Exception('El archivo de imagen no existe');
+        }
+        
+        // Subir nueva imagen con progreso
+        photoUrl = await CloudinaryService.uploadImage(
+          file,
+          onProgress: (progress) {
+            final mappedProgress = 0.1 + (progress * 0.7);
+            onUploadProgress?.call(mappedProgress);
+          },
+        );
+        
+        if (photoUrl == null) {
+          throw Exception('Error al subir la imagen a Cloudinary');
+        }
+        onUploadProgress?.call(0.9);
+      }
+
+      final productoData = {
+        'name': nombre,
+        'price': precio,
+        'time': tiempoPreparacion,
+        'ingredients': ingredientes,
+        'categoryId': categoria,
+        'disponible': disponible,
+        'photo': photoUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final db = FirebaseFirestore.instance;
+      await db.collection('producto').doc(productId).update(productoData);
+      
+      onUploadProgress?.call(1.0);
+
+      return null; // Éxito
     } catch (e) {
       return e.toString();
     }
