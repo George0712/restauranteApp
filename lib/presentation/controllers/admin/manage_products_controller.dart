@@ -12,8 +12,25 @@ import 'package:restaurante_app/presentation/providers/images/cloudinary_service
 class RegisterCategoryController {
   final TextEditingController nombreController = TextEditingController();
 
+  late bool _disponible;
+
+  bool get disponible => _disponible;
+
+  RegisterCategoryController() {
+    _disponible = true;
+  }
+
   void dispose() {
     nombreController.dispose();
+  }
+
+  void initializeForEditing(CategoryModel category) {
+    nombreController.text = category.name;
+    _disponible = category.disponible;
+  }
+
+  void setDisponible(bool value) {
+    _disponible = value;
   }
 
   bool areFieldsValid() {
@@ -21,30 +38,57 @@ class RegisterCategoryController {
     return AppConstants.nameRegex.hasMatch(nombre);
   }
 
-  Future<String?> registrarCategoria(
-    WidgetRef ref, {
+  Future<String?> registrarCategoria(WidgetRef ref, {
     required String nombre,
     required bool disponible,
-    required String? foto,
+    String? foto,
   }) async {
     try {
       final docRef = FirebaseFirestore.instance.collection('categoria').doc();
-
-      final categoria = CategoryModel(
+      final category = CategoryModel(
         id: docRef.id,
         name: nombre,
-        photo: foto,
         disponible: disponible,
       );
+      await docRef.set(category.toMap());
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
-      await docRef.set(categoria.toMap());
+  Future<String?> actualizarCategoria(WidgetRef ref, {
+    required String id,
+    required String nombre,
+    required bool disponible,
+    String? foto,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('categoria').doc(id);
+      await docRef.update({
+        'name': nombre,
+        'disponible': disponible,
+      });
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
+  Future<String?> eliminarCategoria(WidgetRef ref, {
+    required String id,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('categoria').doc(id);
+      await docRef.delete();
       return null;
     } catch (e) {
       return e.toString();
     }
   }
 }
+
+final registerCategoryControllerProvider = Provider((ref) => RegisterCategoryController());
 
 class RegisterProductoController {
   final TextEditingController nombreController = TextEditingController();
@@ -91,17 +135,17 @@ class RegisterProductoController {
   }) async {
     try {
       String? photoUrl;
-      
+
       // Si hay una imagen, subirla a Cloudinary
       if (foto != null && foto.isNotEmpty) {
         onUploadProgress?.call(0.1);
-        
+
         final file = File(foto);
-        
+
         if (!await file.exists()) {
           throw Exception('El archivo de imagen no existe');
         }
-        
+
         // Subir imagen con progreso
         photoUrl = await CloudinaryService.uploadImage(
           file,
@@ -111,7 +155,7 @@ class RegisterProductoController {
             onUploadProgress?.call(mappedProgress);
           },
         );
-        
+
         if (photoUrl == null) {
           throw Exception('Error al subir la imagen a Cloudinary');
         }
@@ -131,7 +175,7 @@ class RegisterProductoController {
 
       final db = FirebaseFirestore.instance;
       await db.collection('producto').add(productoData);
-      
+
       onUploadProgress?.call(1.0);
 
       return null; // Éxito
@@ -154,17 +198,19 @@ class RegisterProductoController {
   }) async {
     try {
       String? photoUrl = newPhoto; // Mantener la foto actual si no hay nueva
-      
+
       // Si hay una nueva imagen, subirla a Cloudinary
-      if (newPhoto != null && newPhoto.isNotEmpty && !newPhoto.startsWith('http')) {
+      if (newPhoto != null &&
+          newPhoto.isNotEmpty &&
+          !newPhoto.startsWith('http')) {
         onUploadProgress?.call(0.1);
-        
+
         final file = File(newPhoto);
-        
+
         if (!await file.exists()) {
           throw Exception('El archivo de imagen no existe');
         }
-        
+
         // Subir nueva imagen con progreso
         photoUrl = await CloudinaryService.uploadImage(
           file,
@@ -173,7 +219,7 @@ class RegisterProductoController {
             onUploadProgress?.call(mappedProgress);
           },
         );
-        
+
         if (photoUrl == null) {
           throw Exception('Error al subir la imagen a Cloudinary');
         }
@@ -194,7 +240,7 @@ class RegisterProductoController {
 
       final db = FirebaseFirestore.instance;
       await db.collection('producto').doc(productId).update(productoData);
-      
+
       onUploadProgress?.call(1.0);
 
       return null; // Éxito
@@ -328,7 +374,8 @@ class RegisterComboController extends StateNotifier<void> {
 }
 
 class ProductManagementController {
-  Future<String?> toggleProductAvailability(String productId, bool currentDisponible) async {
+  Future<String?> toggleProductAvailability(
+      String productId, bool currentDisponible) async {
     try {
       final db = FirebaseFirestore.instance;
       await db.collection('producto').doc(productId).update({
@@ -354,7 +401,8 @@ class ProductManagementController {
 class EditProductController {
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController precioController = TextEditingController();
-  final TextEditingController tiempoPreparacionController = TextEditingController();
+  final TextEditingController tiempoPreparacionController =
+      TextEditingController();
   final TextEditingController ingredientesController = TextEditingController();
 
   void dispose() {
@@ -405,17 +453,19 @@ class EditProductController {
   }) async {
     try {
       String? photoUrl = newPhoto; // Mantener la foto actual si no hay nueva
-      
+
       // Si hay una nueva imagen, subirla a Cloudinary
-      if (newPhoto != null && newPhoto.isNotEmpty && !newPhoto.startsWith('http')) {
+      if (newPhoto != null &&
+          newPhoto.isNotEmpty &&
+          !newPhoto.startsWith('http')) {
         onUploadProgress?.call(0.1);
-        
+
         final file = File(newPhoto);
-        
+
         if (!await file.exists()) {
           throw Exception('El archivo de imagen no existe');
         }
-        
+
         // Subir nueva imagen con progreso
         photoUrl = await CloudinaryService.uploadImage(
           file,
@@ -424,7 +474,7 @@ class EditProductController {
             onUploadProgress?.call(mappedProgress);
           },
         );
-        
+
         if (photoUrl == null) {
           throw Exception('Error al subir la imagen a Cloudinary');
         }
@@ -444,7 +494,7 @@ class EditProductController {
 
       final db = FirebaseFirestore.instance;
       await db.collection('producto').doc(productId).update(productoData);
-      
+
       onUploadProgress?.call(1.0);
 
       return null; // Éxito

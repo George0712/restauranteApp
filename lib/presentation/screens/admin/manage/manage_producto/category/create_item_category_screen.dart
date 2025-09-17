@@ -8,11 +8,14 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
+import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateItemCategoryScreen extends ConsumerStatefulWidget {
-  const CreateItemCategoryScreen({super.key});
+  final CategoryModel? category; // null para crear, categoría para editar
+
+  const CreateItemCategoryScreen({Key? key, this.category}) : super(key: key);
 
   @override
   ConsumerState<CreateItemCategoryScreen> createState() =>
@@ -27,10 +30,19 @@ class _CreateItemCategoryScreenState
   @override
   void initState() {
     super.initState();
-    final registerCategoryController =
-        ref.read(registerCategoryControllerProvider);
-    registerCategoryController.nombreController.addListener(_validateFields);
+    final controller = ref.read(registerCategoryControllerProvider);
+
+    if (widget.category != null) {
+      controller.nombreController.text = widget.category!.name;
+      isAvailable = widget.category!.disponible;
+      // Si usas imagenes: inicializa tambien provider para imagen aquí si es necesario
+    } else {
+      isAvailable = true; // Default para nueva categoría
+    }
+
+    controller.nombreController.addListener(_validateFields);
   }
+  
 
   void _validateFields() {
     if (!mounted) return;
@@ -46,7 +58,7 @@ class _CreateItemCategoryScreenState
         ref.watch(registerCategoryControllerProvider);
     final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
-    final imageNotifier = ref.read(profileImageProvider.notifier);
+    //final imageNotifier = ref.read(profileImageProvider.notifier);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
@@ -115,7 +127,7 @@ class _CreateItemCategoryScreenState
                                 color: theme.primaryColor.withAlpha(200))
                             : null,
                       ),
-                      Positioned(
+                      /*Positioned(
                         bottom: 0,
                         right: 0,
                         child: CircleAvatar(
@@ -129,7 +141,7 @@ class _CreateItemCategoryScreenState
                             },
                           ),
                         ),
-                      ),
+                      ),*/
                     ],
                   ),
                 ),
@@ -237,25 +249,36 @@ class _CreateItemCategoryScreenState
                       onPressed: areFieldsValid &&
                               (_formKey.currentState?.validate() ?? false)
                           ? () async {
-                              final result = await registerCategoryController
-                                  .registrarCategoria(
-                                ref,
-                                nombre: registerCategoryController
-                                    .nombreController.text,
-                                disponible: isAvailable!,
-                                foto: profileImage?.path ?? '',
-                              );
+                              final controller = registerCategoryController;
+                              String? result;
+                              if (widget.category == null) {
+                                // Crear nueva
+                                result = await controller.registrarCategoria(
+                                  ref,
+                                  nombre: controller.nombreController.text,
+                                  disponible: isAvailable!,
+                                  foto: profileImage?.path ?? '',
+                                );
+                              } else {
+                                // Actualizar existente
+                                result = await controller.actualizarCategoria(
+                                  ref,
+                                  id: widget.category!.id,
+                                  nombre: controller.nombreController.text,
+                                  disponible: isAvailable!,
+                                  foto: profileImage?.path ??
+                                      '', // o el valor anterior si no cambió
+                                );
+                              }
 
                               if (result == null) {
-                                // Registro exitoso
                                 SnackbarHelper.showSnackBar(
-                                    'Categoría Agregada');
+                                    widget.category == null
+                                        ? 'Categoría agregada exitosamente'
+                                        : 'Categoría actualizada exitosamente');
                                 context.pop();
-                                context.push(
-                                    '/admin/manage/producto/manage-categorys');
                               } else {
-                                SnackbarHelper.showSnackBar(
-                                    'Error al registrar categoría');
+                                SnackbarHelper.showSnackBar('Error: $result');
                               }
                             }
                           : null,
@@ -264,9 +287,9 @@ class _CreateItemCategoryScreenState
                         disabledBackgroundColor:
                             const Color(0xFF8B5CF6).withAlpha(100),
                       ),
-                      child: const Text(
-                        'Agregar',
-                        style: TextStyle(color: Colors.white),
+                      child: Text(
+                        widget.category == null ? 'Agregar' : 'Actualizar',
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ],

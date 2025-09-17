@@ -56,19 +56,17 @@ final isContactInfoValidProvider = StateProvider<bool>((ref) => false);
 final isCredentialsValidProvider = StateProvider<bool>((ref) => false);
 final userTempProvider = StateProvider<UserModel?>((ref) => null);
 
-final usersProvider = FutureProvider.family<List<UserModel>, String>((ref, rol) async {
+final usersProvider =
+    FutureProvider.family<List<UserModel>, String>((ref, rol) async {
   final firestore = ref.watch(firestoreProvider);
 
-  final querySnapshot = await firestore
-      .collection('usuario')
-      .where('rol', isEqualTo: rol)
-      .get();
+  final querySnapshot =
+      await firestore.collection('usuario').where('rol', isEqualTo: rol).get();
 
   return querySnapshot.docs
       .map((doc) => UserModel.fromMap(doc.data(), doc.id))
       .toList();
 });
-
 
 //Providers Imagenes
 class ProfileImageNotifier extends StateNotifier<File?> {
@@ -96,6 +94,10 @@ class ProfileImageNotifier extends StateNotifier<File?> {
     state = imageFile;
   }
 
+  void clear() {
+    state = null;
+  }
+
   // Método unificado para ambas fuentes
   Future<void> pickImageFromSource(ImageSource source) async {
     if (kIsWeb) {
@@ -106,7 +108,7 @@ class ProfileImageNotifier extends StateNotifier<File?> {
     try {
       // Verificar permisos según la fuente
       bool hasPermission = false;
-      
+
       if (source == ImageSource.camera) {
         hasPermission = await _requestCameraPermission();
       } else {
@@ -126,15 +128,18 @@ class ProfileImageNotifier extends StateNotifier<File?> {
 
       if (pickedFile != null) {
         state = File(pickedFile.path);
-        
-        final sourceText = source == ImageSource.camera ? 'tomada' : 'seleccionada';
+
+        final sourceText =
+            source == ImageSource.camera ? 'tomada' : 'seleccionada';
         SnackbarHelper.showSnackBar('Imagen $sourceText correctamente');
       } else {
         final sourceText = source == ImageSource.camera ? 'tomó' : 'seleccionó';
         SnackbarHelper.showSnackBar('No se $sourceText ninguna imagen');
       }
     } catch (e) {
-      final sourceText = source == ImageSource.camera ? 'tomar la foto' : 'seleccionar la imagen';
+      final sourceText = source == ImageSource.camera
+          ? 'tomar la foto'
+          : 'seleccionar la imagen';
       SnackbarHelper.showSnackBar('Error al $sourceText: $e');
     }
   }
@@ -145,7 +150,7 @@ class ProfileImageNotifier extends StateNotifier<File?> {
       if (Platform.isAndroid) {
         // Para Android 13+ usar permission.photos, para versiones anteriores usar storage
         final deviceInfo = await DeviceInfoPlugin().androidInfo;
-        
+
         if (deviceInfo.version.sdkInt >= 33) {
           // Android 13+
           var photosStatus = await Permission.photos.status;
@@ -154,11 +159,11 @@ class ProfileImageNotifier extends StateNotifier<File?> {
             if (!photosStatus.isGranted && !photosStatus.isLimited) {
               if (photosStatus.isPermanentlyDenied) {
                 SnackbarHelper.showSnackBar(
-                  'Permiso de galería denegado permanentemente. Ve a Configuración para habilitarlo.'
-                );
+                    'Permiso de galería denegado permanentemente. Ve a Configuración para habilitarlo.');
                 await openAppSettings();
               } else {
-                SnackbarHelper.showSnackBar('Se necesita permiso para acceder a las fotos');
+                SnackbarHelper.showSnackBar(
+                    'Se necesita permiso para acceder a las fotos');
               }
               return false;
             }
@@ -171,11 +176,11 @@ class ProfileImageNotifier extends StateNotifier<File?> {
             if (!storageStatus.isGranted) {
               if (storageStatus.isPermanentlyDenied) {
                 SnackbarHelper.showSnackBar(
-                  'Permiso de almacenamiento denegado permanentemente. Ve a Configuración para habilitarlo.'
-                );
+                    'Permiso de almacenamiento denegado permanentemente. Ve a Configuración para habilitarlo.');
                 await openAppSettings();
               } else {
-                SnackbarHelper.showSnackBar('Se necesita permiso para acceder al almacenamiento');
+                SnackbarHelper.showSnackBar(
+                    'Se necesita permiso para acceder al almacenamiento');
               }
               return false;
             }
@@ -188,17 +193,17 @@ class ProfileImageNotifier extends StateNotifier<File?> {
           if (!photosStatus.isGranted && !photosStatus.isLimited) {
             if (photosStatus.isPermanentlyDenied) {
               SnackbarHelper.showSnackBar(
-                'Permiso de galería denegado permanentemente. Ve a Configuración para habilitarlo.'
-              );
+                  'Permiso de galería denegado permanentemente. Ve a Configuración para habilitarlo.');
               await openAppSettings();
             } else {
-              SnackbarHelper.showSnackBar('Se necesita permiso para acceder a las fotos');
+              SnackbarHelper.showSnackBar(
+                  'Se necesita permiso para acceder a las fotos');
             }
             return false;
           }
         }
       }
-      
+
       return true;
     } catch (e) {
       SnackbarHelper.showSnackBar('Error al verificar permisos de galería: $e');
@@ -215,16 +220,16 @@ class ProfileImageNotifier extends StateNotifier<File?> {
         if (!cameraStatus.isGranted) {
           if (cameraStatus.isPermanentlyDenied) {
             SnackbarHelper.showSnackBar(
-              'Permiso de cámara denegado permanentemente. Ve a Configuración para habilitarlo.'
-            );
+                'Permiso de cámara denegado permanentemente. Ve a Configuración para habilitarlo.');
             await openAppSettings();
           } else {
-            SnackbarHelper.showSnackBar('Se necesita permiso para acceder a la cámara');
+            SnackbarHelper.showSnackBar(
+                'Se necesita permiso para acceder a la cámara');
           }
           return false;
         }
       }
-      
+
       return true;
     } catch (e) {
       SnackbarHelper.showSnackBar('Error al verificar permisos de cámara: $e');
@@ -242,11 +247,11 @@ final profileImageProvider =
   return ProfileImageNotifier();
 });
 
-
 //Providers Category
 final isValidFieldsProvider = StateProvider<bool>((ref) => false);
 
-final registerCategoryControllerProvider = Provider<RegisterCategoryController>((ref) {
+final registerCategoryControllerProvider =
+    Provider<RegisterCategoryController>((ref) {
   final controller = RegisterCategoryController();
   ref.onDispose(() {
     controller.dispose();
@@ -259,12 +264,13 @@ final categoryDisponibleProvider = StreamProvider<List<CategoryModel>>((ref) {
   return firestore.collection('categoria').snapshots().map((snapshot) {
     return snapshot.docs.map((doc) {
       return CategoryModel.fromMap(doc.data(), doc.id);
-    }).where((category) => category.disponible).toList();
+    }).toList();
   });
 });
 
 //Providers Productos
-final registerProductoControllerProvider = Provider<RegisterProductoController>((ref) {
+final registerProductoControllerProvider =
+    Provider<RegisterProductoController>((ref) {
   final controller = RegisterProductoController();
   ref.onDispose(() {
     controller.dispose();
@@ -281,36 +287,39 @@ final productsProvider = StreamProvider<List<ProductModel>>((ref) {
   });
 });
 
-final productsProviderCategory = StreamProvider.family<List<ProductModel>, String>((ref, categoryId) {
+final productsProviderCategory =
+    StreamProvider.family<List<ProductModel>, String>((ref, categoryId) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
       .collection('producto')
       .where('categoryId', isEqualTo: categoryId)
       .snapshots()
       .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          return ProductModel.fromMap(doc.data(), doc.id);
-        }).toList();
-      });
+    return snapshot.docs.map((doc) {
+      return ProductModel.fromMap(doc.data(), doc.id);
+    }).toList();
+  });
 });
 
-final productManagementControllerProvider = Provider<ProductManagementController>((ref) {
+final productManagementControllerProvider =
+    Provider<ProductManagementController>((ref) {
   return ProductManagementController();
 });
 
 // Provider para obtener un producto específico por ID
-final productByIdProvider = StreamProvider.family<ProductModel?, String>((ref, productId) {
+final productByIdProvider =
+    StreamProvider.family<ProductModel?, String>((ref, productId) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
       .collection('producto')
       .doc(productId)
       .snapshots()
       .map((snapshot) {
-        if (snapshot.exists && snapshot.data() != null) {
-          return ProductModel.fromMap(snapshot.data()!, snapshot.id);
-        }
-        return null;
-      });
+    if (snapshot.exists && snapshot.data() != null) {
+      return ProductModel.fromMap(snapshot.data()!, snapshot.id);
+    }
+    return null;
+  });
 });
 
 // Provider para el controller de edición
@@ -319,7 +328,8 @@ final editProductControllerProvider = Provider<EditProductController>((ref) {
 });
 
 //Providers Additionals
-final registerAdditionalControllerProvider = Provider<RegisterAdditionalController>((ref) {
+final registerAdditionalControllerProvider =
+    Provider<RegisterAdditionalController>((ref) {
   final controller = RegisterAdditionalController();
   ref.onDispose(() {
     controller.dispose();
@@ -330,15 +340,18 @@ final registerAdditionalControllerProvider = Provider<RegisterAdditionalControll
 final additionalProvider = StreamProvider<List<AdditionalModel>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore.collection('adicional').snapshots().map((snapshot) {
-    return snapshot.docs.map((doc) {
-      return AdditionalModel.fromMap(doc.data(), doc.id);
-    }).where((additional) => additional.disponible).toList();
+    return snapshot.docs
+        .map((doc) {
+          return AdditionalModel.fromMap(doc.data(), doc.id);
+        })
+        .where((additional) => additional.disponible)
+        .toList();
   });
 });
 
-
 //Providers Combos
-final registerComboControllerProvider = Provider<RegisterComboController>((ref)  {
+final registerComboControllerProvider =
+    Provider<RegisterComboController>((ref) {
   final controller = RegisterComboController();
   ref.onDispose(() {
     controller.dispose();
@@ -346,7 +359,8 @@ final registerComboControllerProvider = Provider<RegisterComboController>((ref) 
   return controller;
 });
 
-final registerComboControllerNotifierProvider = StateNotifierProvider<RegisterComboController, void>((ref) {
+final registerComboControllerNotifierProvider =
+    StateNotifierProvider<RegisterComboController, void>((ref) {
   return RegisterComboController();
 });
 
@@ -377,10 +391,10 @@ final mesasDisponiblesProvider = StreamProvider<List<MesaModel>>((ref) {
       .where('estado', isEqualTo: 'disponible')
       .snapshots()
       .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          return MesaModel.fromMap(doc.data(), doc.id);
-        }).toList();
-      });
+    return snapshot.docs.map((doc) {
+      return MesaModel.fromMap(doc.data(), doc.id);
+    }).toList();
+  });
 });
 
 final mesasOcupadasProvider = StreamProvider<List<MesaModel>>((ref) {
@@ -390,8 +404,8 @@ final mesasOcupadasProvider = StreamProvider<List<MesaModel>>((ref) {
       .where('estado', isEqualTo: 'ocupada')
       .snapshots()
       .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          return MesaModel.fromMap(doc.data(), doc.id);
-        }).toList();
-      });
+    return snapshot.docs.map((doc) {
+      return MesaModel.fromMap(doc.data(), doc.id);
+    }).toList();
+  });
 });

@@ -143,7 +143,8 @@ class ListCardsProducts extends ConsumerWidget {
                                         gradient: LinearGradient(
                                           colors: [
                                             theme.primaryColor.withOpacity(0.1),
-                                            theme.primaryColor.withOpacity(0.05),
+                                            theme.primaryColor
+                                                .withOpacity(0.05),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -152,16 +153,19 @@ class ListCardsProducts extends ConsumerWidget {
                                       child: Icon(
                                         Icons.fastfood_rounded,
                                         size: 80,
-                                        color: theme.primaryColor.withOpacity(0.7),
+                                        color:
+                                            theme.primaryColor.withOpacity(0.7),
                                       ),
                                     ),
                                   ),
-                                  
+
                                   // Overlay sutil para mejorar la legibilidad
-                                  if (producto.photo != null && producto.photo!.isNotEmpty)
+                                  if (producto.photo != null &&
+                                      producto.photo!.isNotEmpty)
                                     Container(
                                       decoration: BoxDecoration(
-                                        borderRadius: const BorderRadius.vertical(
+                                        borderRadius:
+                                            const BorderRadius.vertical(
                                           top: Radius.circular(16),
                                         ),
                                         gradient: LinearGradient(
@@ -183,7 +187,8 @@ class ListCardsProducts extends ConsumerWidget {
                                 padding: const EdgeInsets.all(12),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Flexible(
                                       child: Text(
@@ -215,14 +220,18 @@ class ListCardsProducts extends ConsumerWidget {
                                         borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: theme.primaryColor.withOpacity(0.3),
+                                            color: theme.primaryColor
+                                                .withOpacity(0.3),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
                                       child: Text(
-                                        '\$${producto.price.toStringAsFixed(0)}',
+                                        '\$${producto.price.toStringAsFixed(0).replaceAllMapped(
+                                              RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                              (Match m) => '${m[1]}.',
+                                            )}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
@@ -283,7 +292,9 @@ class ListCardsProducts extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  producto.disponible ? 'Disponible' : 'No disponible',
+                                  producto.disponible
+                                      ? 'Disponible'
+                                      : 'No disponible',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 10,
@@ -388,7 +399,8 @@ class ListCardsProducts extends ConsumerWidget {
     );
   }
 
-  void _showProductOptions(BuildContext context, WidgetRef ref, dynamic producto) {
+  void _showProductOptions(
+      BuildContext context, WidgetRef ref, dynamic producto) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -412,10 +424,12 @@ class ProductOptionsBottomSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ProductOptionsBottomSheet> createState() => _ProductOptionsBottomSheetState();
+  ConsumerState<ProductOptionsBottomSheet> createState() =>
+      _ProductOptionsBottomSheetState();
 }
 
-class _ProductOptionsBottomSheetState extends ConsumerState<ProductOptionsBottomSheet> {
+class _ProductOptionsBottomSheetState
+    extends ConsumerState<ProductOptionsBottomSheet> {
   bool _isLoading = false;
 
   @override
@@ -495,9 +509,9 @@ class _ProductOptionsBottomSheetState extends ConsumerState<ProductOptionsBottom
                           children: [
                             Text(
                               '\$${widget.producto.price.toStringAsFixed(0).replaceAllMapped(
-                                      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                      (Match m) => '${m[1]}.',
-                                    )}',
+                                    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                    (Match m) => '${m[1]}.',
+                                  )}',
                               style: const TextStyle(
                                 fontSize: 16,
                                 color: Color(0xFF10B981),
@@ -506,18 +520,23 @@ class _ProductOptionsBottomSheetState extends ConsumerState<ProductOptionsBottom
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: widget.producto.disponible 
-                                  ? Colors.green.withOpacity(0.2)
-                                  : Colors.red.withOpacity(0.2),
+                                color: widget.producto.disponible
+                                    ? Colors.green.withOpacity(0.2)
+                                    : Colors.red.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                widget.producto.disponible ? 'Activo' : 'Inactivo',
+                                widget.producto.disponible
+                                    ? 'Activo'
+                                    : 'Inactivo',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: widget.producto.disponible ? Colors.green : Colors.red,
+                                  color: widget.producto.disponible
+                                      ? Colors.green
+                                      : Colors.red,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -552,7 +571,8 @@ class _ProductOptionsBottomSheetState extends ConsumerState<ProductOptionsBottom
                       color: const Color(0xFF3B82F6),
                       onTap: () {
                         Navigator.pop(context);
-                        context.push('/admin/manage/producto/detalle/${widget.producto.id}');
+                        context.push(
+                            '/admin/manage/producto/detalle/${widget.producto.id}');
                       },
                     ),
                     const SizedBox(height: 16),
@@ -560,11 +580,12 @@ class _ProductOptionsBottomSheetState extends ConsumerState<ProductOptionsBottom
                       context,
                       icon: Icons.edit_outlined,
                       title: 'Editar producto',
-                      subtitle: 'Modificar información y configuración',
+                      subtitle: 'Modificar información del producto',
                       color: const Color(0xFF8B5CF6),
                       onTap: () {
                         Navigator.pop(context);
-                        context.push('/admin/manage/producto/editar/${widget.producto.id}');
+                        context.push(
+                            '/admin/manage/producto/editar/${widget.producto.id}');
                       },
                     ),
                     const SizedBox(height: 16),
@@ -589,7 +610,7 @@ class _ProductOptionsBottomSheetState extends ConsumerState<ProductOptionsBottom
                       context,
                       icon: Icons.delete_outline,
                       title: 'Eliminar producto',
-                      subtitle: 'Remover permanentemente',
+                      subtitle: 'Eliminar permanentemente',
                       color: const Color(0xFFEF4444),
                       onTap: () => _showDeleteConfirmation(context),
                     ),
@@ -688,11 +709,11 @@ class _ProductOptionsBottomSheetState extends ConsumerState<ProductOptionsBottom
       if (result == null) {
         // Éxito
         Navigator.pop(context);
-        
-        final message = widget.producto.disponible 
+
+        final message = widget.producto.disponible
             ? 'Producto desactivado correctamente'
             : 'Producto activado correctamente';
-        
+
         final color = widget.producto.disponible
             ? const Color(0xFFF59E0B)
             : const Color(0xFF10B981);
