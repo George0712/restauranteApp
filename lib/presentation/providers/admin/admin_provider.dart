@@ -341,11 +341,15 @@ final additionalProvider = StreamProvider<List<AdditionalModel>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore.collection('adicional').snapshots().map((snapshot) {
     return snapshot.docs
-        .map((doc) {
-          return AdditionalModel.fromMap(doc.data(), doc.id);
-        })
-        .where((additional) => additional.disponible)
+        .map((doc) => AdditionalModel.fromMap(doc.data(), doc.id))
         .toList();
+  });
+});
+
+final additionalsProvider = StreamProvider<List<AdditionalModel>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('adicional').snapshots().map((snapshot) {
+    return snapshot.docs.map((doc) => AdditionalModel.fromMap(doc.data(), doc.id)).toList();
   });
 });
 

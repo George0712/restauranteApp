@@ -306,7 +306,7 @@ class ListCardsProducts extends ConsumerWidget {
                           ),
                         ),
                         // Icono de opciones
-                        Positioned(
+                        /*Positioned(
                           top: 8,
                           left: 8,
                           child: Container(
@@ -321,7 +321,7 @@ class ListCardsProducts extends ConsumerWidget {
                               size: 16,
                             ),
                           ),
-                        ),
+                        ),*/
                       ],
                     ),
                   ),
@@ -815,9 +815,6 @@ class _ProductOptionsBottomSheetState
   // Función para ejecutar la eliminación
   Future<void> _deleteProduct() async {
     try {
-      // Mostrar loading en SnackBar
-      SnackbarHelper.showInfo('Eliminando producto...');
-
       final controller = ref.read(productManagementControllerProvider);
       final result = await controller.deleteProduct(widget.producto.id);
 

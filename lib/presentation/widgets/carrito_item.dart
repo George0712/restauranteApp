@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
+import 'package:restaurante_app/presentation/widgets/cloudinary_image_widget.dart';
 
 class CarritoItem extends StatelessWidget {
   final ItemCarrito item;
@@ -27,9 +28,30 @@ class CarritoItem extends StatelessWidget {
       ),
       color: Colors.white,
       child: ListTile(
-        leading: CircleAvatar(
-          child: Text(item.producto.photo ?? '🍽️'),
-        ),
+        leading: item.producto.photo != null && item.producto.photo!.isNotEmpty
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(50),
+                child: CloudinaryImageWidget(
+                  imageUrl: item.producto.photo,
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                  errorWidget: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.fastfood_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              )
+            : const Text('🍽️', style: TextStyle(fontSize: 24)),
         title: Text('${item.producto.name} x${item.cantidad}'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

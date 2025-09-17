@@ -107,7 +107,6 @@ class _CreateItemProductScreenState
     registerProductController.ingredientesController.text =
         producto.ingredientes ?? '';
 
-    // ✅ LIMPIEZA DEL VALOR DE CATEGORÍA
     String? categoryValue = producto.category;
 
     // Si está vacío, null, o solo espacios, convertir a null
@@ -116,7 +115,7 @@ class _CreateItemProductScreenState
     }
 
     setState(() {
-      selectedCategory = categoryValue; // ✅ Usar valor limpiado
+      selectedCategory = categoryValue;
       isAvailable = producto.disponible ?? true;
       _originalImageUrl = producto.photo;
       _hasLoadedData = true;

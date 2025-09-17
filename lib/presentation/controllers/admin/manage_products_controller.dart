@@ -251,47 +251,96 @@ class RegisterProductoController {
 }
 
 class RegisterAdditionalController {
-  final TextEditingController nombreController = TextEditingController();
-  final TextEditingController precioController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+
+  bool _disponible = true;
+
+  bool get disponible => _disponible;
 
   void dispose() {
-    nombreController.dispose();
-    precioController.dispose();
+    nameController.dispose();
+    priceController.dispose();
+  }
+
+  void setDisponible(bool value) {
+    _disponible = value;
+  }
+
+  void initializeForEditing(AdditionalModel additional) {
+    nameController.text = additional.name;
+    priceController.text = additional.price.toString();
+    _disponible = additional.disponible;
   }
 
   bool areFieldsValid() {
-    final nombre = nombreController.text.trim();
-    final precio = precioController.text.trim();
-    return AppConstants.nameRegex.hasMatch(nombre) &&
-        AppConstants.priceRegex.hasMatch(precio);
+    final name = nameController.text.trim();
+    final price = priceController.text.trim();
+    return name.isNotEmpty && AppConstants.priceRegex.hasMatch(price);
   }
 
-  Future<String?> registrarAdditional(
-    WidgetRef ref, {
-    required String nombre,
-    required double precio,
+  /// Crea un nuevo adicional en firestore
+  Future<String?> registrarAdditional(WidgetRef ref, {
+    required String name,
     required bool disponible,
-    required String foto,
+    required double price,
+    String? photo,
   }) async {
     try {
       final docRef = FirebaseFirestore.instance.collection('adicional').doc();
-
-      final adicional = AdditionalModel(
+      final additional = AdditionalModel(
         id: docRef.id,
-        name: nombre,
-        price: precio,
+        name: name,
+        price: price,
         disponible: disponible,
-        photo: foto,
+        photo: photo,
       );
+      await docRef.set(additional.toMap());
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
-      await docRef.set(adicional.toMap());
+  /// Actualiza un adicional existente
+  Future<String?> actualizarAdditional(WidgetRef ref, {
+    required String id,
+    required String name,
+    required double price,
+    required bool disponible,
+    String? photo,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('adicional').doc(id);
+      await docRef.update({
+        'name': name,
+        'disponible': disponible,
+        'price': price,
+        if (photo != null) 'photo': photo,
+      });
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
+  /// Elimina un adicional
+  Future<String?> eliminarAdditional(WidgetRef ref, {required String id}) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('adicional').doc(id);
+      await docRef.delete();
       return null;
     } catch (e) {
       return e.toString();
     }
   }
 }
+
+final registerAdditionalController = Provider((ref) {
+  final controller = RegisterAdditionalController();
+  ref.onDispose(() => controller.dispose());
+  return controller;
+});
 
 class RegisterComboController extends StateNotifier<void> {
   RegisterComboController() : super(null);

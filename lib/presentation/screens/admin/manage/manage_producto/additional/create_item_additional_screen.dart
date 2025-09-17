@@ -30,8 +30,8 @@ class _CreateItemAdditionalScreenState
     super.initState();
     final registerAdditionalController =
         ref.read(registerAdditionalControllerProvider);
-    registerAdditionalController.nombreController.addListener(_validateFields);
-    registerAdditionalController.precioController.addListener(_validateFields);
+    registerAdditionalController.nameController.addListener(_validateFields);
+    registerAdditionalController.priceController.addListener(_validateFields);
   }
 
   void _validateFields() {
@@ -48,7 +48,7 @@ class _CreateItemAdditionalScreenState
         ref.watch(registerAdditionalControllerProvider);
     final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
-    final imageNotifier = ref.read(profileImageProvider.notifier);
+    //final imageNotifier = ref.read(profileImageProvider.notifier);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
@@ -112,12 +112,12 @@ class _CreateItemAdditionalScreenState
                             ? FileImage(profileImage)
                             : null,
                         child: profileImage == null
-                            ? Icon(Icons.add,
+                            ? Icon(Icons.category_rounded,
                                 size: 50,
                                 color: theme.primaryColor.withAlpha(200))
                             : null,
                       ),
-                      Positioned(
+                      /*Positioned(
                         bottom: 0,
                         right: 0,
                         child: CircleAvatar(
@@ -131,7 +131,7 @@ class _CreateItemAdditionalScreenState
                             },
                           ),
                         ),
-                      ),
+                      ),*/
                     ],
                   ),
                 ),
@@ -145,7 +145,7 @@ class _CreateItemAdditionalScreenState
                       CustomInputField(
                           hintText: AppStrings.name,
                           controller:
-                              registerAdditionalController.nombreController,
+                              registerAdditionalController.nameController,
                           validator: (value) => value == null || value.isEmpty
                               ? 'Por favor ingrese un nombre'
                               : AppConstants.nameRegex.hasMatch(value)
@@ -155,7 +155,7 @@ class _CreateItemAdditionalScreenState
                       CustomInputField(
                         hintText: 'Precio',
                         controller:
-                            registerAdditionalController.precioController,
+                            registerAdditionalController.priceController,
                         validator: (value) => value == null || value.isEmpty
                             ? 'Por favor ingrese un valor'
                             : AppConstants.priceRegex.hasMatch(value)
@@ -252,13 +252,12 @@ class _CreateItemAdditionalScreenState
                               final result = await registerAdditionalController
                                   .registrarAdditional(
                                 ref,
-                                nombre: registerAdditionalController
-                                    .nombreController.text,
-                                precio: double.parse(
+                                name: registerAdditionalController
+                                    .nameController.text,
+                                price: double.parse(
                                     registerAdditionalController
-                                        .precioController.text),
+                                        .priceController.text),
                                 disponible: isAvailable!,
-                                foto: profileImage?.path ?? '',
                               );
                               if (result == null) {
                                 // Registro exitoso
