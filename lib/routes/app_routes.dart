@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_cocinero_screen.dart';
@@ -179,6 +180,14 @@ final GoRouter router = GoRouter(
       builder: (context, state) {
         final category = state.extra as CategoryModel?;
         return CreateItemCategoryScreen(category: category);
+      },
+    ),
+
+    GoRoute(
+      path: '/admin/manage/additional/edit',
+      builder: (context, state) {
+        final additional = state.extra as AdditionalModel?;
+        return CreateItemAdditionalScreen(additional: additional);
       },
     ),
   ],

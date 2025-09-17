@@ -9,11 +9,13 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
+import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateItemAdditionalScreen extends ConsumerStatefulWidget {
-  const CreateItemAdditionalScreen({super.key});
+  final AdditionalModel? additional;
+  const CreateItemAdditionalScreen({super.key, this.additional});
 
   @override
   ConsumerState<CreateItemAdditionalScreen> createState() =>
@@ -28,24 +30,28 @@ class _CreateItemAdditionalScreenState
   @override
   void initState() {
     super.initState();
-    final registerAdditionalController =
-        ref.read(registerAdditionalControllerProvider);
-    registerAdditionalController.nameController.addListener(_validateFields);
-    registerAdditionalController.priceController.addListener(_validateFields);
+    final controller = ref.read(registerAdditionalControllerProvider);
+    controller.nameController.addListener(_validateFields);
+    controller.priceController.addListener(_validateFields);
+
+    if (widget.additional != null) {
+      // Modo edición: inicializar campos
+      controller.nameController.text = widget.additional!.name;
+      controller.priceController.text = widget.additional!.price.toStringAsFixed(0);
+      isAvailable = widget.additional!.disponible;
+    }
   }
 
   void _validateFields() {
     if (!mounted) return;
-    final registerAdditionalController =
-        ref.read(registerAdditionalControllerProvider);
-    final isValid = registerAdditionalController.areFieldsValid();
+    final controller = ref.read(registerAdditionalControllerProvider);
+    final isValid = controller.areFieldsValid();
     ref.read(isValidFieldsProvider.notifier).state = isValid;
   }
 
   @override
   Widget build(BuildContext context) {
-    final registerAdditionalController =
-        ref.watch(registerAdditionalControllerProvider);
+    final controller = ref.watch(registerAdditionalControllerProvider);
     final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
     //final imageNotifier = ref.read(profileImageProvider.notifier);
@@ -59,8 +65,7 @@ class _CreateItemAdditionalScreenState
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined,
-              color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
@@ -68,11 +73,7 @@ class _CreateItemAdditionalScreenState
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF0F0F23),
-              Color(0xFF1A1A2E),
-              Color(0xFF16213E),
-            ],
+            colors: [Color(0xFF0F0F23), Color(0xFF1A1A2E), Color(0xFF16213E)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -86,55 +87,33 @@ class _CreateItemAdditionalScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  AppStrings.registerAdditional,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                Text(
+                  widget.additional == null ? AppStrings.registerAdditional : 'Editar Adicional',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  AppStrings.registerAdditionalDescription,
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                Text(
+                  widget.additional == null ? AppStrings.registerAdditionalDescription : 'Modifica la información del adicional',
+                  style: const TextStyle(fontSize: 16, color: Colors.white70),
                 ),
                 const SizedBox(height: 24),
 
-                // Foto de perfil (opcional)
+                // Foto de perfil (opcional) — mantén estilo si quieres
                 Center(
                   child: Stack(
                     children: [
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.white.withAlpha(40),
-                        backgroundImage: profileImage != null
-                            ? FileImage(profileImage)
-                            : null,
+                        backgroundImage: profileImage != null ? FileImage(profileImage) : null,
                         child: profileImage == null
-                            ? Icon(Icons.category_rounded,
-                                size: 50,
-                                color: theme.primaryColor.withAlpha(200))
+                            ? Icon(Icons.category_rounded, size: 50, color: theme.primaryColor.withAlpha(200))
                             : null,
                       ),
-                      /*Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: CircleAvatar(
-                          radius: 18,
-                          backgroundColor: theme.primaryColor,
-                          child: IconButton(
-                            icon: const Icon(Icons.camera_alt,
-                                size: 18, color: Colors.white),
-                            onPressed: () async {
-                              await imageNotifier.pickImage();
-                            },
-                          ),
-                        ),
-                      ),*/
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 24),
 
                 // Inputs de texto
@@ -143,19 +122,19 @@ class _CreateItemAdditionalScreenState
                   child: Column(
                     children: [
                       CustomInputField(
-                          hintText: AppStrings.name,
-                          controller:
-                              registerAdditionalController.nameController,
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Por favor ingrese un nombre'
-                              : AppConstants.nameRegex.hasMatch(value)
-                                  ? null
-                                  : 'El nombre no es válido'),
+                        hintText: AppStrings.name,
+                        controller: controller.nameController,
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Por favor ingrese un nombre'
+                            : AppConstants.nameRegex.hasMatch(value)
+                                ? null
+                                : 'El nombre no es válido',
+                      ),
                       const SizedBox(height: 12),
                       CustomInputField(
                         hintText: 'Precio',
-                        controller:
-                            registerAdditionalController.priceController,
+                        controller: controller.priceController,
+                        keyboardType: TextInputType.number,
                         validator: (value) => value == null || value.isEmpty
                             ? 'Por favor ingrese un valor'
                             : AppConstants.priceRegex.hasMatch(value)
@@ -163,6 +142,7 @@ class _CreateItemAdditionalScreenState
                                 : 'El campo no es válido',
                       ),
                       const SizedBox(height: 12),
+
                       // Checkbox de disponibilidad
                       Align(
                         alignment: Alignment.centerLeft,
@@ -171,11 +151,7 @@ class _CreateItemAdditionalScreenState
                           children: [
                             const Text(
                               'Disponible:',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white,
-                              ),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white),
                             ),
                             Expanded(
                               child: Row(
@@ -189,12 +165,11 @@ class _CreateItemAdditionalScreenState
                                           setState(() {
                                             isAvailable = value;
                                           });
+                                          ref.read(registerAdditionalControllerProvider).setDisponible(value ?? true);
                                         },
                                         activeColor: Colors.green,
                                       ),
-                                      const Text('Sí',
-                                          style:
-                                              TextStyle(color: Colors.white)),
+                                      const Text('Sí', style: TextStyle(color: Colors.white)),
                                     ],
                                   ),
                                   const SizedBox(width: 16),
@@ -207,12 +182,11 @@ class _CreateItemAdditionalScreenState
                                           setState(() {
                                             isAvailable = value;
                                           });
+                                          ref.read(registerAdditionalControllerProvider).setDisponible(value ?? false);
                                         },
                                         activeColor: Colors.red,
                                       ),
-                                      const Text('No',
-                                          style:
-                                              TextStyle(color: Colors.white)),
+                                      const Text('No', style: TextStyle(color: Colors.white)),
                                     ],
                                   ),
                                 ],
@@ -233,54 +207,52 @@ class _CreateItemAdditionalScreenState
                   children: [
                     OutlinedButton(
                       onPressed: () {
+                        ref.read(registerAdditionalControllerProvider).clear();
                         context.pop();
                       },
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         side: const BorderSide(color: Colors.white),
                       ),
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: const Text('Cancelar', style: TextStyle(color: Colors.white)),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
-                      onPressed: areFieldsValid &&
-                              (_formKey.currentState?.validate() ?? false)
+                      onPressed: areFieldsValid && (_formKey.currentState?.validate() ?? false)
                           ? () async {
-                              final result = await registerAdditionalController
-                                  .registrarAdditional(
-                                ref,
-                                name: registerAdditionalController
-                                    .nameController.text,
-                                price: double.parse(
-                                    registerAdditionalController
-                                        .priceController.text),
-                                disponible: isAvailable!,
-                              );
-                              if (result == null) {
-                                // Registro exitoso
-                                SnackbarHelper.showSnackBar(
-                                    'Adicional Agregado');
-                                context.pop();
-                                context.push(
-                                    '/admin/manage/producto/manage-additionals');
+                              final controller = ref.read(registerAdditionalControllerProvider);
+                              String? result;
+                              if (widget.additional == null) {
+                                result = await controller.registrarAdditional(
+                                  ref,
+                                  name: controller.nameController.text.trim(),
+                                  price: double.parse(controller.priceController.text.trim()),
+                                  disponible: isAvailable!,
+                                );
                               } else {
+                                result = await controller.actualizarAdditional(
+                                  ref,
+                                  id: widget.additional!.id,
+                                  name: controller.nameController.text.trim(),
+                                  price: double.parse(controller.priceController.text.trim()),
+                                  disponible: isAvailable!,
+                                );
+                              }
+
+                              if (result == null) {
                                 SnackbarHelper.showSnackBar(
-                                    'Error al registrar adicional');
+                                    widget.additional == null ? 'Adicional agregado' : 'Adicional actualizado');
+                                context.pop();
+                              } else {
+                                SnackbarHelper.showSnackBar('Error: $result');
                               }
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B5CF6),
-                        disabledBackgroundColor:
-                            const Color(0xFF8B5CF6).withAlpha(100),
+                        disabledBackgroundColor: const Color(0xFF8B5CF6).withAlpha(100),
                       ),
-                      child: const Text(
-                        'Continuar',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: Text(widget.additional == null ? 'Agregar' : 'Actualizar', style: const TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),

@@ -263,6 +263,12 @@ class RegisterAdditionalController {
     priceController.dispose();
   }
 
+  void clear() {
+    nameController.clear();
+    priceController.clear();
+    _disponible = true;
+  }
+
   void setDisponible(bool value) {
     _disponible = value;
   }
