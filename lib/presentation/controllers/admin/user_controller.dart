@@ -26,6 +26,9 @@ class UserController {
   bool get isUpdating => _isUpdating;
   set isUpdating(bool val) => _isUpdating = val;
 
+  String adminEmail = FirebaseAuth.instance.currentUser!.email!;
+  String adminPassword = 'Admin123'; 
+
   void dispose() {
     nombreController.dispose();
     apellidosController.dispose();
@@ -101,8 +104,12 @@ class UserController {
         rol: rol,
       );
 
-      // Guardar en colección 'usuarios'
+      // Guardar en colección 'usuario'
       await _firestore.collection('usuario').doc(uid).set(usuario.toMap());
+
+      // Restaurar la sesión admin
+      await _auth.signOut();
+      await _auth.signInWithEmailAndPassword(email: adminEmail, password: adminPassword);
     } catch (e) {
       return e.toString();
     }

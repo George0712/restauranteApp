@@ -222,8 +222,7 @@ class _CreateCredentialsMeseroState
                                   if (res == null) {
                                     SnackbarHelper.showSnackBar(
                                         'Credenciales actualizadas con éxito');
-                                    context.pop();
-                                    context.push('/admin/manage/mesero');
+                                    context.go('/admin/manage/mesero');
                                   } else {
                                     SnackbarHelper.showSnackBar('Error: $res');
                                   }

@@ -41,7 +41,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
   @override
   Widget build(BuildContext context) {
     final mesasAsync = ref.watch(mesasStreamProvider);
-    final notifier = ref.read(mesasProvider.notifier);
+    final notifier = ref.read(mesasMeseroProvider.notifier);
 
     return mesasAsync.when(
       data: (mesas) {
@@ -676,7 +676,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
            );
 
           ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-          ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+          ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
 
           context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
         },
@@ -697,7 +697,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
              fechaReserva: fecha,
              tiempo: hora,
            );
-          ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+          ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
         },
       ),
     );
@@ -755,7 +755,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
                  horaOcupacion: null,
                  total: null,
                );
-              ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+              ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -797,7 +797,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
 
     // Guardar cambios
     ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-    ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+    ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
 
     // Navegar a la pantalla de pedido
     context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
@@ -839,7 +839,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
                  tiempo: null,
                  fechaReserva: null,
                );
-              ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+              ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(

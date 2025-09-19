@@ -34,19 +34,23 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
 /// Extrae cada métrica de AdminDashboardModel
 final totalVentasProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
-  return firestore.collection('pedido').snapshots().map((snapshot) {
-    int totalVentas = 0;
-    for (final doc in snapshot.docs) {
-      final data = doc.data();
-      final venta = data['total']; // Ajusta el nombre de campo exacto
-      if (venta is int) {
-        totalVentas += venta;
-      } else if (venta is double) {
-        totalVentas += venta.toInt();
+  return firestore
+    .collection('pedido')
+    .where('status', isEqualTo: 'terminado')
+    .snapshots()
+    .map((snapshot) {
+      int totalVentas = 0;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final venta = data['total']; // Ajusta el nombre del campo si es necesario
+        if (venta is int) {
+          totalVentas += venta;
+        } else if (venta is double) {
+          totalVentas += venta.toInt();
+        }
       }
-    }
-    return totalVentas;
-  });
+      return totalVentas;
+    });
 });
 
 // Provider para contar pedidos (órdenes)
@@ -68,7 +72,11 @@ final usuariosProvider = StreamProvider<int>((ref) {
 // Provider para contar productos
 final productosProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
-  return firestore.collection('producto').snapshots().map((snapshot) => snapshot.size);
+  return firestore
+    .collection('producto')
+    .where('disponible', isEqualTo: true)
+    .snapshots()
+    .map((snapshot) => snapshot.size);
 });
 
 //Providers Users
@@ -421,9 +429,7 @@ final isMesaFieldsValidProvider = StateProvider<bool>((ref) => false);
 final mesasProvider = StreamProvider<List<MesaModel>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore.collection('mesa').snapshots().map((snapshot) {
-    return snapshot.docs.map((doc) {
-      return MesaModel.fromMap(doc.data(), doc.id);
-    }).toList();
+    return snapshot.docs.map((doc) => MesaModel.fromMap(doc.data(), doc.id)).toList();
   });
 });
 

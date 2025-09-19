@@ -134,11 +134,13 @@ Widget buildNeonStatCardWithValue(
           ),
         ),
 
-        Text(
-          subtitle,
-          style: TextStyle(
-            color: color.withOpacity(0.7),
-            fontSize: 12,
+        Flexible(
+          child: Text(
+            subtitle,
+            style: TextStyle(
+              color: color.withOpacity(0.7),
+              fontSize: 12,
+            ),
           ),
         ),
       ],

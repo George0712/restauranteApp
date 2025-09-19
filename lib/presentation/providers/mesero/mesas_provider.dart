@@ -90,7 +90,7 @@ class MesasNotifier extends StateNotifier<List<MesaModel>> {
   int get mesasReservadas => state.where((m) => m.estado == 'reservada').length;
 }
 
-final mesasProvider = StateNotifierProvider<MesasNotifier, List<MesaModel>>((ref) {
+final mesasMeseroProvider = StateNotifierProvider<MesasNotifier, List<MesaModel>>((ref) {
   return MesasNotifier();
 });
 
