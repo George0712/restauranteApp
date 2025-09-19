@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:restaurante_app/presentation/providers/cocina/order_provider.dart';
+import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 
 class KitchenStats extends ConsumerWidget {
   const KitchenStats({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stats = ref.watch(orderStatsProvider);
+    final statsAsync = ref.watch(pedidoStatsProvider);
 
+    return statsAsync.when(
+      data: (stats) => _buildStatsContainer(stats),
+      loading: () => _buildLoadingContainer(),
+      error: (error, _) => _buildErrorContainer(),
+    );
+  }
+
+  Widget _buildStatsContainer(Map<String, int> stats) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(16),
@@ -27,33 +35,72 @@ class KitchenStats extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildStatItem(
-            'Pendientes',
-            stats['pendiente']!,
-            Colors.red,
-            Icons.pending_actions,
-          ),
-          _buildDivider(),
-          _buildStatItem(
             'Preparando',
-            stats['preparando']!,
+            stats['preparando'] ?? 0, // Cambié 'enPreparacion' por 'preparando'
             Colors.orange,
             Icons.restaurant,
           ),
           _buildDivider(),
           _buildStatItem(
             'Terminados',
-            stats['terminado']!,
+            stats['terminado'] ?? 0, // Cambié 'listo' por 'terminado' 
             Colors.green,
             Icons.check_circle,
           ),
-          _buildDivider(),
-          _buildStatItem(
-            'Cancelados',
-            stats['cancelado']!,
-            Colors.grey,
-            Icons.cancel,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingContainer() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(16),
+      height: 80,
+      decoration: BoxDecoration(
+        color: const Color(0xFF3D3D3D),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.2),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
         ],
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(
+          color: Colors.orange,
+          strokeWidth: 2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorContainer() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(16),
+      height: 80,
+      decoration: BoxDecoration(
+        color: const Color(0xFF3D3D3D),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.2),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          'Error al cargar estadísticas',
+          style: TextStyle(
+            color: Colors.red[300],
+            fontSize: 14,
+          ),
+        ),
       ),
     );
   }

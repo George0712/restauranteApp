@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
+import 'package:restaurante_app/data/models/user_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/detalle_producto_screen.dart';
 import 'package:restaurante_app/presentation/widgets/carrito_bottom.dart';
@@ -532,95 +534,102 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
   }
 
   void _confirmarPedido(BuildContext context, List<ItemCarrito> carrito) async {
+  try {
+    final adicionalesAsync = await ref.read(additionalProvider.future);
+    
+    // ✅ OBTENER INFORMACIÓN DEL MESERO ACTUAL correctamente
+    UserModel? user;
     try {
-      final adicionalesAsync = await ref.read(additionalProvider.future);
-      
-      // Crear los items del pedido con sus adicionales
-      final items = carrito.map((item) {
-        final adicionales = item.modificacionesSeleccionadas
-            .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
-            .toList();
-            
-        return {
-          'productId': item.producto.id,
-          'name': item.producto.name,
-          'price': item.precioUnitario,
-          'quantity': item.cantidad,
-          'notes': item.notas,
-          'adicionales': adicionales.map((a) => a.toMap()).toList(),
-        };
-      }).toList();
-
-      // Calcular totales
-      final subtotal = carrito.fold<double>(0, (sum, item) {
-        final precioBase = item.precioUnitario * item.cantidad;
-        final precioAdicionales = item.adicionales?.fold<double>(
-          0,
-          (sum, adicional) => sum + (adicional.price * item.cantidad),
-        ) ?? 0;
-        return sum + precioBase + precioAdicionales;
-      });
-      final total = subtotal;
-
-      // Crear el pedido en Firestore
-      await FirebaseFirestore.instance.collection('pedido').add({
-        'mode': 'mesa',
-        'tableNumber': widget.pedidoId,
-        'items': items,
-        'subtotal': subtotal,
-        'total': total,
-        'status': 'pendiente',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      // Actualizar estado
-      setState(() {
-        pedidoConfirmado = true;
-      });
-
-      // Mostrar mensaje de éxito
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pedido confirmado exitosamente')),
-        );
-        Navigator.pop(context);
-      }
+      user = await ref.read(userModelProvider.future); // ✅ Usar .future
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al confirmar el pedido: $e')),
-        );
-      }
+      print("🚨 ERROR OBTENIENDO USUARIO: $e");
+      user = null;
+    }
+    
+    // Crear items y calcular totales...
+    final items = carrito.map((item) {
+      final adicionales = item.modificacionesSeleccionadas
+          .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
+          .toList();
+          
+      return {
+        'productId': item.producto.id,
+        'name': item.producto.name,
+        'price': item.precioUnitario,
+        'quantity': item.cantidad,
+        'notes': item.notas,
+        'adicionales': adicionales.map((a) => a.toMap()).toList(),
+      };
+    }).toList();
+
+    final subtotal = carrito.fold<double>(0, (sum, item) {
+      final precioBase = item.precioUnitario * item.cantidad;
+      final precioAdicionales = item.adicionales?.fold<double>(
+        0,
+        (sum, adicional) => sum + (adicional.price * item.cantidad),
+      ) ?? 0;
+      return sum + precioBase + precioAdicionales;
+    });
+    final total = subtotal;
+
+    // ✅ Crear documento con información del mesero
+    await FirebaseFirestore.instance
+        .collection('pedido')
+        .doc(widget.pedidoId)
+        .set({
+          'id': widget.pedidoId,
+          'items': items,
+          'subtotal': subtotal,
+          'total': total,
+          'status': 'pendiente',
+          'mode': 'mesa',
+          'tableNumber': widget.pedidoId,
+          'meseroId': user?.uid,                                    // ✅ Puede ser null
+          'meseroNombre': user != null ? '${user.nombre} ${user.apellidos}' : 'Mesero desconocido', // ✅ Con fallback
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+    print("🔧 PEDIDO ACTUALIZADO: ${widget.pedidoId} - Mesero: ${user?.nombre ?? 'Desconocido'} ${user?.apellidos ?? ''}");
+
+    setState(() {
+      pedidoConfirmado = true;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pedido confirmado exitosamente')),
+      );
+      Navigator.pop(context);
+    }
+  } catch (e) {
+    print("🚨 ERROR CREANDO/ACTUALIZANDO PEDIDO: $e");
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al confirmar el pedido: $e')),
+      );
     }
   }
+}
+
+
+
 
   void _procesarPago(BuildContext context, List<ItemCarrito> carrito) async {
     try {
       // Simular proceso de pago
       await Future.delayed(const Duration(seconds: 2));
 
-      // Calcular total
-      carrito.fold<double>(0, (sum, item) {
-        final precioBase = item.precioUnitario * item.cantidad;
-        final precioAdicionales = item.adicionales?.fold<double>(
-          0,
-          (sum, adicional) => sum + (adicional.price * item.cantidad),
-        ) ?? 0;
-        return sum + precioBase + precioAdicionales;
-      });
+      // ✅ ACTUALIZAR el pedido existente
+      await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(widget.pedidoId) // ✅ Usar el ID del pedido existente
+          .update({
+            'status': 'pagado',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
-      // Actualizar estado del pedido en Firestore
-      final pedidoRef = await FirebaseFirestore.instance.collection('pedido')
-          .where('tableNumber', isEqualTo: widget.pedidoId)
-          .where('status', isEqualTo: 'pendiente')
-          .get();
-
-      if (pedidoRef.docs.isNotEmpty) {
-        await pedidoRef.docs.first.reference.update({
-          'status': 'pagado',
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
+      print("🔧 PEDIDO PAGADO: ${widget.pedidoId}");
 
       // Limpiar carrito después del pago exitoso
       ref.read(carritoProvider.notifier).limpiarCarrito();
@@ -632,6 +641,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
         Navigator.pop(context);
       }
     } catch (e) {
+      print("🚨 ERROR PROCESANDO PAGO: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al procesar el pago: $e')),
@@ -639,6 +649,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
       }
     }
   }
+
 }
 
 

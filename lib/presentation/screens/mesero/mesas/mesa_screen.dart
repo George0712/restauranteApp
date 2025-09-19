@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/widgets/dialog_ocupar_mesa.dart';
 import 'package:restaurante_app/presentation/widgets/dialog_reservar_mesa.dart';
 import 'package:uuid/uuid.dart';
@@ -652,37 +653,88 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
   }
 
   void _ocuparMesa(MesaModel mesa) {
-    Navigator.pop(context);
-    showDialog(
-      context: context,
-      builder: (context) => OcuparMesaDialog(
-        mesa: mesa,
-        onOcupar: (cliente) {
-          final pedidoId = const Uuid().v4();
+  Navigator.pop(context);
+  showDialog(
+    context: context,
+    builder: (context) => OcuparMesaDialog(
+      mesa: mesa,
+      onOcupar: (cliente) async {
+        final pedidoId = const Uuid().v4();
+        final tableUuid = const Uuid().v4();
+        
+        try {
+          // ✅ OBTENER INFORMACIÓN DEL MESERO ACTUAL correctamente
+          final userAsync = await ref.read(userModelProvider.future); // ✅ Usar .future
+          
+          print("🔧 OCUPANDO MESA:");
+          print("   - Mesa ID: ${mesa.id}");
+          print("   - Pedido ID: $pedidoId");
+          print("   - Mesero: ${userAsync.nombre} ${userAsync.apellidos}"); // ✅ Ahora funciona
+          
           final nuevoPedido = Pedido(
             id: pedidoId,
-            mesaId: mesa.id,
-            cliente: cliente,
-            fecha: DateTime.now(),
+            status: 'pendiente',
+            mode: 'mesa',
+            subtotal: 0.0,
+            total: 0.0,
+            tableNumber: tableUuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
             items: [],
-            estado: 'pendiente',
+            cliente: cliente,
+            notas: null,
+            meseroId: userAsync.uid,                           // ✅ Usar userAsync
+            meseroNombre: '${userAsync.nombre} ${userAsync.apellidos}', // ✅ Usar userAsync
           );
 
-                     final mesaActualizada = mesa.copyWith(
-             estado: 'ocupada',
-             cliente: cliente,
-             pedidoId: pedidoId,
-             horaOcupacion: DateTime.now(),
-           );
+          final mesaActualizada = mesa.copyWith(
+            estado: 'ocupada',
+            cliente: cliente,
+            pedidoId: pedidoId,
+            horaOcupacion: DateTime.now(),
+          );
 
           ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
           ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
 
           context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
-        },
-      ),
-    );
-  }
+        } catch (e) {
+          print("🚨 ERROR OBTENIENDO USUARIO: $e");
+          // ✅ Crear pedido sin mesero si falla
+          final nuevoPedido = Pedido(
+            id: pedidoId,
+            status: 'pendiente',
+            mode: 'mesa',
+            subtotal: 0.0,
+            total: 0.0,
+            tableNumber: tableUuid,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+            items: [],
+            cliente: cliente,
+            notas: null,
+            meseroId: null,
+            meseroNombre: 'Mesero desconocido',
+          );
+
+          final mesaActualizada = mesa.copyWith(
+            estado: 'ocupada',
+            cliente: cliente,
+            pedidoId: pedidoId,
+            horaOcupacion: DateTime.now(),
+          );
+
+          ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
+          ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+
+          context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
+        }
+      },
+    ),
+  );
+}
+
+
 
   void _reservarMesa(MesaModel mesa) {
     Navigator.pop(context);
@@ -774,34 +826,75 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
     );
   }
 
-  void _confirmarLlegada(MesaModel mesa) {
-    Navigator.pop(context);
+  void _confirmarLlegada(MesaModel mesa) async {
+  Navigator.pop(context);
 
-    // Crear nuevo pedido
-    final pedidoId = const Uuid().v4();
+  final pedidoId = const Uuid().v4();
+  final tableUuid = const Uuid().v4();
+  
+  try {
+    // ✅ OBTENER INFORMACIÓN DEL MESERO ACTUAL correctamente
+    final userAsync = await ref.read(userModelProvider.future); // ✅ Usar .future
+    
     final nuevoPedido = Pedido(
       id: pedidoId,
-      mesaId: mesa.id,
-      cliente: mesa.cliente,
-      fecha: DateTime.now(),
+      status: 'pendiente',
+      mode: 'mesa',
+      subtotal: 0.0,
+      total: 0.0,
+      tableNumber: tableUuid,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
       items: [],
-      estado: 'pendiente',
+      cliente: mesa.cliente,
+      notas: null,
+      meseroId: userAsync.uid,                           // ✅ Usar userAsync
+      meseroNombre: '${userAsync.nombre} ${userAsync.apellidos}', // ✅ Usar userAsync
     );
 
-         // Actualizar mesa
-     final mesaActualizada = mesa.copyWith(
-       estado: 'ocupada',
-       horaOcupacion: DateTime.now(),
-       pedidoId: pedidoId,
-     );
+    final mesaActualizada = mesa.copyWith(
+      estado: 'ocupada',
+      horaOcupacion: DateTime.now(),
+      pedidoId: pedidoId,
+    );
 
-    // Guardar cambios
     ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
     ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
 
-    // Navegar a la pantalla de pedido
+    context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
+  } catch (e) {
+    print("🚨 ERROR OBTENIENDO USUARIO: $e");
+    // Crear pedido sin mesero si falla
+    final nuevoPedido = Pedido(
+      id: pedidoId,
+      status: 'pendiente',
+      mode: 'mesa',
+      subtotal: 0.0,
+      total: 0.0,
+      tableNumber: tableUuid,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      items: [],
+      cliente: mesa.cliente,
+      notas: null,
+      meseroId: null,
+      meseroNombre: 'Mesero desconocido',
+    );
+
+    final mesaActualizada = mesa.copyWith(
+      estado: 'ocupada',
+      horaOcupacion: DateTime.now(),
+      pedidoId: pedidoId,
+    );
+
+    ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
+    ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+
     context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
   }
+}
+
+
 
   void _cancelarReserva(MesaModel mesa) {
     Navigator.pop(context);

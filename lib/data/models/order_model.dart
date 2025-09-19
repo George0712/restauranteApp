@@ -110,6 +110,7 @@ class Order {
   final Timestamp? completedAt;
   final Timestamp? cancelledAt;
   final String? meseroId; // Nombre del mesero que tomó el pedido
+  
 
   Order({
     this.id,
