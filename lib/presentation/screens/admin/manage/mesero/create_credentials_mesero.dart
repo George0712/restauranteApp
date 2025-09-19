@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
+import 'package:restaurante_app/data/models/user_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateCredentialsMesero extends ConsumerStatefulWidget {
-  const CreateCredentialsMesero({super.key});
+  final UserModel? user;
+  const CreateCredentialsMesero({super.key, this.user});
 
   @override
   ConsumerState<CreateCredentialsMesero> createState() =>
@@ -25,10 +27,21 @@ class _CreateCredentialsMeseroState
   void initState() {
     super.initState();
 
-    final registerUserController = ref.read(registerUserControllerProvider);
-    registerUserController.userNameController.addListener(_validateFields);
-    registerUserController.emailController.addListener(_validateFields);
-    registerUserController.passwordController.addListener(_validateFields);
+    final controller = ref.read(registerUserControllerProvider);
+
+    controller.userNameController.addListener(_validateFields);
+    controller.emailController.addListener(_validateFields);
+    controller.passwordController.addListener(_validateFields);
+
+    if (widget.user != null) {
+      controller.userNameController.text = widget.user!.username;
+      controller.emailController.text = widget.user!.email;
+      controller.passwordController.text = '';
+    } else {
+      controller.userNameController.clear();
+      controller.emailController.clear();
+      controller.passwordController.clear();
+    }
   }
 
   void _validateFields() {
@@ -36,11 +49,6 @@ class _CreateCredentialsMeseroState
     final registerUserController = ref.read(registerUserControllerProvider);
     final isValid = registerUserController.areFieldsAccesDataValid();
     ref.read(isCredentialsValidProvider.notifier).state = isValid;
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -81,8 +89,8 @@ class _CreateCredentialsMeseroState
             child: Container(
               width: isTablet ? 500 : double.infinity,
               padding: isTablet
-                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
-                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
+                  ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
+                  : const EdgeInsets.fromLTRB(16, 100, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -126,17 +134,27 @@ class _CreateCredentialsMeseroState
                           },
                         ),
                         const SizedBox(height: 16),
-                        CustomInputField(
-                          hintText: AppStrings.password,
-                          controller: registerUserController.passwordController,
-                          validator: (value) {
-                            return value!.isEmpty
-                                ? AppStrings.pleaseEnterPassword
-                                : AppConstants.passwordRegex.hasMatch(value)
-                                    ? null
-                                    : AppStrings.invalidPassword;
-                          },
-                        ),
+                        if (widget.user == null)
+                          CustomInputField(
+                            hintText: AppStrings.password,
+                            controller:
+                                registerUserController.passwordController,
+                            validator: (value) {
+                              return value!.isEmpty
+                                  ? AppStrings.pleaseEnterPassword
+                                  : AppConstants.passwordRegex.hasMatch(value)
+                                      ? null
+                                      : AppStrings.invalidPassword;
+                            },
+                          ),
+                        if (widget.user != null)
+                          CustomInputField(
+                            hintText: AppStrings.password,
+                            controller:
+                                registerUserController.passwordController,
+                            obscureText: true,
+                            // No requiere validador porque está bloqueado
+                          ),
                       ],
                     ),
                   ),
@@ -167,33 +185,47 @@ class _CreateCredentialsMeseroState
                                       'Falta información de contacto');
                                   return;
                                 }
-                                try {
-                                  await registerUserController.registrarUsuario(
-                                    ref,
-                                    nombre: tempUser.nombre,
-                                    apellidos: tempUser.apellidos,
-                                    telefono: tempUser.telefono,
-                                    direccion: tempUser.direccion,
-                                    username: registerUserController
-                                        .userNameController.text
-                                        .trim(),
+                              if (widget.user == null) {
+                                final res = await registerUserController.registrarUsuario(
+                                  ref,
+                                  nombre: tempUser.nombre,
+                                  apellidos: tempUser.apellidos,
+                                  telefono: tempUser.telefono,
+                                  direccion: tempUser.direccion,
+                                  username: registerUserController.userNameController.text.trim(),
+                                  email: registerUserController.emailController.text.trim(),
+                                  password: registerUserController.passwordController.text.trim(),
+                                  rol: tempUser.rol,
+                                );
+                                if (res == null) {
+                                  SnackbarHelper.showSuccess('Usuario creado correctamente');
+                                  ref.read(userTempProvider.notifier).state = null;
+                                  context.pop();
+                                  context.push('/admin/manage/mesero');
+                                } else {
+                                  SnackbarHelper.showError('Error: $res');
+                                }
+                              } else {
+                                  // EDICIÓN - solo actualizar username y email
+                                  final controller =
+                                      ref.read(registerUserControllerProvider);
+                                  final res =
+                                      await controller.updateUserAccessInfo(
+                                    uid: widget.user!.uid,
                                     email: registerUserController
                                         .emailController.text
                                         .trim(),
-                                    password: registerUserController
-                                        .passwordController.text
+                                    username: registerUserController
+                                        .userNameController.text
                                         .trim(),
-                                    rol: tempUser.rol,
                                   );
-                                  SnackbarHelper.showSnackBar(
-                                      'Mesero registrado con éxito');
-                                  ref.read(userTempProvider.notifier).state =
-                                      null;
-                                  context.pop();
-                                  context.push('/admin/manage/mesero');
-                                } catch (e) {
-                                  SnackbarHelper.showSnackBar(
-                                      'Error: ${e.toString()}');
+                                  if (res == null) {
+                                    SnackbarHelper.showSnackBar(
+                                        'Credenciales actualizadas con éxito');
+                                    context.go('/admin/manage/mesero');
+                                  } else {
+                                    SnackbarHelper.showSnackBar('Error: $res');
+                                  }
                                 }
                               }
                             : null,

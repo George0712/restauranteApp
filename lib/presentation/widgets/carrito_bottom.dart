@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
@@ -56,15 +55,19 @@ class CarritoBottomSheet extends ConsumerWidget {
                       final item = carrito[index];
                       return adicionalesAsync.when(
                         data: (adicionales) {
-                          final nombresAdicionales = item.modificacionesSeleccionadas
-                              .map((id) => adicionales.firstWhere((a) => a.id == id).name)
+                          final nombresAdicionales = item
+                              .modificacionesSeleccionadas
+                              .map((id) => adicionales
+                                  .firstWhere((a) => a.id == id)
+                                  .name)
                               .toList();
                           return CarritoItem(
                             item: item,
                             nombresAdicionales: nombresAdicionales,
                           );
                         },
-                        loading: () => const Center(child: CircularProgressIndicator()),
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
                         error: (error, stack) => Text('Error: $error'),
                       );
                     },
@@ -79,10 +82,12 @@ class CarritoBottomSheet extends ConsumerWidget {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Text(
-                '\$${carritoController.calcularTotal().toStringAsFixed(2)}',
-                style: TextStyle(
+                '\$${carritoController.calcularTotal().toStringAsFixed(0).replaceAllMapped(
+                      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                      (Match m) => '${m[1]}.',
+                    )}',
+                style: const TextStyle(
                   fontSize: 20,
-                  color: Theme.of(context).primaryColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -92,9 +97,12 @@ class CarritoBottomSheet extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: carrito.isEmpty ? null : (pedidoConfirmado ? onPagar : onConfirmar),
+              onPressed: carrito.isEmpty
+                  ? null
+                  : (pedidoConfirmado ? onPagar : onConfirmar),
               icon: Icon(pedidoConfirmado ? Icons.payment : Icons.check_circle),
-              label: Text(pedidoConfirmado ? 'Proceder al Pago' : 'Confirmar Pedido'),
+              label: Text(
+                  pedidoConfirmado ? 'Proceder al Pago' : 'Confirmar Pedido'),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: pedidoConfirmado ? Colors.green : Colors.blue,

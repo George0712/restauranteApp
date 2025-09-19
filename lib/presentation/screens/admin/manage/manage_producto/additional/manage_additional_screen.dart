@@ -74,8 +74,8 @@ class _ManageAdditionalScreenState
                 // Botones
                 ElevatedButton(
                   onPressed: () {
-                    registerAdditionalController.nombreController.clear();
-                    registerAdditionalController.precioController.clear();
+                    registerAdditionalController.nameController.clear();
+                    registerAdditionalController.priceController.clear();
                     context.pop();
                     context.push(
                         '/admin/manage/additional/create-item-additionals');

@@ -11,7 +11,8 @@ class AdminMesasScreen extends ConsumerStatefulWidget {
   ConsumerState<AdminMesasScreen> createState() => _AdminMesasScreenState();
 }
 
-class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with TickerProviderStateMixin {
+class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
+    with TickerProviderStateMixin {
   String filtro = 'Todas';
   final ScrollController _scrollController = ScrollController();
 
@@ -29,15 +30,18 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
 
     return mesasAsync.when(
       data: (mesas) {
-        final mesasFiltradas = filtro == 'Todas' ? mesas : mesas.where((m) => m.estado == filtro).toList();
-        
+        final mesasFiltradas = filtro == 'Todas'
+            ? mesas
+            : mesas.where((m) => m.estado == filtro).toList();
+
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.white,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_ios_new_outlined,
+                  color: Colors.white),
               onPressed: () => context.pop(),
             ),
           ),
@@ -81,10 +85,12 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: () => context.push('/admin/manage/mesa/create-mesa'),
+                      onPressed: () =>
+                          context.push('/admin/manage/mesa/create-mesa'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B5CF6),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -123,7 +129,8 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
           foregroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios_new_outlined,
+                color: Colors.white),
             onPressed: () => context.pop(),
           ),
         ),
@@ -207,7 +214,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
     Color colorEstado;
     IconData iconoEstado;
 
-    switch(mesa.estado) {
+    switch (mesa.estado) {
       case 'disponible':
         colorEstado = Colors.green;
         iconoEstado = Icons.check_circle;
@@ -283,7 +290,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                 ],
               ),
             ),
-            
+
             // Contenido
             Expanded(
               child: Padding(
@@ -294,7 +301,8 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.people_outline, color: Colors.white70, size: 14),
+                        const Icon(Icons.people_outline,
+                            color: Colors.white70, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           '${mesa.capacidad} personas',
@@ -306,7 +314,6 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                         ),
                       ],
                     ),
-                    
                     if (mesa.estado != 'disponible') ...[
                       Text(
                         mesa.cliente ?? '',
@@ -318,10 +325,10 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      
                       if (mesa.estado == 'ocupada') ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: colorEstado.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
@@ -329,7 +336,8 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.access_time, size: 12, color: colorEstado),
+                              Icon(Icons.access_time,
+                                  size: 12, color: colorEstado),
                               const SizedBox(width: 4),
                               Text(
                                 mesa.tiempoTranscurrido,
@@ -344,7 +352,8 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                         ),
                       ] else if (mesa.estado == 'reservada') ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: colorEstado.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
@@ -352,7 +361,8 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.schedule, size: 12, color: colorEstado),
+                              Icon(Icons.schedule,
+                                  size: 12, color: colorEstado),
                               const SizedBox(width: 4),
                               Text(
                                 mesa.tiempo ?? '',
@@ -388,7 +398,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
 
   Widget _buildOpcionesBottomSheet(MesaModel mesa) {
     Color colorEstado;
-    switch(mesa.estado) {
+    switch (mesa.estado) {
       case 'disponible':
         colorEstado = Colors.green;
         break;
@@ -427,7 +437,6 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
             ),
           ),
           const SizedBox(height: 20),
-          
           Row(
             children: [
               Container(
@@ -467,7 +476,6 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
               ),
             ],
           ),
-          
           if (mesa.cliente != null) ...[
             const SizedBox(height: 16),
             Container(
@@ -496,9 +504,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
               ),
             ),
           ],
-          
           const SizedBox(height: 24),
-          
           Row(
             children: [
               Expanded(
@@ -523,14 +529,14 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
               ),
             ],
           ),
-          
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildBotonOpcionAdmin(String texto, IconData icono, Color color, VoidCallback onPressed) {
+  Widget _buildBotonOpcionAdmin(
+      String texto, IconData icono, Color color, VoidCallback onPressed) {
     return ElevatedButton.icon(
       onPressed: onPressed,
       icon: Icon(icono, size: 20),
@@ -555,18 +561,32 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
         esNueva: nueva,
         onGuardar: (mesaActualizada) async {
           final mesaController = ref.read(mesaControllerProvider);
+          String? error;
+
           if (nueva) {
-            final error = await mesaController.crearMesa(
+            // Crear nueva mesa
+            error = await mesaController.crearMesa(
               numeroMesa: mesaActualizada.id,
               capacidad: mesaActualizada.capacidad,
             );
-            if (error != null) {
-              _mostrarError(error);
-            }
           } else {
-            // Para editar necesitaríamos el documentId, por ahora solo refrescamos
-            ref.refresh(mesasProvider);
+            // Actualizar mesa
+            if (mesa != null) {
+              error = await mesaController.actualizarMesa(
+                documentId: mesa.docId!,
+                numeroMesa: mesaActualizada.id,
+                capacidad: mesaActualizada.capacidad,
+              );
+            } else {
+              error = 'Datos de mesa inválidos';
+            }
           }
+
+          if (error != null) {
+            _mostrarError(error);
+            return;
+          }
+          Navigator.of(context).pop(); // Cierra diálogo solo en caso de éxito
         },
       ),
     );
@@ -590,11 +610,11 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.warning, color: Colors.red, size: 28),
-            const SizedBox(width: 12),
-            const Text(
+            SizedBox(width: 12),
+            Text(
               'Eliminar Mesa',
               style: TextStyle(
                 color: Colors.white,
@@ -622,12 +642,14 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                    const Icon(Icons.warning_amber,
+                        color: Colors.orange, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'La mesa está ${mesa.estado}. Esta acción liberará la mesa.',
-                        style: TextStyle(color: Colors.orange.shade300, fontSize: 12),
+                        style: TextStyle(
+                            color: Colors.orange.shade300, fontSize: 12),
                       ),
                     ),
                   ],
@@ -655,9 +677,14 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen> with Ticker
           ),
           ElevatedButton(
             onPressed: () async {
-              // Por ahora solo refrescamos, necesitaríamos el documentId para eliminar
-              ref.refresh(mesasProvider);
-              Navigator.pop(context);
+              final mesaController = ref.read(mesaControllerProvider);
+
+              final error = await mesaController.eliminarMesa(mesa.docId!);
+              if (error != null) {
+                _mostrarError(error);
+                return;
+              }
+              Navigator.pop(context); // Cierra confirmación
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -689,7 +716,8 @@ class _FormularioMesaDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_FormularioMesaDialog> createState() => _FormularioMesaDialogState();
+  ConsumerState<_FormularioMesaDialog> createState() =>
+      _FormularioMesaDialogState();
 }
 
 class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
@@ -700,12 +728,10 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
   @override
   void initState() {
     super.initState();
-    _idController = TextEditingController(
-      text: widget.mesa?.id.toString() ?? ''
-    );
-    _capacidadController = TextEditingController(
-      text: widget.mesa?.capacidad.toString() ?? ''
-    );
+    _idController =
+        TextEditingController(text: widget.mesa?.id.toString() ?? '');
+    _capacidadController =
+        TextEditingController(text: widget.mesa?.capacidad.toString() ?? '');
   }
 
   @override
@@ -757,7 +783,8 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
               decoration: InputDecoration(
                 labelText: 'Número de Mesa',
                 labelStyle: const TextStyle(color: Colors.white70),
-                prefixIcon: const Icon(Icons.table_restaurant, color: Color(0xFF8B5CF6)),
+                prefixIcon: const Icon(Icons.table_restaurant,
+                    color: Color(0xFF8B5CF6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
@@ -768,7 +795,8 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF8B5CF6), width: 2),
                 ),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.1),
@@ -777,8 +805,10 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value?.isEmpty ?? true) return 'Ingrese el número de mesa';
-                if (int.tryParse(value!) == null) return 'Ingrese un número válido';
-                if (int.parse(value) <= 0) return 'El número debe ser mayor a 0';
+                if (int.tryParse(value!) == null)
+                  return 'Ingrese un número válido';
+                if (int.parse(value) <= 0)
+                  return 'El número debe ser mayor a 0';
                 return null;
               },
             ),
@@ -799,7 +829,8 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF8B5CF6), width: 2),
                 ),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.1),
@@ -863,7 +894,7 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
         fechaReserva: widget.mesa?.fechaReserva,
         horaOcupacion: widget.mesa?.horaOcupacion,
       );
-      
+
       widget.onGuardar(mesa);
       Navigator.of(context).pop();
     }

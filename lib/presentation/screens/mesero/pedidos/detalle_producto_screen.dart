@@ -15,7 +15,8 @@ class DetalleProductoScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<DetalleProductoScreen> createState() => _DetalleProductoScreenState();
+  ConsumerState<DetalleProductoScreen> createState() =>
+      _DetalleProductoScreenState();
 }
 
 class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
@@ -92,7 +93,8 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
                           color: Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: widget.producto.photo != null && widget.producto.photo!.isNotEmpty
+                        child: widget.producto.photo != null &&
+                                widget.producto.photo!.isNotEmpty
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Image.network(
@@ -100,13 +102,18 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
                                   width: double.infinity,
                                   height: double.infinity,
                                   fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, loadingProgress) {
+                                  loadingBuilder:
+                                      (context, child, loadingProgress) {
                                     if (loadingProgress == null) return child;
                                     return Center(
                                       child: CircularProgressIndicator(
-                                        value: loadingProgress.expectedTotalBytes != null
-                                            ? loadingProgress.cumulativeBytesLoaded /
-                                                loadingProgress.expectedTotalBytes!
+                                        value: loadingProgress
+                                                    .expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
                                             : null,
                                       ),
                                     );
@@ -186,17 +193,24 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          ...adicionales.map((adicional) =>
-                            CheckboxListTile(
+                          ...adicionales.map(
+                            (adicional) => CheckboxListTile(
                               title: Text(adicional.name),
-                              subtitle: Text('+\$${adicional.price.toStringAsFixed(2)}'),
-                              value: adicionalesSeleccionados.contains(adicional.id),
+                              subtitle: Text(
+                                '+\$${adicional.price.toStringAsFixed(0).replaceAllMapped(
+                                      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                      (Match m) => '${m[1]}.',
+                                    )}',
+                              ),
+                              value: adicionalesSeleccionados
+                                  .contains(adicional.id),
                               onChanged: (bool? value) {
                                 setState(() {
                                   if (value == true) {
                                     adicionalesSeleccionados.add(adicional.id);
                                   } else {
-                                    adicionalesSeleccionados.remove(adicional.id);
+                                    adicionalesSeleccionados
+                                        .remove(adicional.id);
                                   }
                                 });
                               },
@@ -207,7 +221,8 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
                         ],
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (error, stack) => Text('Error: $error'),
                   ),
                   const SizedBox(height: 24),
@@ -242,12 +257,16 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
                     children: [
                       CantidadSelector(
                         cantidad: cantidad,
-                        onCantidadChanged: (value) => setState(() => cantidad = value),
+                        onCantidadChanged: (value) =>
+                            setState(() => cantidad = value),
                         enabled: widget.producto.disponible,
                       ),
                       const Spacer(),
                       Text(
-                        'Total: \$${precioTotal.toStringAsFixed(2)}',
+                        'Total: \$${precioTotal.toStringAsFixed(0).replaceAllMapped(
+                              RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                              (Match m) => '${m[1]}.',
+                            )}',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -265,7 +284,8 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: widget.producto.disponible ? _agregarAlCarrito : null,
+                onPressed:
+                    widget.producto.disponible ? _agregarAlCarrito : null,
                 icon: const Icon(Icons.add_shopping_cart),
                 label: const Text('Agregar al carrito'),
                 style: ElevatedButton.styleFrom(

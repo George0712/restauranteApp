@@ -20,10 +20,12 @@ class SeleccionProductosScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SeleccionProductosScreen> createState() => _SeleccionProductosScreenState();
+  ConsumerState<SeleccionProductosScreen> createState() =>
+      _SeleccionProductosScreenState();
 }
 
-class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScreen>
+class _SeleccionProductosScreenState
+    extends ConsumerState<SeleccionProductosScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
   String categoriaSeleccionada = 'Todas';
@@ -36,10 +38,14 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
   void initState() {
     super.initState();
     final categoriasAsync = ref.read(categoryDisponibleProvider);
-    
+
     categoriasAsync.whenData((categorias) {
-      final nombresCategorias = ['Todas', ...categorias.map((c) => c.name).toList()];
-      _tabController = TabController(length: nombresCategorias.length, vsync: this);
+      final nombresCategorias = [
+        'Todas',
+        ...categorias.map((c) => c.name).toList()
+      ];
+      _tabController =
+          TabController(length: nombresCategorias.length, vsync: this);
     });
   }
 
@@ -60,7 +66,10 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
       appBar: _buildAppBar(context, carrito),
       body: productosAsync.when(
         data: (productos) {
-          final categorias = ['Todas', ...productos.map((p) => p.category).toSet().toList()];
+          final categorias = [
+            'Todas',
+            ...productos.map((p) => p.category).toSet().toList()
+          ];
           return Column(
             children: [
               _buildSearchBar(),
@@ -78,12 +87,14 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, List<ItemCarrito> carrito) {
+  PreferredSizeWidget _buildAppBar(
+      BuildContext context, List<ItemCarrito> carrito) {
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.white,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.black54),
+        icon: const Icon(Icons.arrow_back_ios_new_outlined,
+            color: Colors.black54),
         onPressed: () => context.pop(),
       ),
       title: const Column(
@@ -111,7 +122,8 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
         Stack(
           children: [
             IconButton(
-              icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black54),
+              icon: const Icon(Icons.shopping_cart_outlined,
+                  color: Colors.black54),
               onPressed: () => _mostrarCarrito(context),
             ),
             if (carrito.isNotEmpty)
@@ -125,7 +137,9 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    carrito.fold(0, (sum, item) => sum + item.cantidad).toString(),
+                    carrito
+                        .fold(0, (sum, item) => sum + item.cantidad)
+                        .toString(),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -172,11 +186,14 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
 
   Widget _buildCategorias(List<String> categorias) {
     final categoriasAsync = ref.watch(categoryDisponibleProvider);
-    
+
     return categoriasAsync.when(
       data: (categoriasList) {
-        final nombresCategorias = ['Todas', ...categoriasList.map((c) => c.name).toList()];
-        
+        final nombresCategorias = [
+          'Todas',
+          ...categoriasList.map((c) => c.name).toList()
+        ];
+
         return Container(
           height: 50,
           margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
@@ -186,7 +203,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
             itemBuilder: (context, index) {
               final categoria = nombresCategorias[index];
               final isSelected = categoriaSeleccionada == categoria;
-              
+
               return GestureDetector(
                 onTap: () {
                   setState(() {
@@ -200,13 +217,16 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                 },
                 child: Container(
                   margin: const EdgeInsets.only(right: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isSelected ? Theme.of(context).primaryColor : Colors.white,
+                    color: isSelected
+                        ? Theme.of(context).primaryColor
+                        : Colors.white,
                     borderRadius: BorderRadius.circular(25),
                     boxShadow: [
                       BoxShadow(
-                        color: isSelected 
+                        color: isSelected
                             ? Color.fromRGBO(
                                 Theme.of(context).primaryColor.red,
                                 Theme.of(context).primaryColor.green,
@@ -223,7 +243,8 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                     categoria,
                     style: TextStyle(
                       color: isSelected ? Colors.white : Colors.black54,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w500,
                       fontSize: 14,
                     ),
                   ),
@@ -240,10 +261,10 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
 
   Widget _buildProductosGrid(List<ProductModel> productos) {
     final productosFiltrados = productos.where((producto) {
-      final matchesCategoria = categoriaIdSeleccionada.isEmpty || 
-                              producto.category == categoriaIdSeleccionada;
+      final matchesCategoria = categoriaIdSeleccionada.isEmpty ||
+          producto.category == categoriaIdSeleccionada;
       final matchesTexto = filtroTexto.isEmpty ||
-                          producto.name.toLowerCase().contains(filtroTexto.toLowerCase());
+          producto.name.toLowerCase().contains(filtroTexto.toLowerCase());
       return matchesCategoria && matchesTexto;
     }).toList();
 
@@ -334,7 +355,8 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                             if (loadingProgress == null) return child;
                             return Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
                                     ? loadingProgress.cumulativeBytesLoaded /
                                         loadingProgress.expectedTotalBytes!
                                     : null,
@@ -408,9 +430,12 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '\$${producto.price.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: Theme.of(context).primaryColor,
+                          '\$${producto.price.toStringAsFixed(0).replaceAllMapped(
+                                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                (Match m) => '${m[1]}.',
+                              )}',
+                          style: const TextStyle(
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -418,7 +443,7 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: producto.disponible 
+                            color: producto.disponible
                                 ? Theme.of(context).primaryColor
                                 : Colors.grey.shade400,
                             borderRadius: BorderRadius.circular(8),
@@ -441,15 +466,17 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
     );
   }
 
-  Widget? _buildCarritoBottomBar(BuildContext context, List<ItemCarrito> carrito) {
+  Widget? _buildCarritoBottomBar(
+      BuildContext context, List<ItemCarrito> carrito) {
     if (carrito.isEmpty) return null;
 
     final total = carrito.fold<double>(0, (sum, item) {
       final precioBase = item.precioUnitario * item.cantidad;
       final precioAdicionales = item.adicionales?.fold<double>(
-        0,
-        (sum, adicional) => sum + (adicional.price * item.cantidad),
-      ) ?? 0;
+            0,
+            (sum, adicional) => sum + (adicional.price * item.cantidad),
+          ) ??
+          0;
       return sum + precioBase + precioAdicionales;
     });
     final cantidadTotal = carrito.fold(0, (sum, item) => sum + item.cantidad);
@@ -482,11 +509,14 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
                     ),
                   ),
                   Text(
-                    '\$${total.toStringAsFixed(2)}',
-                    style: TextStyle(
+                    '\$${total.toStringAsFixed(0).replaceAllMapped(
+                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                          (Match m) => '${m[1]}.',
+                        )}',
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
+                      color: Colors.black,
                     ),
                   ),
                 ],
@@ -497,7 +527,8 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
               icon: const Icon(Icons.shopping_cart),
               label: const Text('Ver Carrito'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -651,7 +682,3 @@ class _SeleccionProductosScreenState extends ConsumerState<SeleccionProductosScr
   }
 
 }
-
-
-
-

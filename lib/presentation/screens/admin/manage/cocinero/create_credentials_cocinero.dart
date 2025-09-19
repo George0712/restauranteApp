@@ -186,8 +186,7 @@ class _CreateCredentialsCocineroState
                                   );
                                   SnackbarHelper.showSnackBar(
                                       'Cocinero registrado con éxito');
-                                  context.pop();
-                                  context.push('/admin/manage/cocinero');
+                                  context.go('/admin/manage/cocinero');
                                 } catch (e) {
                                   SnackbarHelper.showSnackBar(
                                       'Error: ${e.toString()}');

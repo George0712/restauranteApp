@@ -6,15 +6,31 @@ import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/data/models/combo_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import 'package:uuid/uuid.dart';
+import 'package:restaurante_app/presentation/providers/images/cloudinary_service.dart';
 
 class RegisterCategoryController {
   final TextEditingController nombreController = TextEditingController();
 
+  late bool _disponible;
+
+  bool get disponible => _disponible;
+
+  RegisterCategoryController() {
+    _disponible = true;
+  }
+
   void dispose() {
     nombreController.dispose();
+  }
+
+  void initializeForEditing(CategoryModel category) {
+    nombreController.text = category.name;
+    _disponible = category.disponible;
+  }
+
+  void setDisponible(bool value) {
+    _disponible = value;
   }
 
   bool areFieldsValid() {
@@ -22,30 +38,57 @@ class RegisterCategoryController {
     return AppConstants.nameRegex.hasMatch(nombre);
   }
 
-  Future<String?> registrarCategoria(
-    WidgetRef ref, {
+  Future<String?> registrarCategoria(WidgetRef ref, {
     required String nombre,
     required bool disponible,
-    required String? foto,
+    String? foto,
   }) async {
     try {
       final docRef = FirebaseFirestore.instance.collection('categoria').doc();
-
-      final categoria = CategoryModel(
+      final category = CategoryModel(
         id: docRef.id,
         name: nombre,
-        photo: foto,
         disponible: disponible,
       );
+      await docRef.set(category.toMap());
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
-      await docRef.set(categoria.toMap());
+  Future<String?> actualizarCategoria(WidgetRef ref, {
+    required String id,
+    required String nombre,
+    required bool disponible,
+    String? foto,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('categoria').doc(id);
+      await docRef.update({
+        'name': nombre,
+        'disponible': disponible,
+      });
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
+  Future<String?> eliminarCategoria(WidgetRef ref, {
+    required String id,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('categoria').doc(id);
+      await docRef.delete();
       return null;
     } catch (e) {
       return e.toString();
     }
   }
 }
+
+final registerCategoryControllerProvider = Provider((ref) => RegisterCategoryController());
 
 class RegisterProductoController {
   final TextEditingController nombreController = TextEditingController();
@@ -59,6 +102,13 @@ class RegisterProductoController {
     precioController.dispose();
     tiempoPreparacionController.dispose();
     ingredientesController.dispose();
+  }
+
+  void clearAllFields() {
+    nombreController.clear();
+    precioController.clear();
+    tiempoPreparacionController.clear();
+    ingredientesController.clear();
   }
 
   bool areFieldsValid() {
@@ -80,22 +130,36 @@ class RegisterProductoController {
     required String ingredientes,
     required String categoria,
     required bool disponible,
-    required String foto,
+    required String? foto,
+    Function(double)? onUploadProgress,
   }) async {
     try {
       String? photoUrl;
-      
-      // Si hay una imagen, subirla a Firebase Storage
-      if (foto.isNotEmpty) {
+
+      // Si hay una imagen, subirla a Cloudinary
+      if (foto != null && foto.isNotEmpty) {
+        onUploadProgress?.call(0.1);
+
         final file = File(foto);
-        final storageRef = FirebaseStorage.instance.ref();
-        final imageRef = storageRef.child('productos/${const Uuid().v4()}.jpg');
-        
-        // Subir la imagen
-        await imageRef.putFile(file);
-        
-        // Obtener la URL de la imagen
-        photoUrl = await imageRef.getDownloadURL();
+
+        if (!await file.exists()) {
+          throw Exception('El archivo de imagen no existe');
+        }
+
+        // Subir imagen con progreso
+        photoUrl = await CloudinaryService.uploadImage(
+          file,
+          onProgress: (progress) {
+            // Mapear progreso de subida (0.1 a 0.8)
+            final mappedProgress = 0.1 + (progress * 0.7);
+            onUploadProgress?.call(mappedProgress);
+          },
+        );
+
+        if (photoUrl == null) {
+          throw Exception('Error al subir la imagen a Cloudinary');
+        }
+        onUploadProgress?.call(0.9);
       }
 
       final productoData = {
@@ -105,11 +169,79 @@ class RegisterProductoController {
         'ingredients': ingredientes,
         'category': categoria,
         'disponible': disponible,
-        'photo': photoUrl, // Guardar la URL de la imagen en lugar de la ruta local
+        'photo': photoUrl, // URL de Cloudinary
+        'createdAt': FieldValue.serverTimestamp(),
       };
 
       final db = FirebaseFirestore.instance;
       await db.collection('producto').add(productoData);
+
+      onUploadProgress?.call(1.0);
+
+      return null; // Éxito
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> updateProduct(
+    WidgetRef ref, {
+    required String productId,
+    required String nombre,
+    required double precio,
+    required int tiempoPreparacion,
+    required String ingredientes,
+    required String categoria,
+    required bool disponible,
+    String? newPhoto,
+    Function(double)? onUploadProgress,
+  }) async {
+    try {
+      String? photoUrl = newPhoto; // Mantener la foto actual si no hay nueva
+
+      // Si hay una nueva imagen, subirla a Cloudinary
+      if (newPhoto != null &&
+          newPhoto.isNotEmpty &&
+          !newPhoto.startsWith('http')) {
+        onUploadProgress?.call(0.1);
+
+        final file = File(newPhoto);
+
+        if (!await file.exists()) {
+          throw Exception('El archivo de imagen no existe');
+        }
+
+        // Subir nueva imagen con progreso
+        photoUrl = await CloudinaryService.uploadImage(
+          file,
+          onProgress: (progress) {
+            final mappedProgress = 0.1 + (progress * 0.7);
+            onUploadProgress?.call(mappedProgress);
+          },
+        );
+
+        if (photoUrl == null) {
+          throw Exception('Error al subir la imagen a Cloudinary');
+        }
+
+        onUploadProgress?.call(0.9);
+      }
+
+      final productoData = {
+        'name': nombre,
+        'price': precio,
+        'time': tiempoPreparacion,
+        'ingredients': ingredientes,
+        'category': categoria,
+        'disponible': disponible,
+        'photo': photoUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final db = FirebaseFirestore.instance;
+      await db.collection('producto').doc(productId).update(productoData);
+
+      onUploadProgress?.call(1.0);
 
       return null; // Éxito
     } catch (e) {
@@ -119,47 +251,102 @@ class RegisterProductoController {
 }
 
 class RegisterAdditionalController {
-  final TextEditingController nombreController = TextEditingController();
-  final TextEditingController precioController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+
+  bool _disponible = true;
+
+  bool get disponible => _disponible;
 
   void dispose() {
-    nombreController.dispose();
-    precioController.dispose();
+    nameController.dispose();
+    priceController.dispose();
+  }
+
+  void clear() {
+    nameController.clear();
+    priceController.clear();
+    _disponible = true;
+  }
+
+  void setDisponible(bool value) {
+    _disponible = value;
+  }
+
+  void initializeForEditing(AdditionalModel additional) {
+    nameController.text = additional.name;
+    priceController.text = additional.price.toString();
+    _disponible = additional.disponible;
   }
 
   bool areFieldsValid() {
-    final nombre = nombreController.text.trim();
-    final precio = precioController.text.trim();
-    return AppConstants.nameRegex.hasMatch(nombre) &&
-        AppConstants.priceRegex.hasMatch(precio);
+    final name = nameController.text.trim();
+    final price = priceController.text.trim();
+    return name.isNotEmpty && AppConstants.priceRegex.hasMatch(price);
   }
 
-  Future<String?> registrarAdditional(
-    WidgetRef ref, {
-    required String nombre,
-    required double precio,
+  /// Crea un nuevo adicional en firestore
+  Future<String?> registrarAdditional(WidgetRef ref, {
+    required String name,
     required bool disponible,
-    required String foto,
+    required double price,
+    String? photo,
   }) async {
     try {
       final docRef = FirebaseFirestore.instance.collection('adicional').doc();
-
-      final adicional = AdditionalModel(
+      final additional = AdditionalModel(
         id: docRef.id,
-        name: nombre,
-        price: precio,
+        name: name,
+        price: price,
         disponible: disponible,
-        photo: foto,
+        photo: photo,
       );
+      await docRef.set(additional.toMap());
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
-      await docRef.set(adicional.toMap());
+  /// Actualiza un adicional existente
+  Future<String?> actualizarAdditional(WidgetRef ref, {
+    required String id,
+    required String name,
+    required double price,
+    required bool disponible,
+    String? photo,
+  }) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('adicional').doc(id);
+      await docRef.update({
+        'name': name,
+        'disponible': disponible,
+        'price': price,
+        if (photo != null) 'photo': photo,
+      });
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
+  /// Elimina un adicional
+  Future<String?> eliminarAdditional(WidgetRef ref, {required String id}) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('adicional').doc(id);
+      await docRef.delete();
       return null;
     } catch (e) {
       return e.toString();
     }
   }
 }
+
+final registerAdditionalController = Provider((ref) {
+  final controller = RegisterAdditionalController();
+  ref.onDispose(() => controller.dispose());
+  return controller;
+});
 
 class RegisterComboController extends StateNotifier<void> {
   RegisterComboController() : super(null);
@@ -235,6 +422,137 @@ class RegisterComboController extends StateNotifier<void> {
       await docRef.set(combo.toMap());
 
       return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+}
+
+class ProductManagementController {
+  Future<String?> toggleProductAvailability(
+      String productId, bool currentDisponible) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('producto').doc(productId).update({
+        'disponible': !currentDisponible,
+      });
+      return null; // Success
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> deleteProduct(String productId) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('producto').doc(productId).delete();
+      return null; // Success
+    } catch (e) {
+      return e.toString();
+    }
+  }
+}
+
+class EditProductController {
+  final TextEditingController nombreController = TextEditingController();
+  final TextEditingController precioController = TextEditingController();
+  final TextEditingController tiempoPreparacionController =
+      TextEditingController();
+  final TextEditingController ingredientesController = TextEditingController();
+
+  void dispose() {
+    nombreController.dispose();
+    precioController.dispose();
+    tiempoPreparacionController.dispose();
+    ingredientesController.dispose();
+  }
+
+  // Cargar datos del producto en los controladores
+  void loadProductData(ProductModel producto) {
+    nombreController.text = producto.name;
+    precioController.text = producto.price.toString();
+    tiempoPreparacionController.text = producto.tiempoPreparacion.toString();
+    ingredientesController.text = producto.ingredientes;
+  }
+
+  // Limpiar todos los campos
+  void clearAllFields() {
+    nombreController.clear();
+    precioController.clear();
+    tiempoPreparacionController.clear();
+    ingredientesController.clear();
+  }
+
+  bool areFieldsValid() {
+    final nombre = nombreController.text.trim();
+    final precio = precioController.text.trim();
+    final tiempoPreparacion = tiempoPreparacionController.text.trim();
+    final ingredientes = ingredientesController.text.trim();
+    return AppConstants.nameRegex.hasMatch(nombre) &&
+        AppConstants.priceRegex.hasMatch(precio) &&
+        AppConstants.timePreparationRegex.hasMatch(tiempoPreparacion) &&
+        AppConstants.ingredientesRegex.hasMatch(ingredientes);
+  }
+
+  Future<String?> updateProduct(
+    WidgetRef ref, {
+    required String productId,
+    required String nombre,
+    required double precio,
+    required int tiempoPreparacion,
+    required String ingredientes,
+    required String categoria,
+    required bool disponible,
+    String? newPhoto,
+    Function(double)? onUploadProgress,
+  }) async {
+    try {
+      String? photoUrl = newPhoto; // Mantener la foto actual si no hay nueva
+
+      // Si hay una nueva imagen, subirla a Cloudinary
+      if (newPhoto != null &&
+          newPhoto.isNotEmpty &&
+          !newPhoto.startsWith('http')) {
+        onUploadProgress?.call(0.1);
+
+        final file = File(newPhoto);
+
+        if (!await file.exists()) {
+          throw Exception('El archivo de imagen no existe');
+        }
+
+        // Subir nueva imagen con progreso
+        photoUrl = await CloudinaryService.uploadImage(
+          file,
+          onProgress: (progress) {
+            final mappedProgress = 0.1 + (progress * 0.7);
+            onUploadProgress?.call(mappedProgress);
+          },
+        );
+
+        if (photoUrl == null) {
+          throw Exception('Error al subir la imagen a Cloudinary');
+        }
+        onUploadProgress?.call(0.9);
+      }
+
+      final productoData = {
+        'name': nombre,
+        'price': precio,
+        'time': tiempoPreparacion,
+        'ingredients': ingredientes,
+        'categoryId': categoria,
+        'disponible': disponible,
+        'photo': photoUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final db = FirebaseFirestore.instance;
+      await db.collection('producto').doc(productId).update(productoData);
+
+      onUploadProgress?.call(1.0);
+
+      return null; // Éxito
     } catch (e) {
       return e.toString();
     }

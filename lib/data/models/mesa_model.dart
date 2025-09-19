@@ -1,5 +1,6 @@
 // Modelo de Mesa mejorado
 class MesaModel {
+  final String? docId; // ID del documento en Firestore
   final int id;
   final String estado; 
   final int capacidad;
@@ -14,6 +15,7 @@ class MesaModel {
     required this.id,
     required this.estado,
     required this.capacidad,
+    this.docId,
     this.cliente,
     this.tiempo,
     this.total,
@@ -23,6 +25,7 @@ class MesaModel {
   });
 
   MesaModel copyWith({
+    String? docId,
     int? id,
     String? estado,
     int? capacidad,
@@ -34,6 +37,7 @@ class MesaModel {
     DateTime? horaOcupacion,
   }) {
     return MesaModel(
+      docId: docId ?? this.docId,
       id: id ?? this.id,
       estado: estado ?? this.estado,
       capacidad: capacidad ?? this.capacidad,
@@ -57,6 +61,7 @@ class MesaModel {
   // Método para convertir a Map para Firestore
   Map<String, dynamic> toMap() {
     return {
+      'docId': docId,
       'id': id,
       'estado': estado,
       'capacidad': capacidad,
@@ -72,6 +77,7 @@ class MesaModel {
   // Método para crear desde Map de Firestore
   factory MesaModel.fromMap(Map<String, dynamic> map, String documentId) {
     return MesaModel(
+      docId: documentId,
       id: map['id'] ?? 0,
       estado: map['estado'] ?? 'disponible',
       capacidad: map['capacidad'] ?? 0,
