@@ -9,8 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
 
-class RegisterUserController {
-
+class UserController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -18,15 +17,21 @@ class RegisterUserController {
   final TextEditingController apellidosController = TextEditingController();
   final TextEditingController telefonoController = TextEditingController();
   final TextEditingController direccionController = TextEditingController();
+
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  bool _isUpdating = false;
+  bool get isUpdating => _isUpdating;
+  set isUpdating(bool val) => _isUpdating = val;
 
   void dispose() {
     nombreController.dispose();
     apellidosController.dispose();
     telefonoController.dispose();
     direccionController.dispose();
+
     userNameController.dispose();
     emailController.dispose();
     passwordController.dispose();
@@ -38,21 +43,35 @@ class RegisterUserController {
     final telefono = telefonoController.text.trim();
     final direccion = direccionController.text.trim();
     return AppConstants.nameRegex.hasMatch(nombre) &&
-         AppConstants.surnameRegex.hasMatch(apellidos) &&
-         AppConstants.phoneRegex.hasMatch(telefono) &&
-         AppConstants.addressRegex.hasMatch(direccion);
+        AppConstants.surnameRegex.hasMatch(apellidos) &&
+        AppConstants.phoneRegex.hasMatch(telefono) &&
+        AppConstants.addressRegex.hasMatch(direccion);
   }
 
-  bool areFieldsAccesDataValid(){
+  bool areFieldsAccesDataValid() {
     final userName = userNameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     return AppConstants.usernameRegex.hasMatch(userName) &&
-         AppConstants.emailRegex.hasMatch(email) &&
-         AppConstants.passwordRegex.hasMatch(password);
+        AppConstants.emailRegex.hasMatch(email) &&
+        AppConstants.passwordRegex.hasMatch(password);
   }
 
-  Future<String?> registrarUsuario( WidgetRef ref, {
+  void clearContactData() {
+    nombreController.clear();
+    apellidosController.clear();
+    telefonoController.clear();
+    direccionController.clear();
+  }
+
+  void clearAccessData() {
+    userNameController.clear();
+    emailController.clear();
+    passwordController.clear();
+  }
+
+  Future<String?> registrarUsuario(
+    WidgetRef ref, {
     required String nombre,
     required String apellidos,
     required String telefono,
@@ -84,10 +103,50 @@ class RegisterUserController {
 
       // Guardar en colección 'usuarios'
       await _firestore.collection('usuario').doc(uid).set(usuario.toMap());
-      
     } catch (e) {
       return e.toString();
     }
     return null;
+  }
+
+  Future<String?> updateUserPersonalInfo(UserModel user) async {
+    try {
+      await _firestore.collection('usuario').doc(user.uid).update({
+        'nombre': user.nombre,
+        'apellidos': user.apellidos,
+        'telefono': user.telefono,
+        'direccion': user.direccion,
+      });
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> updateUserAccessInfo({
+    required String uid,
+    required String email,
+    required String username,
+  }) async {
+    try {
+      await _firestore.collection('usuario').doc(uid).update({
+        'email': email,
+        'username': username,
+        // No se actualiza la contraseña aquí por seguridad
+      });
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> deleteUser(String uid) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('usuario').doc(uid).delete();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
   }
 }

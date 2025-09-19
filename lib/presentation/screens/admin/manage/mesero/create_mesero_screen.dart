@@ -6,12 +6,14 @@ import 'package:go_router/go_router.dart';
 
 import 'package:restaurante_app/core/constants/app_constants.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateMeseroScreen extends ConsumerStatefulWidget {
-  const CreateMeseroScreen({super.key});
+  final UserModel? user;
+  const CreateMeseroScreen({super.key, this.user});
 
   @override
   ConsumerState<CreateMeseroScreen> createState() => _CreateMeseroScreenState();
@@ -19,15 +21,26 @@ class CreateMeseroScreen extends ConsumerStatefulWidget {
 
 class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
   final _formKey = GlobalKey<FormState>();
+  late bool isEditing;
 
   @override
   void initState() {
     super.initState();
-    final registerUserController = ref.read(registerUserControllerProvider);
-    registerUserController.nombreController.addListener(_validateFields);
-    registerUserController.apellidosController.addListener(_validateFields);
-    registerUserController.telefonoController.addListener(_validateFields);
-    registerUserController.direccionController.addListener(_validateFields);
+    final controller = ref.read(registerUserControllerProvider);
+
+    controller.nombreController.addListener(_validateFields);
+    controller.apellidosController.addListener(_validateFields);
+    controller.telefonoController.addListener(_validateFields);
+    controller.direccionController.addListener(_validateFields);
+
+    isEditing = widget.user != null;
+
+    if (isEditing) {
+      controller.nombreController.text = widget.user!.nombre;
+      controller.apellidosController.text = widget.user!.apellidos;
+      controller.telefonoController.text = widget.user!.telefono;
+      controller.direccionController.text = widget.user!.direccion;
+    }
   }
 
   void _validateFields() {
@@ -54,8 +67,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined,
-              color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
@@ -78,40 +90,36 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
             child: Container(
               width: isTablet ? 500 : double.infinity,
               padding: isTablet
-                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
-                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
+                  ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
+                  : const EdgeInsets.fromLTRB(16, 100, 16, 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    AppStrings.registerWaiter,
-                    style: TextStyle(
+                  Text(
+                    isEditing ? "Editar Mesero" : AppStrings.registerWaiter,
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    AppStrings.registerWaiterDescription,
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
+                  Text(
+                    isEditing ? "Editar la información de contacto del Mesero." : AppStrings.registerWaiterDescription,
+                    style: const TextStyle(fontSize: 16, color: Colors.white70),
                   ),
                   const SizedBox(height: 24),
 
-                  // Foto de perfil (opcional)
+                  // Foto perfil
                   Center(
                     child: Stack(
                       children: [
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: Colors.white.withAlpha(40),
-                          backgroundImage: profileImage != null
-                              ? FileImage(profileImage)
-                              : null,
+                          backgroundImage: profileImage != null ? FileImage(profileImage) : null,
                           child: profileImage == null
-                              ? Icon(Icons.person,
-                                  size: 50,
-                                  color: theme.primaryColor.withAlpha(200))
+                              ? Icon(Icons.person, size: 50, color: theme.primaryColor.withAlpha(200))
                               : null,
                         ),
                         Positioned(
@@ -121,8 +129,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                             radius: 18,
                             backgroundColor: theme.primaryColor,
                             child: IconButton(
-                              icon: const Icon(Icons.camera_alt,
-                                  size: 18, color: Colors.white),
+                              icon: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
                               onPressed: () async {
                                 await imageNotifier.pickImage();
                               },
@@ -140,18 +147,18 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                     child: Column(
                       children: [
                         CustomInputField(
-                            hintText: AppStrings.name,
-                            controller: registerUserController.nombreController,
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Por favor ingrese un nombre'
-                                : AppConstants.nameRegex.hasMatch(value)
-                                    ? null
-                                    : 'El nombre no es válido'),
+                          hintText: AppStrings.name,
+                          controller: registerUserController.nombreController,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Por favor ingrese un nombre'
+                              : AppConstants.nameRegex.hasMatch(value)
+                                  ? null
+                                  : 'El nombre no es válido',
+                        ),
                         const SizedBox(height: 12),
                         CustomInputField(
                           hintText: AppStrings.lastName,
-                          controller:
-                              registerUserController.apellidosController,
+                          controller: registerUserController.apellidosController,
                           validator: (value) => value == null || value.isEmpty
                               ? 'Por favor ingrese un apellido'
                               : AppConstants.surnameRegex.hasMatch(value)
@@ -172,8 +179,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                         const SizedBox(height: 12),
                         CustomInputField(
                           hintText: AppStrings.address,
-                          controller:
-                              registerUserController.direccionController,
+                          controller: registerUserController.direccionController,
                           validator: (value) => value == null || value.isEmpty
                               ? 'Ingrese una dirección'
                               : AppConstants.addressRegex.hasMatch(value)
@@ -183,7 +189,6 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 32),
 
                   // Botones
@@ -205,49 +210,49 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                           backgroundColor: Colors.transparent,
                           side: const BorderSide(color: Colors.white),
                         ),
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        child: const Text('Cancelar', style: TextStyle(color: Colors.white)),
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton(
-                        onPressed: areFieldsValid &&
-                                (_formKey.currentState?.validate() ?? false)
-                            ? () {
-                                final partialUser = UserModel(
+                        onPressed: areFieldsValid && (_formKey.currentState?.validate() ?? false)
+                            ? () async {
+                                if (isEditing) {
+                                  final res = await registerUserController.updateUserPersonalInfo(
+                                    widget.user!.copyWith(
+                                      nombre: registerUserController.nombreController.text.trim(),
+                                      apellidos: registerUserController.apellidosController.text.trim(),
+                                      telefono: registerUserController.telefonoController.text.trim(),
+                                      direccion: registerUserController.direccionController.text.trim(),
+                                    ),
+                                  );
+                                  if (res == null) {
+                                    SnackbarHelper.showSuccess('Mesero actualizado exitosamente');
+                                    context.pop();
+                                  } else {
+                                    SnackbarHelper.showError('Error: $res');
+                                  }
+                                } else {
+                                  // Crear usuario temporal y continuar al siguiente paso fuera de esta pantalla
+                                  final partialUser = UserModel(
                                     uid: '',
-                                    nombre: registerUserController
-                                        .nombreController.text
-                                        .trim(),
-                                    apellidos: registerUserController
-                                        .apellidosController.text
-                                        .trim(),
-                                    telefono: registerUserController
-                                        .telefonoController.text
-                                        .trim(),
-                                    direccion: registerUserController
-                                        .direccionController.text
-                                        .trim(),
+                                    nombre: registerUserController.nombreController.text.trim(),
+                                    apellidos: registerUserController.apellidosController.text.trim(),
+                                    telefono: registerUserController.telefonoController.text.trim(),
+                                    direccion: registerUserController.direccionController.text.trim(),
                                     email: '',
                                     username: '',
-                                    rol: rol);
-                                // 2. Guarda en el provider temporal
-                                ref.read(userTempProvider.notifier).state =
-                                    partialUser;
-                                context.push(
-                                    '/admin/manage/mesero/create-credentials');
+                                    rol: rol,
+                                  );
+                                  ref.read(userTempProvider.notifier).state = partialUser;
+                                  context.push('/admin/manage/mesero/create-credentials');
+                                }
                               }
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF8B5CF6),
-                          disabledBackgroundColor:
-                              const Color(0xFF8B5CF6).withAlpha(100),
+                          disabledBackgroundColor: const Color(0xFF8B5CF6).withAlpha(100),
                         ),
-                        child: const Text(
-                          'Continuar',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        child: Text(isEditing ? 'Actualizar' : 'Continuar', style: const TextStyle(color: Colors.white)),
                       ),
                     ],
                   ),

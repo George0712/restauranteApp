@@ -6,13 +6,15 @@ class CustomInputField extends StatelessWidget {
   final TextEditingController? controller;
   final String? Function(String?)? validator;
   final bool? obscureText;
+  final bool enabled;
 
   const CustomInputField({super.key, 
     required this.hintText,
     this.keyboardType = TextInputType.text,
     this.controller, 
     this.validator, 
-    this.obscureText
+    this.obscureText,
+    this.enabled = true,
   });
 
   @override
@@ -26,6 +28,7 @@ class CustomInputField extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(32)),
         filled: true,
         fillColor: Colors.white,
+        enabled: enabled,
       ),
     );
   }

@@ -84,8 +84,9 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color:
-                              additional.disponible ? Colors.green : Colors.red,
+                          color: additional.disponible
+                                ? Colors.green.withOpacity(0.7)
+                                : Colors.red.withOpacity(0.7),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(

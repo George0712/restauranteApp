@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
+import 'package:restaurante_app/data/models/user_model.dart';
 
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_cocinero_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/create_credentials_cocinero.dart';
@@ -8,6 +10,7 @@ import 'package:restaurante_app/presentation/screens/admin/manage/cocinero/manag
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/producto/view_detail_product_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesa/create_mesa_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesa/manage_mesa_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/mesero/view_detail_user.dart';
 import 'package:restaurante_app/presentation/screens/mesero/historial/historial_mesero_screen.dart';
 
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/additional/create_item_additional_screen.dart';
@@ -188,6 +191,33 @@ final GoRouter router = GoRouter(
       builder: (context, state) {
         final additional = state.extra as AdditionalModel?;
         return CreateItemAdditionalScreen(additional: additional);
+      },
+    ),
+
+    GoRoute(
+      path: '/admin/manage/user/edit',
+      builder: (context, state) {
+        final user = state.extra as UserModel;
+
+        if (user.rol == 'mesero') {
+          return CreateMeseroScreen(user: user);
+        } else if (user.rol == 'cocinero') {
+          return CreateCocineroScreen(user: user);
+        } else {
+          // Ruta fallback, por si no es ninguno de estos roles
+          return Scaffold(
+            body: Center(
+              child: Text('Rol no soportado: ${user.rol}'),
+            ),
+          );
+        }
+      },
+    ),
+    GoRoute(
+      path: '/admin/manage/user/detail/:userId',
+      builder: (context, state) {
+        final userId = state.pathParameters['userId']!;
+        return UserDetailScreen(userId: userId);
       },
     ),
   ],

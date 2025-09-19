@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
+import 'package:restaurante_app/data/models/dashboard_admin_model.dart';
 import 'package:restaurante_app/presentation/controllers/admin/manage_products_controller.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
@@ -15,37 +16,64 @@ import 'package:restaurante_app/data/models/mesa_model.dart';
 
 import 'package:restaurante_app/data/models/user_model.dart';
 
-import 'package:restaurante_app/presentation/controllers/admin/admin_controller.dart';
-import 'package:restaurante_app/presentation/controllers/admin/register_user_controller.dart';
+import 'package:restaurante_app/presentation/controllers/admin/admin_dashbord_controller.dart';
+import 'package:restaurante_app/presentation/controllers/admin/user_controller.dart';
 import 'package:restaurante_app/presentation/controllers/admin/mesa_controller.dart';
 
 //Providers Admin
-final adminControllerProvider =
-    StateNotifierProvider<AdminController, AdminDashboardState>((ref) {
-  return AdminController();
+final adminControllerProvider = StateNotifierProvider<AdminController, AdminDashboardModel>((ref) {
+  final controller = AdminController();
+  controller.cargarDashboard(); // carga datos al iniciar
+  return controller;
 });
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
-/// Extrae cada métrica de AdminDashboardState
-final totalVentasProvider = Provider<int>((ref) {
-  return ref.watch(adminControllerProvider).totalVentas;
+/// Extrae cada métrica de AdminDashboardModel
+final totalVentasProvider = StreamProvider<int>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('pedido').snapshots().map((snapshot) {
+    int totalVentas = 0;
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final venta = data['total']; // Ajusta el nombre de campo exacto
+      if (venta is int) {
+        totalVentas += venta;
+      } else if (venta is double) {
+        totalVentas += venta.toInt();
+      }
+    }
+    return totalVentas;
+  });
 });
-final ordenesProvider = Provider<int>((ref) {
-  return ref.watch(adminControllerProvider).ordenes;
+
+// Provider para contar pedidos (órdenes)
+final ordenesProvider = StreamProvider<int>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+    .collection('pedido')
+    .where('status', isEqualTo: 'pendiente')
+    .snapshots()
+    .map((snapshot) => snapshot.size);
 });
-final clientesProvider = Provider<int>((ref) {
-  return ref.watch(adminControllerProvider).clientes;
+
+// Provider para contar usuarios
+final usuariosProvider = StreamProvider<int>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('usuario').snapshots().map((snapshot) => snapshot.size - 1);
 });
-final productosProviderCount = Provider<int>((ref) {
-  return ref.watch(adminControllerProvider).productos;
+
+// Provider para contar productos
+final productosProvider = StreamProvider<int>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('producto').snapshots().map((snapshot) => snapshot.size);
 });
 
 //Providers Users
-final registerUserControllerProvider = Provider<RegisterUserController>((ref) {
-  final controller = RegisterUserController();
+final registerUserControllerProvider = Provider<UserController>((ref) {
+  final controller = UserController();
   ref.onDispose(() {
     controller.dispose();
   });
@@ -56,16 +84,27 @@ final isContactInfoValidProvider = StateProvider<bool>((ref) => false);
 final isCredentialsValidProvider = StateProvider<bool>((ref) => false);
 final userTempProvider = StateProvider<UserModel?>((ref) => null);
 
-final usersProvider =
-    FutureProvider.family<List<UserModel>, String>((ref, rol) async {
+final usersProvider = StreamProvider.family<List<UserModel>, String>((ref, rol) {
   final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('usuario')
+      .where('rol', isEqualTo: rol)
+      .snapshots()
+      .map((snapshot) =>
+          snapshot.docs.map((doc) => UserModel.fromMap(doc.data(), doc.id)).toList());
+});
 
-  final querySnapshot =
-      await firestore.collection('usuario').where('rol', isEqualTo: rol).get();
+final userManagementControllerProvider =
+    Provider<ProductManagementController>((ref) {
+  return ProductManagementController();
+});
 
-  return querySnapshot.docs
-      .map((doc) => UserModel.fromMap(doc.data(), doc.id))
-      .toList();
+final userByIdProvider = StreamProvider.family<UserModel?, String>((ref, userId) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('usuario').doc(userId).snapshots().map((doc) {
+    if (!doc.exists) return null;
+    return UserModel.fromMap(doc.data()!, doc.id);
+  });
 });
 
 //Providers Imagenes
