@@ -699,7 +699,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
 
           context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
         } catch (e) {
-          print("🚨 ERROR OBTENIENDO USUARIO: $e");
           // ✅ Crear pedido sin mesero si falla
           final nuevoPedido = Pedido(
             id: pedidoId,
@@ -725,7 +724,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           );
 
           ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-          ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+          ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
 
           context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
         }
@@ -859,7 +858,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
     );
 
     ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-    ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+    ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
 
     context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
   } catch (e) {
