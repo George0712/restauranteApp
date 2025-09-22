@@ -51,94 +51,136 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
             : mesas.where((m) => m.estado == filtro).toList();
 
         return Scaffold(
-          backgroundColor: const Color(0xFF121212),
           appBar: _buildAppBar(notifier),
-          body: Column(
-            children: [
-              _buildEstadisticas(notifier, mesas),
-              _buildFiltros(),
-              Expanded(
-                child: _buildGridMesas(mesasFiltradas),
+          extendBodyBehindAppBar: true,
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF0F0F23),
+                  Color(0xFF1A1A2E),
+                  Color(0xFF16213E),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 90), // Espacio para el AppBar
+                _buildEstadisticas(notifier, mesas),
+                _buildFiltros(),
+                Expanded(
+                  child: _buildGridMesas(mesasFiltradas),
+                ),
+              ],
+            ),
           ),
         );
       },
-      loading: () => const Scaffold(
-        backgroundColor: Color(0xFF121212),
-        body: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF8B5CF6),
+      loading: () => Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0F0F23),
+                Color(0xFF1A1A2E),
+                Color(0xFF16213E),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFF8B5CF6),
+            ),
           ),
         ),
       ),
       error: (error, stack) => Scaffold(
-        backgroundColor: const Color(0xFF121212),
         appBar: AppBar(
-          elevation: 0,
           backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white70),
+            icon: const Icon(Icons.arrow_back_ios_new_outlined,
+                color: Colors.white),
             onPressed: () => context.pop(),
           ),
-          title: const Text(
-            'Gestión de Mesas',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 24,
+        ),
+        extendBodyBehindAppBar: true,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0F0F23),
+                Color(0xFF1A1A2E),
+                Color(0xFF16213E),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Error al cargar las mesas',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: const TextStyle(color: Colors.white70),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => ref.refresh(mesasStreamProvider),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Reintentar',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 64,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Error al cargar las mesas',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: const TextStyle(color: Colors.white70),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => ref.refresh(mesasStreamProvider),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF8B5CF6),
-                ),
-                child: const Text(
-                  'Reintentar',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
-        );
+    );
   }
 
   PreferredSizeWidget _buildAppBar(MesasNotifier notifier) {
     return AppBar(
-      elevation: 0,
       backgroundColor: Colors.transparent,
+      foregroundColor: Colors.white,
+      elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_outlined,
-            color: Colors.white70),
+        icon:
+            const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
         onPressed: () => context.pop(),
       ),
       title: const Text(
@@ -162,18 +204,22 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
     final disponibles = mesas.where((m) => m.estado == 'disponible').length;
     final ocupadas = mesas.where((m) => m.estado == 'ocupada').length;
     final reservadas = mesas.where((m) => m.estado == 'reservada').length;
-    
+
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
           BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.07),
-            blurRadius: 10,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -225,8 +271,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
     final filtros = ['Todas', 'disponible', 'ocupada', 'reservada'];
 
     return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      height: 45,
+      margin: const EdgeInsets.all(16),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: filtros.length,
@@ -240,23 +286,19 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color:
-                    isSelected ? Theme.of(context).primaryColor : Colors.white,
+                color: isSelected
+                    ? const Color(0xFF8B5CF6)
+                    : Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(
                   color: isSelected
-                      ? Theme.of(context).primaryColor
-                      : Colors.grey.shade300,
+                      ? const Color(0xFF8B5CF6)
+                      : Colors.white.withOpacity(0.3),
                 ),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: Color.fromRGBO(
-                            Theme.of(context).primaryColor.red,
-                            Theme.of(context).primaryColor.green,
-                            Theme.of(context).primaryColor.blue,
-                            0.3,
-                          ),
+                          color: const Color(0xFF8B5CF6).withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -266,7 +308,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
               child: Text(
                 filtroActual,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.black54,
+                  color: isSelected ? Colors.white : Colors.white70,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   fontSize: 14,
                 ),
@@ -287,14 +329,14 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
             Icon(
               Icons.table_restaurant_outlined,
               size: 64,
-              color: Colors.grey.shade400,
+              color: Colors.white.withOpacity(0.4),
             ),
             const SizedBox(height: 16),
             Text(
               'No hay mesas ${filtro == 'Todas' ? '' : filtro.toLowerCase()}',
               style: TextStyle(
                 fontSize: 18,
-                color: Colors.grey.shade600,
+                color: Colors.white.withOpacity(0.6),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -304,7 +346,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
                 'Contacta al administrador para crear mesas',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey.shade500,
+                  color: Colors.white.withOpacity(0.5),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -314,22 +356,20 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
       );
     }
 
-    return Padding(
+    return GridView.builder(
+      controller: _scrollController,
       padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        controller: _scrollController,
-        itemCount: mesas.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
-          childAspectRatio: 0.85,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-        ),
-        itemBuilder: (context, index) {
-          final mesa = mesas[index];
-          return _buildMesaCard(mesa);
-        },
+      itemCount: mesas.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+        childAspectRatio: 0.85,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
       ),
+      itemBuilder: (context, index) {
+        final mesa = mesas[index];
+        return _buildMesaCard(mesa);
+      },
     );
   }
 
@@ -361,30 +401,26 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: Color.fromRGBO(
-            colorEstado.red,
-            colorEstado.green,
-            colorEstado.blue,
-            0.1,
-          ),
+          color: Colors.white.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
-                ? Theme.of(context).primaryColor
-                : Color.fromRGBO(
-                    colorEstado.red,
-                    colorEstado.green,
-                    colorEstado.blue,
-                    0.3,
-                  ),
+                ? const Color(0xFF8B5CF6)
+                : Colors.white.withOpacity(0.2),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(20),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
+            if (isSelected)
+              BoxShadow(
+                color: const Color(0xFF8B5CF6).withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
           ],
         ),
         child: Column(
@@ -395,8 +431,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color.fromRGBO(colorEstado.red, colorEstado.green, colorEstado.blue, 0.3),
-                    Color.fromRGBO(colorEstado.red, colorEstado.green, colorEstado.blue, 0.2),
+                    colorEstado.withOpacity(0.3),
+                    colorEstado.withOpacity(0.2),
                   ],
                 ),
                 borderRadius: const BorderRadius.only(
@@ -426,7 +462,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
                 ],
               ),
             ),
-            
+
             // Contenido
             Expanded(
               child: Padding(
@@ -438,62 +474,62 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
                     Row(
                       children: [
                         Icon(Icons.people_outline,
-                            color: Colors.grey.shade600, size: 14),
+                            color: Colors.white.withOpacity(0.6), size: 14),
                         const SizedBox(width: 4),
                         Text(
                           '${mesa.capacidad} personas',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Colors.white.withOpacity(0.6),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
-                                         if (mesa.estado != 'disponible') ...[
-                       Text(
-                         mesa.cliente ?? '',
-                         style: const TextStyle(
-                           fontWeight: FontWeight.w600,
-                           fontSize: 13,
-                           color: Colors.white70,
-                         ),
-                         maxLines: 1,
-                         overflow: TextOverflow.ellipsis,
-                       ),
-                       if (mesa.estado == 'ocupada') ...[
-                         Row(
-                           children: [
-                             Icon(Icons.access_time,
-                                 size: 12, color: colorEstado),
-                             const SizedBox(width: 4),
-                             Text(
-                               mesa.tiempoTranscurrido,
-                               style: TextStyle(
-                                 color: colorEstado,
-                                 fontSize: 11,
-                                 fontWeight: FontWeight.w600,
-                               ),
-                             ),
-                           ],
-                         ),
-                       ] else if (mesa.estado == 'reservada') ...[
-                         Row(
-                           children: [
-                             Icon(Icons.schedule, size: 12, color: colorEstado),
-                             const SizedBox(width: 4),
-                             Text(
-                               mesa.tiempo ?? '',
-                               style: TextStyle(
-                                 color: colorEstado,
-                                 fontSize: 11,
-                                 fontWeight: FontWeight.w600,
-                               ),
-                             ),
-                           ],
-                         ),
-                       ],
-                     ],
+                    if (mesa.estado != 'disponible') ...[
+                      Text(
+                        mesa.cliente ?? '',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: Colors.white70,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (mesa.estado == 'ocupada') ...[
+                        Row(
+                          children: [
+                            Icon(Icons.access_time,
+                                size: 12, color: colorEstado),
+                            const SizedBox(width: 4),
+                            Text(
+                              mesa.tiempoTranscurrido,
+                              style: TextStyle(
+                                color: colorEstado,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ] else if (mesa.estado == 'reservada') ...[
+                        Row(
+                          children: [
+                            Icon(Icons.schedule, size: 12, color: colorEstado),
+                            const SizedBox(width: 4),
+                            Text(
+                              mesa.tiempo ?? '',
+                              style: TextStyle(
+                                color: colorEstado,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ],
                 ),
               ),
@@ -515,9 +551,20 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
 
   Widget _buildOpcionesBottomSheet(MesaModel mesa) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1A1A2E),
+            Color(0xFF16213E),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -527,7 +574,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: Colors.white.withOpacity(0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -537,14 +584,14 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white70,
+              color: Colors.white,
             ),
           ),
           Text(
             '${mesa.capacidad} personas',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey.shade600,
+              color: Colors.white.withOpacity(0.6),
             ),
           ),
           if (mesa.cliente != null) ...[
@@ -590,7 +637,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           _buildBotonOpcion(
             'Ver Pedido',
             Icons.receipt_long,
-            Colors.blue,
+            const Color(0xFF8B5CF6),
             () => _verPedido(mesa),
           ),
           const SizedBox(height: 12),
@@ -652,88 +699,85 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
     );
   }
 
+  // [Resto de métodos permanecen exactamente iguales]
+
   void _ocuparMesa(MesaModel mesa) {
-  Navigator.pop(context);
-  showDialog(
-    context: context,
-    builder: (context) => OcuparMesaDialog(
-      mesa: mesa,
-      onOcupar: (cliente) async {
-        final pedidoId = const Uuid().v4();
-        final tableUuid = const Uuid().v4();
-        
-        try {
-          // ✅ OBTENER INFORMACIÓN DEL MESERO ACTUAL correctamente
-          final userAsync = await ref.read(userModelProvider.future); // ✅ Usar .future
-          
-          print("🔧 OCUPANDO MESA:");
-          print("   - Mesa ID: ${mesa.id}");
-          print("   - Pedido ID: $pedidoId");
-          print("   - Mesero: ${userAsync.nombre} ${userAsync.apellidos}"); // ✅ Ahora funciona
-          
-          final nuevoPedido = Pedido(
-            id: pedidoId,
-            status: 'pendiente',
-            mode: 'mesa',
-            subtotal: 0.0,
-            total: 0.0,
-            tableNumber: tableUuid,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            items: [],
-            cliente: cliente,
-            notas: null,
-            meseroId: userAsync.uid,                           // ✅ Usar userAsync
-            meseroNombre: '${userAsync.nombre} ${userAsync.apellidos}', // ✅ Usar userAsync
-          );
+    Navigator.pop(context);
+    showDialog(
+      context: context,
+      builder: (context) => OcuparMesaDialog(
+        mesa: mesa,
+        onOcupar: (cliente) async {
+          final pedidoId = const Uuid().v4();
+          final tableUuid = const Uuid().v4();
 
-          final mesaActualizada = mesa.copyWith(
-            estado: 'ocupada',
-            cliente: cliente,
-            pedidoId: pedidoId,
-            horaOcupacion: DateTime.now(),
-          );
+          try {
+            final userAsync = await ref.read(userModelProvider.future);
 
-          ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-          ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+            final nuevoPedido = Pedido(
+              id: pedidoId,
+              status: 'pendiente',
+              mode: 'mesa',
+              subtotal: 0.0,
+              total: 0.0,
+              tableNumber: tableUuid,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+              items: [],
+              cliente: cliente,
+              notas: null,
+              meseroId: userAsync.uid,
+              meseroNombre: '${userAsync.nombre} ${userAsync.apellidos}',
+            );
 
-          context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
-        } catch (e) {
-          // ✅ Crear pedido sin mesero si falla
-          final nuevoPedido = Pedido(
-            id: pedidoId,
-            status: 'pendiente',
-            mode: 'mesa',
-            subtotal: 0.0,
-            total: 0.0,
-            tableNumber: tableUuid,
-            createdAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-            items: [],
-            cliente: cliente,
-            notas: null,
-            meseroId: null,
-            meseroNombre: 'Mesero desconocido',
-          );
+            final mesaActualizada = mesa.copyWith(
+              estado: 'ocupada',
+              cliente: cliente,
+              pedidoId: pedidoId,
+              horaOcupacion: DateTime.now(),
+            );
 
-          final mesaActualizada = mesa.copyWith(
-            estado: 'ocupada',
-            cliente: cliente,
-            pedidoId: pedidoId,
-            horaOcupacion: DateTime.now(),
-          );
+            ref
+                .read(pedidos.pedidosProvider.notifier)
+                .agregarPedido(nuevoPedido);
+            ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
 
-          ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-          ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+            context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
+          } catch (e) {
+            final nuevoPedido = Pedido(
+              id: pedidoId,
+              status: 'pendiente',
+              mode: 'mesa',
+              subtotal: 0.0,
+              total: 0.0,
+              tableNumber: tableUuid,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+              items: [],
+              cliente: cliente,
+              notas: null,
+              meseroId: null,
+              meseroNombre: 'Mesero desconocido',
+            );
 
-          context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
-        }
-      },
-    ),
-  );
-}
+            final mesaActualizada = mesa.copyWith(
+              estado: 'ocupada',
+              cliente: cliente,
+              pedidoId: pedidoId,
+              horaOcupacion: DateTime.now(),
+            );
 
+            ref
+                .read(pedidos.pedidosProvider.notifier)
+                .agregarPedido(nuevoPedido);
+            ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
 
+            context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
+          }
+        },
+      ),
+    );
+  }
 
   void _reservarMesa(MesaModel mesa) {
     Navigator.pop(context);
@@ -742,12 +786,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
       builder: (context) => ReservarMesaDialog(
         mesa: mesa,
         onReservar: (cliente, fecha, hora) {
-                     final mesaActualizada = mesa.copyWith(
-             estado: 'reservada',
-             cliente: cliente,
-             fechaReserva: fecha,
-             tiempo: hora,
-           );
+          final mesaActualizada = mesa.copyWith(
+            estado: 'reservada',
+            cliente: cliente,
+            fechaReserva: fecha,
+            tiempo: hora,
+          );
           ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
         },
       ),
@@ -773,7 +817,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -798,15 +842,17 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           ),
           ElevatedButton(
             onPressed: () {
-                             final mesaActualizada = mesa.copyWith(
-                 estado: 'disponible',
-                 cliente: null,
-                 tiempo: null,
-                 pedidoId: null,
-                 horaOcupacion: null,
-                 total: null,
-               );
-              ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+              final mesaActualizada = mesa.copyWith(
+                estado: 'disponible',
+                cliente: null,
+                tiempo: null,
+                pedidoId: null,
+                horaOcupacion: null,
+                total: null,
+              );
+              ref
+                  .read(mesasMeseroProvider.notifier)
+                  .editarMesa(mesaActualizada);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -826,81 +872,76 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
   }
 
   void _confirmarLlegada(MesaModel mesa) async {
-  Navigator.pop(context);
+    Navigator.pop(context);
 
-  final pedidoId = const Uuid().v4();
-  final tableUuid = const Uuid().v4();
-  
-  try {
-    // ✅ OBTENER INFORMACIÓN DEL MESERO ACTUAL correctamente
-    final userAsync = await ref.read(userModelProvider.future); // ✅ Usar .future
-    
-    final nuevoPedido = Pedido(
-      id: pedidoId,
-      status: 'pendiente',
-      mode: 'mesa',
-      subtotal: 0.0,
-      total: 0.0,
-      tableNumber: tableUuid,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      items: [],
-      cliente: mesa.cliente,
-      notas: null,
-      meseroId: userAsync.uid,                           // ✅ Usar userAsync
-      meseroNombre: '${userAsync.nombre} ${userAsync.apellidos}', // ✅ Usar userAsync
-    );
+    final pedidoId = const Uuid().v4();
+    final tableUuid = const Uuid().v4();
 
-    final mesaActualizada = mesa.copyWith(
-      estado: 'ocupada',
-      horaOcupacion: DateTime.now(),
-      pedidoId: pedidoId,
-    );
+    try {
+      final userAsync = await ref.read(userModelProvider.future);
 
-    ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-    ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+      final nuevoPedido = Pedido(
+        id: pedidoId,
+        status: 'pendiente',
+        mode: 'mesa',
+        subtotal: 0.0,
+        total: 0.0,
+        tableNumber: tableUuid,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        items: [],
+        cliente: mesa.cliente,
+        notas: null,
+        meseroId: userAsync.uid,
+        meseroNombre: '${userAsync.nombre} ${userAsync.apellidos}',
+      );
 
-    context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
-  } catch (e) {
-    print("🚨 ERROR OBTENIENDO USUARIO: $e");
-    // Crear pedido sin mesero si falla
-    final nuevoPedido = Pedido(
-      id: pedidoId,
-      status: 'pendiente',
-      mode: 'mesa',
-      subtotal: 0.0,
-      total: 0.0,
-      tableNumber: tableUuid,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      items: [],
-      cliente: mesa.cliente,
-      notas: null,
-      meseroId: null,
-      meseroNombre: 'Mesero desconocido',
-    );
+      final mesaActualizada = mesa.copyWith(
+        estado: 'ocupada',
+        horaOcupacion: DateTime.now(),
+        pedidoId: pedidoId,
+      );
 
-    final mesaActualizada = mesa.copyWith(
-      estado: 'ocupada',
-      horaOcupacion: DateTime.now(),
-      pedidoId: pedidoId,
-    );
+      ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
+      ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
 
-    ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-    ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+      context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
+    } catch (e) {
+      final nuevoPedido = Pedido(
+        id: pedidoId,
+        status: 'pendiente',
+        mode: 'mesa',
+        subtotal: 0.0,
+        total: 0.0,
+        tableNumber: tableUuid,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        items: [],
+        cliente: mesa.cliente,
+        notas: null,
+        meseroId: null,
+        meseroNombre: 'Mesero desconocido',
+      );
 
-    context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
+      final mesaActualizada = mesa.copyWith(
+        estado: 'ocupada',
+        horaOcupacion: DateTime.now(),
+        pedidoId: pedidoId,
+      );
+
+      ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
+      ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+
+      context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
+    }
   }
-}
-
-
 
   void _cancelarReserva(MesaModel mesa) {
     Navigator.pop(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
@@ -925,13 +966,15 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           ),
           ElevatedButton(
             onPressed: () {
-                             final mesaActualizada = mesa.copyWith(
-                 estado: 'disponible',
-                 cliente: null,
-                 tiempo: null,
-                 fechaReserva: null,
-               );
-              ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+              final mesaActualizada = mesa.copyWith(
+                estado: 'disponible',
+                cliente: null,
+                tiempo: null,
+                fechaReserva: null,
+              );
+              ref
+                  .read(mesasMeseroProvider.notifier)
+                  .editarMesa(mesaActualizada);
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(

@@ -10,10 +10,10 @@ class PedidoCard extends ConsumerWidget {
   final bool isCompact;
 
   const PedidoCard({
-    Key? key,
+    super.key, // ✅ CORREGIDO: usar super.key en lugar de Key? key
     required this.pedido,
     this.isCompact = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,7 +25,7 @@ class PedidoCard extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: _getStatusColor(pedido.status), // ✅ Cambiado a 'status'
+          color: _getStatusColor(pedido.status),
           width: 3,
         ),
       ),
@@ -49,7 +49,7 @@ class PedidoCard extends ConsumerWidget {
 
   // ========== HEADER ==========
   Widget _buildHeader() {
-    final statusColor = _getStatusColor(pedido.status); // ✅ Cambiado a 'status'
+    final statusColor = _getStatusColor(pedido.status);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -61,7 +61,7 @@ class PedidoCard extends ConsumerWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            '#${_generateFriendlyId(pedido.id)}', // ✅ ID más amigable
+            '#${_generateFriendlyId(pedido.id)}',
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -94,7 +94,7 @@ class PedidoCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                _getStatusText(pedido.status), // ✅ Cambiado a 'status'
+                _getStatusText(pedido.status),
                 style: TextStyle(
                   color: statusColor,
                   fontWeight: FontWeight.bold,
@@ -109,100 +109,100 @@ class PedidoCard extends ConsumerWidget {
   }
 
   // ========== INFO CLIENTE ==========
-  // ========== INFO CLIENTE ==========
-Widget _buildCustomerInfo(WidgetRef ref) {
-  final mesasAsync = ref.watch(mesasStreamProvider);
-  
-  return mesasAsync.when(
-    data: (mesas) {
-      String display;
-      if (pedido.mode == 'mesa') {
-        final mesasConPedido = mesas.where((m) => m.pedidoId == pedido.id);
-        final mesa = mesasConPedido.isNotEmpty ? mesasConPedido.first : null;
+  Widget _buildCustomerInfo(WidgetRef ref) {
+    final mesasAsync = ref.watch(mesasStreamProvider);
 
-        if (mesa != null) {
-          display = mesa.cliente != null && mesa.cliente!.isNotEmpty
-              ? 'Mesa ${mesa.id} - ${mesa.cliente}'
-              : 'Mesa ${mesa.id}';
+    return mesasAsync.when(
+      data: (mesas) {
+        String display;
+        if (pedido.mode == 'mesa') {
+          final mesasConPedido = mesas.where((m) => m.pedidoId == pedido.id);
+          final mesa = mesasConPedido.isNotEmpty ? mesasConPedido.first : null;
+
+          if (mesa != null) {
+            display = mesa.cliente != null && mesa.cliente!.isNotEmpty
+                ? 'Mesa ${mesa.id} - ${mesa.cliente}'
+                : 'Mesa ${mesa.id}';
+          } else {
+            final tableRef = pedido.tableNumber?.substring(0, 8) ?? 'Unknown';
+            display = 'Mesa ($tableRef)';
+          }
         } else {
-          final tableRef = pedido.tableNumber?.substring(0, 8) ?? 'Unknown';
-          display = 'Mesa ($tableRef)';
+          display = pedido.cliente ?? 'Cliente sin nombre';
         }
-      } else {
-        display = pedido.cliente ?? 'Cliente sin nombre';
-      }
 
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              _getModeIcon(pedido.mode ?? ''),
-              color: Colors.grey[700],
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _getModeText(pedido.mode ?? ''),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                      fontSize: 14,
-                    ),
-                  ),
-                  Text(
-                    display,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  // ✅ AÑADIR ESTA SECCIÓN (que faltaba):
-                  if (pedido.meseroNombre != null && pedido.meseroNombre!.trim().isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.person,
-                          size: 14,
-                          color: Colors.blue[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          pedido.meseroNombre!.trim(), // ✅ Usar trim() para quitar espacios
-                          style: TextStyle(
-                            color: Colors.blue[600],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _getModeIcon(pedido.mode),
+                color: Colors.grey[700],
+                size: 20,
               ),
-            ),
-          ],
-        ),
-      );
-    },
-    loading: () => _buildCustomerInfoLoading(),
-    error: (error, stack) => _buildCustomerInfoError(),
-  );
-}
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getModeText(pedido.mode),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      display,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    // ✅ SECCIÓN DE MESERO CORREGIDA
+                    if (pedido.meseroNombre != null &&
+                        pedido.meseroNombre!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.person,
+                            size: 14,
+                            color: Colors.blue[600],
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible( // ✅ AÑADIDO: Flexible para evitar overflow
+                            child: Text(
+                              pedido.meseroNombre!.trim(),
+                              style: TextStyle(
+                                color: Colors.blue[600],
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis, // ✅ AÑADIDO: Manejar texto largo
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => _buildCustomerInfoLoading(),
+      error: (error, stack) => _buildCustomerInfoError(),
+    );
+  }
 
-
-
-  // Widget helper para estado de loading
   Widget _buildCustomerInfoLoading() {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -218,8 +218,10 @@ Widget _buildCustomerInfo(WidgetRef ref) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Mesa', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('Cargando...', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                Text('Mesa',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text('Cargando...',
+                    style: TextStyle(color: Colors.grey, fontSize: 16)),
               ],
             ),
           ),
@@ -228,7 +230,6 @@ Widget _buildCustomerInfo(WidgetRef ref) {
     );
   }
 
-  // Widget helper para estado de error
   Widget _buildCustomerInfoError() {
     final tableRef = pedido.tableNumber?.substring(0, 8) ?? 'Unknown';
     return Container(
@@ -245,8 +246,10 @@ Widget _buildCustomerInfo(WidgetRef ref) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Mesa', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('Mesa ($tableRef)', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+                const Text('Mesa',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                Text('Mesa ($tableRef)',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16)),
               ],
             ),
           ),
@@ -303,140 +306,147 @@ Widget _buildCustomerInfo(WidgetRef ref) {
   }
 
   Widget _buildItemRow(ItemPedido item) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    decoration: BoxDecoration(
-      border: Border(
-        bottom: BorderSide(color: Colors.grey[200]!),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[200]!),
+        ),
       ),
-    ),
-    child: Row(
-      children: [
-        Container(
-          width: 24,
-          height: 24,
-          decoration: BoxDecoration(
-            color: _getStatusColor(pedido.status),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Text(
-              '${item.cantidad}x',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: _getStatusColor(pedido.status),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                '${item.cantidad}x',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.nombre,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.nombre,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
-              ),
-              // ✅ MOSTRAR ADICIONALES (CORREGIDO)
-              if (item.adicionales != null && item.adicionales!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                ...item.adicionales!.map((adicional) => Padding(
-                  padding: const EdgeInsets.only(left: 8, top: 2),
-                  child: Row(
+                // ✅ SECCIÓN DE ADICIONALES CORREGIDA
+                if (item.adicionales != null && item.adicionales!.isNotEmpty)
+                  ...item.adicionales!.map((adicional) {
+                    // ✅ VALIDACIÓN MEJORADA para evitar null values
+                    final nombre = adicional['name'] ?? adicional['nombre'] ?? 'Adicional';
+                    
+                    final precio = adicional['price'] ?? adicional['precio'] ?? 0;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 2),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.add,
+                            size: 12,
+                            color: Colors.orange[600],
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible( // ✅ AÑADIDO: Flexible para evitar overflow
+                            child: Text(
+                              nombre.toString(),
+                              style: TextStyle(
+                                color: Colors.orange[600],
+                                fontSize: 11,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              overflow: TextOverflow.ellipsis, // ✅ AÑADIDO
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '+\$${precio.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              color: Colors.orange[600],
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                
+                // Tiempo de preparación
+                if (item.tiempoPreparacion != null && item.tiempoPreparacion! > 0) ...[
+                  const SizedBox(height: 2),
+                  Row(
                     children: [
                       Icon(
-                        Icons.add,
+                        Icons.timer,
                         size: 12,
                         color: Colors.orange[600],
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        adicional['name'] ?? adicional['nombre'] ?? 'Adicional', // ✅ Correcto
+                        '${item.tiempoPreparacion} min',
                         style: TextStyle(
                           color: Colors.orange[600],
                           fontSize: 11,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '+\$${(adicional['price'] ?? adicional['precio'] ?? 0).toStringAsFixed(0)}', // ✅ Correcto
-                        style: TextStyle(
-                          color: Colors.orange[600],
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                )),
-              ],
-              // Tiempo de preparación
-              if (item.tiempoPreparacion != null && item.tiempoPreparacion! > 0) ...[
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.timer,
-                      size: 12,
-                      color: Colors.orange[600],
+                ],
+                // Notas
+                if (item.notas != null && item.notas!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Nota: ${item.notas}',
+                    style: TextStyle(
+                      color: Colors.orange[700],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item.tiempoPreparacion} min',
-                      style: TextStyle(
-                        color: Colors.orange[600],
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              // Notas
-              if (item.notas != null && item.notas!.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  'Nota: ${item.notas}',
-                  style: TextStyle(
-                    color: Colors.orange[700],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        if (pedido.status == 'terminado')
-          const Icon(Icons.check_circle, color: Colors.green, size: 20),
-      ],
-    ),
-  );
-}
-
-
+          if (pedido.status == 'terminado')
+            const Icon(Icons.check_circle, color: Colors.green, size: 20),
+        ],
+      ),
+    );
+  }
 
   // ========== ACCIONES ==========
-  Widget _buildActionButtons(
-      BuildContext context, WidgetRef ref, bool isLoading) {
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref, bool isLoading) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    switch (pedido.status) { // ✅ Cambiado a 'status'
+    switch (pedido.status) {
       case 'pendiente':
         return Row(
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () =>
-                    ref.read(cocinaNotifierProvider.notifier).startPreparation(pedido.id!),
+                onPressed: () => ref
+                    .read(cocinaNotifierProvider.notifier)
+                    .startPreparation(pedido.id),
                 icon: const Icon(Icons.play_arrow),
                 label: const Text('Iniciar Preparación'),
                 style: ElevatedButton.styleFrom(
@@ -464,8 +474,9 @@ Widget _buildCustomerInfo(WidgetRef ref) {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () =>
-                    ref.read(cocinaNotifierProvider.notifier).finishOrder(pedido.id!),
+                onPressed: () => ref
+                    .read(cocinaNotifierProvider.notifier)
+                    .finishOrder(pedido.id),
                 icon: const Icon(Icons.check),
                 label: const Text('Marcar Terminado'),
                 style: ElevatedButton.styleFrom(
@@ -489,23 +500,28 @@ Widget _buildCustomerInfo(WidgetRef ref) {
         );
 
       case 'cancelado':
-        return ElevatedButton.icon(
-          onPressed: () =>
-              ref.read(cocinaNotifierProvider.notifier).reactivateOrder(pedido.id!),
-          icon: const Icon(Icons.refresh),
-          label: const Text('Reactivar Pedido'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        return SizedBox( // ✅ AÑADIDO: SizedBox para width definido
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => ref
+                .read(cocinaNotifierProvider.notifier)
+                .reactivateOrder(pedido.id),
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reactivar Pedido'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
         );
 
       default:
         return Container(
+          width: double.infinity, // ✅ AÑADIDO: width definido
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.green[50],
@@ -536,7 +552,7 @@ Widget _buildCustomerInfo(WidgetRef ref) {
       builder: (context) => AlertDialog(
         title: const Text('Cancelar Pedido'),
         content: Text(
-            '¿Estás seguro de que quieres cancelar el pedido #${_generateFriendlyId(pedido.id)}?'), // ✅ ID amigable
+            '¿Estás seguro de que quieres cancelar el pedido #${_generateFriendlyId(pedido.id)}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -545,7 +561,7 @@ Widget _buildCustomerInfo(WidgetRef ref) {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              ref.read(cocinaNotifierProvider.notifier).cancelOrder(pedido.id!);
+              ref.read(cocinaNotifierProvider.notifier).cancelOrder(pedido.id);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Sí, Cancelar'),
@@ -555,18 +571,16 @@ Widget _buildCustomerInfo(WidgetRef ref) {
     );
   }
 
-  // ✅ Función para generar ID amigable
   String _generateFriendlyId(String? fullId) {
     if (fullId == null || fullId.isEmpty) return 'N/A';
     
-    // Generar un ID más amigable basado en el hash
     final hash = fullId.hashCode.abs();
     final friendlyId = (hash % 10000).toString().padLeft(4, '0');
     return friendlyId;
   }
 
   Color _getStatusColor(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) { // ✅ AÑADIDO: toLowerCase() para ser más robusto
       case 'pendiente':
         return Colors.red;
       case 'preparando':
@@ -575,7 +589,7 @@ Widget _buildCustomerInfo(WidgetRef ref) {
         return Colors.green;
       case 'cancelado':
         return Colors.grey;
-      case 'pagado': // ✅ Añadido estado 'pagado'
+      case 'pagado':
         return Colors.blue;
       default:
         return Colors.grey;
@@ -583,7 +597,7 @@ Widget _buildCustomerInfo(WidgetRef ref) {
   }
 
   String _getStatusText(String status) {
-    switch (status) {
+    switch (status.toLowerCase()) { // ✅ AÑADIDO: toLowerCase()
       case 'pendiente':
         return 'Pendiente';
       case 'preparando':
@@ -592,20 +606,20 @@ Widget _buildCustomerInfo(WidgetRef ref) {
         return 'Terminado';
       case 'cancelado':
         return 'Cancelado';
-      case 'pagado': // ✅ Añadido estado 'pagado'
+      case 'pagado':
         return 'Pagado';
       default:
         return 'Desconocido';
     }
   }
 
-  IconData _getModeIcon(String mode) {
-    switch (mode) {
+  IconData _getModeIcon(String? mode) { // ✅ AÑADIDO: nullable parameter
+    switch (mode?.toLowerCase()) { // ✅ AÑADIDO: null safety
       case 'mesa':
         return Icons.table_restaurant;
       case 'domicilio':
         return Icons.delivery_dining;
-      case 'paraLlevar':
+      case 'parallevar':
         return Icons.takeout_dining;
       default:
         return Icons.restaurant;
@@ -613,12 +627,12 @@ Widget _buildCustomerInfo(WidgetRef ref) {
   }
 
   String _getModeText(String mode) {
-    switch (mode) {
+    switch (mode.toLowerCase()) { // ✅ AÑADIDO: toLowerCase()
       case 'mesa':
         return 'Mesa';
       case 'domicilio':
         return 'Domicilio';
-      case 'paraLlevar':
+      case 'parallevar':
         return 'Para Llevar';
       default:
         return 'Desconocido';
@@ -627,7 +641,7 @@ Widget _buildCustomerInfo(WidgetRef ref) {
 
   String _getTimeDisplay() {
     final now = DateTime.now();
-    final orderTime = pedido.updatedAt ?? pedido.createdAt ?? DateTime.now(); // ✅ Usar nuevos campos de fecha
+    final orderTime = pedido.updatedAt ?? pedido.createdAt ?? DateTime.now();
     final difference = now.difference(orderTime);
 
     if (difference.inMinutes < 60) {
@@ -645,7 +659,6 @@ Widget _buildCustomerInfo(WidgetRef ref) {
       if (item.tiempoPreparacion != null) {
         totalTime += (item.tiempoPreparacion! * item.cantidad).toInt();
       } else {
-        // Si no tiene tiempo de preparación, usar 15 min por defecto
         totalTime += (15 * item.cantidad).toInt();
       }
     }

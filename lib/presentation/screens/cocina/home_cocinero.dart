@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 import 'package:restaurante_app/presentation/widgets/pedido_cards.dart';
 import 'package:restaurante_app/presentation/widgets/kitchen_stats.dart';
-import 'package:restaurante_app/data/models/pedido.dart';
 
 class HomeCocineroScreen extends ConsumerWidget {
   const HomeCocineroScreen({Key? key}) : super(key: key);
