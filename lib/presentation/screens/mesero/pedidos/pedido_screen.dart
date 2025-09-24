@@ -13,10 +13,16 @@ import 'package:restaurante_app/presentation/widgets/carrito_bottom.dart';
 
 class SeleccionProductosScreen extends ConsumerStatefulWidget {
   final String pedidoId;
+  final String? mesaId;      
+  final String? mesaNombre;   
+  final String? clienteNombre; 
 
   const SeleccionProductosScreen({
     super.key,
     required this.pedidoId,
+    this.mesaId,        
+    this.mesaNombre,    
+    this.clienteNombre, 
   });
 
   @override
@@ -568,16 +574,16 @@ class _SeleccionProductosScreenState
   try {
     final adicionalesAsync = await ref.read(additionalProvider.future);
     
-    // ✅ OBTENER INFORMACIÓN DEL MESERO ACTUAL correctamente
+    // Obtener información del mesero
     UserModel? user;
     try {
-      user = await ref.read(userModelProvider.future); // ✅ Usar .future
+      user = await ref.read(userModelProvider.future);
     } catch (e) {
       print("🚨 ERROR OBTENIENDO USUARIO: $e");
       user = null;
     }
     
-    // Crear items y calcular totales...
+    // ... código de items y totales igual ...
     final items = carrito.map((item) {
       final adicionales = item.modificacionesSeleccionadas
           .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
@@ -603,7 +609,15 @@ class _SeleccionProductosScreenState
     });
     final total = subtotal;
 
-    // ✅ Crear documento con información del mesero
+    // ✅ USAR LOS PARÁMETROS PASADOS DESDE LA URL:
+    final mesaIdInt = widget.mesaId != null ? int.tryParse(widget.mesaId!) : null;
+
+    print("🔧 DATOS DE MESA RECIBIDOS:");
+    print("   - Mesa ID: $mesaIdInt");
+    print("   - Mesa Nombre: ${widget.mesaNombre}");
+    print("   - Cliente: ${widget.clienteNombre}");
+
+    // Crear documento con toda la información
     await FirebaseFirestore.instance
         .collection('pedido')
         .doc(widget.pedidoId)
@@ -615,13 +629,20 @@ class _SeleccionProductosScreenState
           'status': 'pendiente',
           'mode': 'mesa',
           'tableNumber': widget.pedidoId,
-          'meseroId': user?.uid,                                    // ✅ Puede ser null
-          'meseroNombre': user != null ? '${user.nombre} ${user.apellidos}' : 'Mesero desconocido', // ✅ Con fallback
+          'meseroId': user?.uid,
+          'meseroNombre': user != null ? '${user.nombre} ${user.apellidos}' : 'Mesero desconocido',
+          // ✅ USAR LOS DATOS PASADOS:
+          'mesaId': mesaIdInt,
+          'mesaNombre': widget.mesaNombre,
+          'clienteNombre': widget.clienteNombre,
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
 
-    print("🔧 PEDIDO ACTUALIZADO: ${widget.pedidoId} - Mesero: ${user?.nombre ?? 'Desconocido'} ${user?.apellidos ?? ''}");
+    print("🔧 PEDIDO ACTUALIZADO: ${widget.pedidoId}");
+    print("   - Mesa: ${widget.mesaNombre}");
+    print("   - Cliente: ${widget.clienteNombre}");
+    print("   - Items: ${items.length}");
 
     setState(() {
       pedidoConfirmado = true;

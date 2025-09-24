@@ -110,98 +110,75 @@ class PedidoCard extends ConsumerWidget {
 
   // ========== INFO CLIENTE ==========
   Widget _buildCustomerInfo(WidgetRef ref) {
-    final mesasAsync = ref.watch(mesasStreamProvider);
-
-    return mesasAsync.when(
-      data: (mesas) {
-        String display;
-        if (pedido.mode == 'mesa') {
-          final mesasConPedido = mesas.where((m) => m.pedidoId == pedido.id);
-          final mesa = mesasConPedido.isNotEmpty ? mesasConPedido.first : null;
-
-          if (mesa != null) {
-            display = mesa.cliente != null && mesa.cliente!.isNotEmpty
-                ? 'Mesa ${mesa.id} - ${mesa.cliente}'
-                : 'Mesa ${mesa.id}';
-          } else {
-            final tableRef = pedido.tableNumber?.substring(0, 8) ?? 'Unknown';
-            display = 'Mesa ($tableRef)';
-          }
-        } else {
-          display = pedido.cliente ?? 'Cliente sin nombre';
-        }
-
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.grey[50],
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      children: [
+        Icon(
+          _getModeIcon(pedido.mode ?? ''),
+          color: Colors.grey[700],
+          size: 20,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                _getModeIcon(pedido.mode),
-                color: Colors.grey[700],
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _getModeText(pedido.mode),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      display,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    // ✅ SECCIÓN DE MESERO CORREGIDA
-                    if (pedido.meseroNombre != null &&
-                        pedido.meseroNombre!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.person,
-                            size: 14,
-                            color: Colors.blue[600],
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible( // ✅ AÑADIDO: Flexible para evitar overflow
-                            child: Text(
-                              pedido.meseroNombre!.trim(),
-                              style: TextStyle(
-                                color: Colors.blue[600],
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              overflow: TextOverflow.ellipsis, // ✅ AÑADIDO: Manejar texto largo
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
+              Text(
+                _getModeText(pedido.mode ?? ''),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                  fontSize: 14,
                 ),
               ),
+              // ✅ USAR INFORMACIÓN LEGIBLE DIRECTAMENTE:
+              Text(
+                pedido.mode == 'mesa' 
+                    ? (pedido.mesaNombre != null && pedido.clienteNombre != null
+                        ? '${pedido.mesaNombre} - ${pedido.clienteNombre}'
+                        : pedido.mesaNombre ?? 'Mesa desconocida')
+                    : pedido.clienteNombre ?? 'Cliente sin nombre',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              // Mostrar mesero
+              if (pedido.meseroNombre != null && pedido.meseroNombre!.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person,
+                      size: 14,
+                      color: Colors.blue[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      pedido.meseroNombre!.trim(),
+                      style: TextStyle(
+                        color: Colors.blue[600],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
-        );
-      },
-      loading: () => _buildCustomerInfoLoading(),
-      error: (error, stack) => _buildCustomerInfoError(),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
 
   Widget _buildCustomerInfoLoading() {
     return Container(
