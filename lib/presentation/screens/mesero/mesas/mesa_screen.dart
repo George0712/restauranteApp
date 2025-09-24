@@ -725,7 +725,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
           );
 
           ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-          ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+          ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada); 
+
 
           context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
         }
@@ -859,7 +860,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen>
     );
 
     ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-    ref.read(mesasProvider.notifier).editarMesa(mesaActualizada);
+    ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);  
+
 
     context.push('/mesero/pedidos/detalle/${mesa.id}/$pedidoId');
   } catch (e) {
