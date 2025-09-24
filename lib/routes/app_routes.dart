@@ -155,9 +155,20 @@ final GoRouter router = GoRouter(
 
     GoRoute(
       path: '/mesero/pedidos/detalle/:mesaId/:pedidoId',
-      builder: (context, state) => SeleccionProductosScreen(
-        pedidoId: state.pathParameters['pedidoId']!,
-      ),
+      builder: (context, state) {
+        //final mesaId = state.pathParameters['mesaId']!;
+        final pedidoId = state.pathParameters['pedidoId']!;
+        
+        // ✅ OBTENER QUERY PARAMETERS:
+        final queryParams = state.uri.queryParameters;
+        
+        return SeleccionProductosScreen(
+          pedidoId: pedidoId,
+          mesaId: queryParams['mesaId'],
+          mesaNombre: queryParams['mesaNombre'],
+          clienteNombre: queryParams['clienteNombre'],
+        );
+      },
     ),
 
     GoRoute(

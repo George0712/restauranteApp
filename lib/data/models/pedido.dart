@@ -77,14 +77,19 @@ class Pedido {
   final String mode;
   final double subtotal;
   final double total;
-  final String? tableNumber;
+  final String? tableNumber; // UUID - mantener para compatibilidad
   final DateTime? updatedAt;
   final DateTime? createdAt;
   final List<ItemPedido> items;
   final String? cliente;
   final String? notas;
-  final String? meseroId;     // ✅ Añadir ID del mesero
-  final String? meseroNombre; // ✅ Añadir nombre del mesero
+  final String? meseroId;
+  final String? meseroNombre;
+  
+  // ✅ NUEVOS CAMPOS PARA INFORMACIÓN LEGIBLE:
+  final int? mesaId;           // Número real de la mesa (1, 2, 3, etc.)
+  final String? mesaNombre;    // "Mesa 3" - información legible
+  final String? clienteNombre; // Nombre del cliente para historial
   
   Pedido({
     required this.id,
@@ -98,67 +103,52 @@ class Pedido {
     required this.items,
     this.cliente,
     this.notas,
-    this.meseroId,     // ✅ Añadir parámetro
-    this.meseroNombre, // ✅ Añadir parámetro
+    this.meseroId,
+    this.meseroNombre,
+    // ✅ Nuevos parámetros:
+    this.mesaId,
+    this.mesaNombre,
+    this.clienteNombre,
   });
 
   // Getters para compatibilidad con código existente
   String get estado => status;
   String get modo => mode;
-  int get mesaId {
-  // Si tableNumber es un UUID, necesitamos obtener el ID real de la mesa
-  // Por ahora, usar un ID genérico hasta que se implemente la búsqueda
-  return 0; // Temporalmente
-}
-
-// Añadir getter para obtener el UUID de la mesa
+  int get mesaIdLegacy {
+    // Si tenemos el mesaId nuevo, usarlo; sino, usar 0 por defecto
+    return mesaId ?? 0;
+  }
   String get tableUuid => tableNumber ?? '';
   DateTime get fecha => updatedAt ?? createdAt ?? DateTime.now();
-  double? get propina => null; // No veo propina en tu estructura actual
+  double? get propina => null;
   double get totalConPropina => total;
 
+
   factory Pedido.fromJson(Map<String, dynamic> json) {
-  return Pedido(
-    id: json['id'] ?? '',
-    status: json['status'] ?? 'pendiente',
-    mode: json['mode'] ?? 'mesa',
-    subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
-    total: (json['total'] as num?)?.toDouble() ?? 0.0,
-    tableNumber: json['tableNumber'],
-    updatedAt: json['updatedAt'] != null 
-        ? (json['updatedAt'] as Timestamp).toDate() 
-        : null,
-    createdAt: json['createdAt'] != null 
-        ? (json['createdAt'] as Timestamp).toDate() 
-        : null,
-    // ✅ PARSING SEGURO DE ITEMS:
-    items: _parseItems(json['items']),
-    cliente: json['cliente'],
-    notas: json['notas'],
-    meseroId: json['meseroId'],
-    meseroNombre: json['meseroNombre'],
-  );
-}
-
-// ✅ FUNCIÓN HELPER PARA PARSING SEGURO:
-static List<ItemPedido> _parseItems(dynamic itemsData) {
-  if (itemsData == null) return [];
-  
-  try {
-    if (itemsData is List) {
-      return itemsData
-          .where((item) => item != null && item is Map<String, dynamic>)
-          .map((item) => ItemPedido.fromJson(item as Map<String, dynamic>))
-          .toList();
-    }
-  } catch (e) {
-    print("🚨 Error parseando items: $e");
+    return Pedido(
+      id: json['id'] ?? '',
+      status: json['status'] ?? 'pendiente',
+      mode: json['mode'] ?? 'mesa',
+      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+      tableNumber: json['tableNumber'],
+      updatedAt: json['updatedAt'] != null 
+          ? (json['updatedAt'] as Timestamp).toDate() 
+          : null,
+      createdAt: json['createdAt'] != null 
+          ? (json['createdAt'] as Timestamp).toDate() 
+          : null,
+      items: _parseItems(json['items']),
+      cliente: json['cliente'],
+      notas: json['notas'],
+      meseroId: json['meseroId'],
+      meseroNombre: json['meseroNombre'],
+      // ✅ Nuevos campos:
+      mesaId: json['mesaId'] as int?,
+      mesaNombre: json['mesaNombre'],
+      clienteNombre: json['clienteNombre'],
+    );
   }
-  
-  return [];
-}
-
-
 
   Map<String, dynamic> toJson() {
     return {
@@ -173,9 +163,31 @@ static List<ItemPedido> _parseItems(dynamic itemsData) {
       'items': items.map((item) => item.toJson()).toList(),
       'cliente': cliente,
       'notas': notas,
-      'meseroId': meseroId,         // ✅ Añadir
-      'meseroNombre': meseroNombre, // ✅ Añadir
+      'meseroId': meseroId,
+      'meseroNombre': meseroNombre,
+      // ✅ Nuevos campos:
+      'mesaId': mesaId,
+      'mesaNombre': mesaNombre,
+      'clienteNombre': clienteNombre,
     };
+  }
+
+  // Función helper para parsing seguro de items
+  static List<ItemPedido> _parseItems(dynamic itemsData) {
+    if (itemsData == null) return [];
+    
+    try {
+      if (itemsData is List) {
+        return itemsData
+            .where((item) => item != null && item is Map<String, dynamic>)
+            .map((item) => ItemPedido.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (e) {
+      print("🚨 Error parseando items: $e");
+    }
+    
+    return [];
   }
 }
 

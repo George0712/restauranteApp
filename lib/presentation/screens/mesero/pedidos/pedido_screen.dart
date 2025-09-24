@@ -13,10 +13,16 @@ import 'package:restaurante_app/presentation/widgets/carrito_bottom.dart';
 
 class SeleccionProductosScreen extends ConsumerStatefulWidget {
   final String pedidoId;
+  final String? mesaId;
+  final String? mesaNombre;
+  final String? clienteNombre;
 
   const SeleccionProductosScreen({
     super.key,
     required this.pedidoId,
+    this.mesaId,
+    this.mesaNombre,
+    this.clienteNombre,
   });
 
   @override
@@ -732,12 +738,17 @@ class _SeleccionProductosScreenState
       List<ItemCarrito> carrito, String status, bool pagado) async {
     final adicionalesAsync = await ref.read(additionalProvider.future);
 
+    // Obtener información del mesero
+
     UserModel? user;
     try {
+      user = await ref.read(userModelProvider.future);
       user = await ref.read(userModelProvider.future);
     } catch (e) {
       user = null;
     }
+
+    // ... código de items y totales igual ...
 
     final items = carrito.map((item) {
       final adicionales = item.modificacionesSeleccionadas
@@ -764,28 +775,50 @@ class _SeleccionProductosScreenState
       return sum + precioBase + precioAdicionales;
     });
 
+    // ✅ USAR LOS PARÁMETROS PASADOS DESDE LA URL:
+    final mesaIdInt =
+        widget.mesaId != null ? int.tryParse(widget.mesaId!) : null;
+
+    print("🔧 DATOS DE MESA RECIBIDOS:");
+    print("   - Mesa ID: $mesaIdInt");
+    print("   - Mesa Nombre: ${widget.mesaNombre}");
+    print("   - Cliente: ${widget.clienteNombre}");
+
+    // Crear documento con toda la información
     // ✅ IMPORTANTE: Solo crear/actualizar cuando realmente se confirma
     await FirebaseFirestore.instance
         .collection('pedido')
         .doc(widget.pedidoId)
         .set({
       'id': widget.pedidoId,
-      'items': items, // ✅ Esto garantiza que hay items
+      'items': items,
       'subtotal': subtotal,
       'total': subtotal,
-      'status': status, // ✅ Esto marca que fue confirmado
-      'pagado': pagado,
+      'status': 'pendiente',
       'mode': 'mesa',
       'tableNumber': widget.pedidoId,
       'meseroId': user?.uid,
       'meseroNombre': user != null
           ? '${user.nombre} ${user.apellidos}'
           : 'Mesero desconocido',
+      // ✅ USAR LOS DATOS PASADOS:
+      'mesaId': mesaIdInt,
+      'mesaNombre': widget.mesaNombre,
+      'clienteNombre': widget.clienteNombre,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
 
-    print("✅ PEDIDO CONFIRMADO: ${widget.pedidoId} con estado: $status");
+    setState(() {
+      pedidoConfirmado = true;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pedido confirmado exitosamente')),
+      );
+      Navigator.pop(context);
+    }
   }
 
   void _mostrarError(BuildContext context, String mensaje) {
@@ -795,6 +828,4 @@ class _SeleccionProductosScreenState
       );
     }
   }
-
-  // ✅ ELIMINADOS LOS MÉTODOS ANTIGUOS _confirmarPedido y _procesarPago
 }
