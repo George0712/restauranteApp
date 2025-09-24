@@ -52,12 +52,10 @@ class MesaController {
       );
 
       // Guardar en Firestore
-      final docRef = await _firestore.collection('mesa').add(mesa.toMap());
-      print('Mesa creada exitosamente con ID: ${docRef.id}');
+      await _firestore.collection('mesa').add(mesa.toMap());
       
       return null; // Éxito
     } catch (e) {
-      print('Error detallado al crear mesa: $e');
       if (e.toString().contains('permission-denied')) {
         return 'Error de permisos: No tienes permisos para crear mesas. Verifica las reglas de Firestore.';
       } else if (e.toString().contains('unavailable')) {

@@ -268,9 +268,6 @@ class _CreateItemProductScreenState
       // Si hay una nueva imagen seleccionada, usar su path
       if (profileImage != null) {
         imageToProcess = profileImage.path;
-        print('🖼️ Nueva imagen seleccionada: ${profileImage.path}');
-      } else {
-        print('🖼️ Manteniendo imagen original: $_originalImageUrl');
       }
 
       String? result;
