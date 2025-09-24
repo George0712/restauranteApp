@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
-import '../../../data/models/pedido.dart';
+import 'package:restaurante_app/data/models/pedido.dart';
+import 'package:restaurante_app/data/models/product_model.dart';
 
 final pedidosProvider = StateNotifierProvider<PedidosNotifier, List<Pedido>>((ref) {
   return PedidosNotifier();
@@ -44,19 +47,86 @@ class PedidosNotifier extends StateNotifier<List<Pedido>> {
 class CarritoNotifier extends StateNotifier<List<ItemCarrito>> {
   CarritoNotifier() : super([]);
 
+  // ✅ NUEVO: Cargar carrito desde un pedido en Firestore
+  Future<void> cargarDesdeFirestore(String pedidoId, List<ProductModel> productos, List<AdditionalModel> adicionales) async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(pedidoId)
+          .get();
+
+      if (!doc.exists) {
+        state = [];
+        return;
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      final items = data['items'] as List?;
+      
+      if (items == null || items.isEmpty) {
+        state = [];
+        return;
+      }
+
+      final carritoItems = <ItemCarrito>[];
+      
+      for (final item in items) {
+        try {
+          // Buscar el producto
+          final producto = productos.firstWhere(
+            (p) => p.id == item['productId'],
+            orElse: () => throw Exception('Producto no encontrado'),
+          );
+
+          // Buscar adicionales
+          final adicionalesItem = <AdditionalModel>[];
+          final modificacionesIds = <String>[];
+          
+          if (item['adicionales'] != null) {
+            for (final adicional in item['adicionales']) {
+              final adicionalObj = adicionales.firstWhere(
+                (a) => a.id == adicional['id'],
+                orElse: () => throw Exception('Adicional no encontrado'),
+              );
+              adicionalesItem.add(adicionalObj);
+              modificacionesIds.add(adicionalObj.id);
+            }
+          }
+
+          final carritoItem = ItemCarrito(
+            producto: producto,
+            cantidad: item['quantity'] ?? 1,
+            precioUnitario: (item['price'] ?? producto.price).toDouble(),
+            notas: item['notes'] ?? '',
+            adicionales: adicionalesItem.isEmpty ? null : adicionalesItem,
+            modificacionesSeleccionadas: modificacionesIds,
+          );
+
+          carritoItems.add(carritoItem);
+        } catch (e) {
+          print('Error cargando item del carrito: $e');
+          // Continuar con los demás items
+        }
+      }
+
+      state = carritoItems;
+      print('✅ Carrito cargado desde Firestore: ${carritoItems.length} items');
+    } catch (e) {
+      print('Error cargando carrito desde Firestore: $e');
+      state = [];
+    }
+  }
+
   void agregarItem(ItemCarrito item) {
-    // Buscar si ya existe un item similar
     final index = state.indexWhere((existingItem) =>
         existingItem.producto.id == item.producto.id &&
         _listasIguales(existingItem.modificacionesSeleccionadas, item.modificacionesSeleccionadas));
 
     if (index >= 0) {
-      // Actualizar cantidad
       final updatedItem = state[index];
       updatedItem.cantidad += item.cantidad;
       state = [...state];
     } else {
-      // Agregar nuevo item
       state = [...state, item];
     }
   }
@@ -94,4 +164,33 @@ class CarritoNotifier extends StateNotifier<List<ItemCarrito>> {
 
 final carritoProvider = StateNotifierProvider<CarritoNotifier, List<ItemCarrito>>((ref) {
   return CarritoNotifier();
+});
+
+// ✅ NUEVO: Provider para obtener un pedido específico desde Firestore
+final pedidoPorIdProvider = StreamProvider.family<Map<String, dynamic>?, String>((ref, pedidoId) {
+  return FirebaseFirestore.instance
+      .collection('pedido')
+      .doc(pedidoId)
+      .snapshots()
+      .map((doc) {
+        if (!doc.exists) return null;
+        return doc.data();
+      });
+});
+
+// ✅ NUEVO: Provider para verificar si un pedido está confirmado
+final pedidoConfirmadoProvider = Provider.family<bool, String?>((ref, pedidoId) {
+  if (pedidoId == null) return false;
+  
+  final pedidoAsync = ref.watch(pedidoPorIdProvider(pedidoId));
+  return pedidoAsync.when(
+    data: (pedido) {
+      if (pedido == null) return false;
+      final items = pedido['items'] as List?;
+      final status = pedido['status'] ?? 'nuevo';
+      return items != null && items.isNotEmpty && status != 'nuevo';
+    },
+    loading: () => false,
+    error: (_, __) => false,
+  );
 });

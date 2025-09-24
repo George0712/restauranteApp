@@ -36,3 +36,38 @@ final userModelProvider = FutureProvider<UserModel>((ref) async {
   
   return UserModel.fromMap(doc.data()!, userAsync.uid);
 });
+
+final isCurrentUserAdminProvider = FutureProvider<bool>((ref) async {
+  try {
+    final userModel = await ref.watch(userModelProvider.future);
+    return userModel.rol.toLowerCase() == 'admin';
+  } catch (e) {
+    return false; // Si hay error o no está autenticado, no es admin
+  }
+});
+
+// Versión StreamProvider para reactividad en tiempo real (recomendada)
+final isCurrentUserAdminStreamProvider = StreamProvider<bool>((ref) {
+  final authStateAsync = ref.watch(authStateChangesProvider);
+  
+  return authStateAsync.when(
+    data: (user) {
+      if (user == null) {
+        return Stream.value(false);
+      }
+      
+      final firestore = ref.watch(firestoreProvider);
+      return firestore
+          .collection('usuario')
+          .doc(user.uid)
+          .snapshots()
+          .map((doc) {
+            if (!doc.exists) return false;
+            final userData = doc.data()!;
+            return userData['rol']?.toLowerCase() == 'admin';
+          });
+    },
+    loading: () => Stream.value(false),
+    error: (_, __) => Stream.value(false),
+  );
+});

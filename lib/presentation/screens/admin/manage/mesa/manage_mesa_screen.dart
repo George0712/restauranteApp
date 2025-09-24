@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -586,7 +588,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
             _mostrarError(error);
             return;
           }
-          Navigator.of(context).pop(); // Cierra diálogo solo en caso de éxito
+          Navigator.of(context).pop(); 
         },
       ),
     );
@@ -805,10 +807,12 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
               keyboardType: TextInputType.number,
               validator: (value) {
                 if (value?.isEmpty ?? true) return 'Ingrese el número de mesa';
-                if (int.tryParse(value!) == null)
+                if (int.tryParse(value!) == null) {
                   return 'Ingrese un número válido';
-                if (int.parse(value) <= 0)
+                }
+                if (int.parse(value) <= 0) {
                   return 'El número debe ser mayor a 0';
+                }
                 return null;
               },
             ),

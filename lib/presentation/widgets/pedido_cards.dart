@@ -10,7 +10,7 @@ class PedidoCard extends ConsumerWidget {
   final bool isCompact;
 
   const PedidoCard({
-    super.key, // ✅ CORREGIDO: usar super.key en lugar de Key? key
+    super.key,
     required this.pedido,
     this.isCompact = false,
   });
@@ -165,7 +165,6 @@ class PedidoCard extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    // ✅ SECCIÓN DE MESERO CORREGIDA
                     if (pedido.meseroNombre != null &&
                         pedido.meseroNombre!.trim().isNotEmpty) ...[
                       const SizedBox(height: 4),
@@ -177,7 +176,7 @@ class PedidoCard extends ConsumerWidget {
                             color: Colors.blue[600],
                           ),
                           const SizedBox(width: 4),
-                          Flexible( // ✅ AÑADIDO: Flexible para evitar overflow
+                          Flexible( // 
                             child: Text(
                               pedido.meseroNombre!.trim(),
                               style: TextStyle(
@@ -185,7 +184,7 @@ class PedidoCard extends ConsumerWidget {
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
-                              overflow: TextOverflow.ellipsis, // ✅ AÑADIDO: Manejar texto largo
+                              overflow: TextOverflow.ellipsis, // 
                             ),
                           ),
                         ],
@@ -345,10 +344,9 @@ class PedidoCard extends ConsumerWidget {
                     fontSize: 14,
                   ),
                 ),
-                // ✅ SECCIÓN DE ADICIONALES CORREGIDA
+                // Adicionales
                 if (item.adicionales != null && item.adicionales!.isNotEmpty)
                   ...item.adicionales!.map((adicional) {
-                    // ✅ VALIDACIÓN MEJORADA para evitar null values
                     final nombre = adicional['name'] ?? adicional['nombre'] ?? 'Adicional';
                     
                     final precio = adicional['price'] ?? adicional['precio'] ?? 0;
@@ -363,7 +361,7 @@ class PedidoCard extends ConsumerWidget {
                             color: Colors.orange[600],
                           ),
                           const SizedBox(width: 4),
-                          Flexible( // ✅ AÑADIDO: Flexible para evitar overflow
+                          Flexible( 
                             child: Text(
                               nombre.toString(),
                               style: TextStyle(
@@ -371,7 +369,7 @@ class PedidoCard extends ConsumerWidget {
                                 fontSize: 11,
                                 fontStyle: FontStyle.italic,
                               ),
-                              overflow: TextOverflow.ellipsis, // ✅ AÑADIDO
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -500,7 +498,7 @@ class PedidoCard extends ConsumerWidget {
         );
 
       case 'cancelado':
-        return SizedBox( // ✅ AÑADIDO: SizedBox para width definido
+        return SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: () => ref
@@ -521,7 +519,7 @@ class PedidoCard extends ConsumerWidget {
 
       default:
         return Container(
-          width: double.infinity, // ✅ AÑADIDO: width definido
+          width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.green[50],
@@ -580,7 +578,7 @@ class PedidoCard extends ConsumerWidget {
   }
 
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) { // ✅ AÑADIDO: toLowerCase() para ser más robusto
+    switch (status.toLowerCase()) { 
       case 'pendiente':
         return Colors.red;
       case 'preparando':
@@ -597,7 +595,7 @@ class PedidoCard extends ConsumerWidget {
   }
 
   String _getStatusText(String status) {
-    switch (status.toLowerCase()) { // ✅ AÑADIDO: toLowerCase()
+    switch (status.toLowerCase()) { 
       case 'pendiente':
         return 'Pendiente';
       case 'preparando':
@@ -613,8 +611,8 @@ class PedidoCard extends ConsumerWidget {
     }
   }
 
-  IconData _getModeIcon(String? mode) { // ✅ AÑADIDO: nullable parameter
-    switch (mode?.toLowerCase()) { // ✅ AÑADIDO: null safety
+  IconData _getModeIcon(String? mode) { 
+    switch (mode?.toLowerCase()) {
       case 'mesa':
         return Icons.table_restaurant;
       case 'domicilio':
@@ -627,7 +625,7 @@ class PedidoCard extends ConsumerWidget {
   }
 
   String _getModeText(String mode) {
-    switch (mode.toLowerCase()) { // ✅ AÑADIDO: toLowerCase()
+    switch (mode.toLowerCase()) { 
       case 'mesa':
         return 'Mesa';
       case 'domicilio':

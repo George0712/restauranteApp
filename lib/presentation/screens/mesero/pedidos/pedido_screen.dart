@@ -37,8 +37,13 @@ class _SeleccionProductosScreenState
   @override
   void initState() {
     super.initState();
-    final categoriasAsync = ref.read(categoryDisponibleProvider);
 
+    // Cargar carrito cuando se inicia la pantalla
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cargarCarritoDelPedido();
+    });
+
+    final categoriasAsync = ref.read(categoryDisponibleProvider);
     categoriasAsync.whenData((categorias) {
       final nombresCategorias = [
         'Todas',
@@ -47,6 +52,22 @@ class _SeleccionProductosScreenState
       _tabController =
           TabController(length: nombresCategorias.length, vsync: this);
     });
+  }
+
+  // ✅ NUEVO: Método para cargar el carrito desde Firestore
+  Future<void> _cargarCarritoDelPedido() async {
+    try {
+      final productos = await ref.read(productsProvider.future);
+      final adicionales = await ref.read(additionalProvider.future);
+
+      await ref.read(carritoProvider.notifier).cargarDesdeFirestore(
+            widget.pedidoId,
+            productos,
+            adicionales,
+          );
+    } catch (e) {
+      print('Error cargando carrito del pedido: $e');
+    }
   }
 
   @override
@@ -557,32 +578,172 @@ class _SeleccionProductosScreenState
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => CarritoBottomSheet(
-        onConfirmar: () => _confirmarPedido(context, ref.read(carritoProvider)),
-        onPagar: () => _procesarPago(context, ref.read(carritoProvider)),
-        pedidoConfirmado: pedidoConfirmado,
+        pedidoId: widget.pedidoId, // Pasar el ID del pedido
+        onConfirmarSinPagar: () => _confirmarPedidoSinPagar(context),
+        onConfirmarYPagar: () => _confirmarPedidoYPagar(context),
+        onProcederPago: () => _procederAlPago(context),
+        onModificarPedido: () => _modificarPedido(context),
+        onCancelarPedido: () => _cancelarPedido(context),
       ),
     );
   }
 
-  void _confirmarPedido(BuildContext context, List<ItemCarrito> carrito) async {
-  try {
+  void _confirmarPedidoSinPagar(BuildContext context) async {
+    try {
+      final carrito = ref.read(carritoProvider);
+
+      // ✅ Verificar estado actual
+      final pedidoDoc = await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(widget.pedidoId)
+          .get();
+
+      if (pedidoDoc.exists) {
+        final pedidoData = pedidoDoc.data() as Map<String, dynamic>;
+        final estadoActual = pedidoData['status'] ?? 'nuevo';
+        final items = pedidoData['items'] as List?;
+
+        if (estadoActual != 'nuevo' && items != null && items.isNotEmpty) {
+          // Ya está confirmado
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('El pedido ya está confirmado')),
+            );
+            Navigator.pop(context);
+          }
+          return;
+        }
+      }
+
+      // Proceder con la confirmación
+      await _crearActualizarPedido(carrito, 'pendiente', false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pedido confirmado sin pagar')),
+        );
+      }
+    } catch (e) {
+      _mostrarError(context, 'Error al confirmar pedido: $e');
+    }
+  }
+
+  void _confirmarPedidoYPagar(BuildContext context) async {
+    try {
+      final carrito = ref.read(carritoProvider);
+      _crearActualizarPedido(carrito, 'pagado', true);
+
+      // Limpiar carrito después del pago
+      ref.read(carritoProvider.notifier).limpiarCarrito();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Pedido confirmado y pagado exitosamente')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      _mostrarError(context, 'Error al confirmar y pagar: $e');
+    }
+  }
+
+  void _procederAlPago(BuildContext context) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(widget.pedidoId)
+          .update({
+        'status': 'pagado',
+        'pagado': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Limpiar carrito después del pago
+      ref.read(carritoProvider.notifier).limpiarCarrito();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pago procesado exitosamente')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      _mostrarError(context, 'Error al procesar pago: $e');
+    }
+  }
+
+  void _modificarPedido(BuildContext context) {
+    Navigator.pop(context); // Cerrar el carrito y permitir modificaciones
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('Puedes agregar o quitar productos del pedido')),
+    );
+  }
+
+  void _cancelarPedido(BuildContext context) async {
+    final shouldCancel = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancelar Pedido'),
+        content:
+            const Text('¿Estás seguro de que quieres cancelar este pedido?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sí, Cancelar'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldCancel == true) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('pedido')
+            .doc(widget.pedidoId)
+            .update({
+          'status': 'cancelado',
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        // Limpiar carrito
+        ref.read(carritoProvider.notifier).limpiarCarrito();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pedido cancelado')),
+          );
+          Navigator.pop(context);
+          context.pop(); // Volver a la pantalla anterior
+        }
+      } catch (e) {
+        _mostrarError(context, 'Error al cancelar pedido: $e');
+      }
+    }
+  }
+
+  Future<void> _crearActualizarPedido(
+      List<ItemCarrito> carrito, String status, bool pagado) async {
     final adicionalesAsync = await ref.read(additionalProvider.future);
-    
-    // ✅ OBTENER INFORMACIÓN DEL MESERO ACTUAL correctamente
+
     UserModel? user;
     try {
-      user = await ref.read(userModelProvider.future); // ✅ Usar .future
+      user = await ref.read(userModelProvider.future);
     } catch (e) {
-      print("🚨 ERROR OBTENIENDO USUARIO: $e");
       user = null;
     }
-    
-    // Crear items y calcular totales...
+
     final items = carrito.map((item) {
       final adicionales = item.modificacionesSeleccionadas
           .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
           .toList();
-          
+
       return {
         'productId': item.producto.id,
         'name': item.producto.name,
@@ -596,89 +757,44 @@ class _SeleccionProductosScreenState
     final subtotal = carrito.fold<double>(0, (sum, item) {
       final precioBase = item.precioUnitario * item.cantidad;
       final precioAdicionales = item.adicionales?.fold<double>(
-        0,
-        (sum, adicional) => sum + (adicional.price * item.cantidad),
-      ) ?? 0;
+            0,
+            (sum, adicional) => sum + (adicional.price * item.cantidad),
+          ) ??
+          0;
       return sum + precioBase + precioAdicionales;
     });
-    final total = subtotal;
 
-    // ✅ Crear documento con información del mesero
+    // ✅ IMPORTANTE: Solo crear/actualizar cuando realmente se confirma
     await FirebaseFirestore.instance
         .collection('pedido')
         .doc(widget.pedidoId)
         .set({
-          'id': widget.pedidoId,
-          'items': items,
-          'subtotal': subtotal,
-          'total': total,
-          'status': 'pendiente',
-          'mode': 'mesa',
-          'tableNumber': widget.pedidoId,
-          'meseroId': user?.uid,                                    // ✅ Puede ser null
-          'meseroNombre': user != null ? '${user.nombre} ${user.apellidos}' : 'Mesero desconocido', // ✅ Con fallback
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+      'id': widget.pedidoId,
+      'items': items, // ✅ Esto garantiza que hay items
+      'subtotal': subtotal,
+      'total': subtotal,
+      'status': status, // ✅ Esto marca que fue confirmado
+      'pagado': pagado,
+      'mode': 'mesa',
+      'tableNumber': widget.pedidoId,
+      'meseroId': user?.uid,
+      'meseroNombre': user != null
+          ? '${user.nombre} ${user.apellidos}'
+          : 'Mesero desconocido',
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
-    print("🔧 PEDIDO ACTUALIZADO: ${widget.pedidoId} - Mesero: ${user?.nombre ?? 'Desconocido'} ${user?.apellidos ?? ''}");
+    print("✅ PEDIDO CONFIRMADO: ${widget.pedidoId} con estado: $status");
+  }
 
-    setState(() {
-      pedidoConfirmado = true;
-    });
-
+  void _mostrarError(BuildContext context, String mensaje) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido confirmado exitosamente')),
-      );
-      Navigator.pop(context);
-    }
-  } catch (e) {
-    print("🚨 ERROR CREANDO/ACTUALIZANDO PEDIDO: $e");
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al confirmar el pedido: $e')),
+        SnackBar(content: Text(mensaje)),
       );
     }
   }
-}
 
-
-
-
-  void _procesarPago(BuildContext context, List<ItemCarrito> carrito) async {
-    try {
-      // Simular proceso de pago
-      await Future.delayed(const Duration(seconds: 2));
-
-      // ✅ ACTUALIZAR el pedido existente
-      await FirebaseFirestore.instance
-          .collection('pedido')
-          .doc(widget.pedidoId) // ✅ Usar el ID del pedido existente
-          .update({
-            'status': 'pagado',
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-
-      print("🔧 PEDIDO PAGADO: ${widget.pedidoId}");
-
-      // Limpiar carrito después del pago exitoso
-      ref.read(carritoProvider.notifier).limpiarCarrito();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago procesado exitosamente')),
-        );
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      print("🚨 ERROR PROCESANDO PAGO: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al procesar el pago: $e')),
-        );
-      }
-    }
-  }
-
+  // ✅ ELIMINADOS LOS MÉTODOS ANTIGUOS _confirmarPedido y _procesarPago
 }

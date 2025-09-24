@@ -74,7 +74,7 @@ class PermissionService {
   }
   
   static Future<bool> requestCameraPermission(BuildContext? context) async {
-    final permission = Permission.camera;
+    const permission = Permission.camera;
     
     var status = await permission.status;
     

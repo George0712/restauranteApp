@@ -35,7 +35,7 @@ Widget buildNeonStatCard(
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.redAccent.withOpacity(0.7), width: 1),
       ),
-      child: Center(child: Text('Error', style: const TextStyle(color: Colors.white))),
+      child: const Center(child: Text('Error', style: TextStyle(color: Colors.white))),
     ),
   );
 }
