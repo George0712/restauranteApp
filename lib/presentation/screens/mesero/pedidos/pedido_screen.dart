@@ -701,8 +701,8 @@ class _SeleccionProductosScreenState
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Sí, Cancelar'),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Sí, Cancelar'),
           ),
         ],
       ),

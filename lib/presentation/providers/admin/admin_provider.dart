@@ -323,7 +323,7 @@ class _ProductAccumulator {
   int quantity;
   double total;
 
-  _ProductAccumulator({required this.name, this.quantity = 0, this.total = 0});
+  _ProductAccumulator({required this.name}) : quantity = 0, total = 0.0;
 }
 
 //Providers Users

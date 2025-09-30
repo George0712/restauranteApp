@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +60,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           leading: _buildProfileButton(theme),
           actions: [_buildNotificationButton()],
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(60),
+            preferredSize: const Size.fromHeight(80),
             child: Container(
               margin: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
               decoration: BoxDecoration(
@@ -70,11 +70,11 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               ),
               child: TabBar(
                 indicator: BoxDecoration(
-                  color: theme.primaryColor.withOpacity(0.22),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                labelColor: Colors.white,
+                labelColor: theme.primaryColor,
                 unselectedLabelColor: Colors.white70,
+                dividerColor: Colors.transparent,
                 labelStyle: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -195,6 +195,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
               color: Colors.white,
             ),
           ),
@@ -202,10 +203,11 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           _buildQuickStats(isTablet),
           const SizedBox(height: 28),
           const Text(
-            'Indicadores clave',
+            AppStrings.keyStats,
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
               color: Colors.white,
             ),
           ),
@@ -213,10 +215,11 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           _buildHighlightMetrics(isTablet),
           const SizedBox(height: 28),
           const Text(
-            'Analítica del restaurante',
+            AppStrings.analitics,
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
               color: Colors.white,
             ),
           ),
@@ -235,21 +238,14 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Centro de gestión',
+            'CENTRO DE GESTIÓN',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Accede rápidamente a los módulos de administración del restaurante.',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
-              fontSize: 14,
-            ),
-          ),
+          
           const SizedBox(height: 20),
           GridView.count(
             shrinkWrap: true,
@@ -330,13 +326,14 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
       builder: (context, constraints) {
         final crossAxisCount = isTablet ? 4 : 2;
         const spacing = 12.0;
+        final height = isTablet ? 165.0 : 135.0;
         final width =
             (constraints.maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount;
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
           children: cards
-              .map((card) => SizedBox(width: width, child: card))
+              .map((card) => SizedBox(width: width, height: height, child: card))
               .toList(),
         );
       },
@@ -631,10 +628,8 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
       );
     }
 
-    final spots = data
-        .asMap()
-        .entries
-        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.total))
+    final spots = data.asMap()
+        .entries.map((entry) => FlSpot(entry.key.toDouble(), entry.value.total))
         .toList();
 
     final maxY = spots.isEmpty
@@ -657,8 +652,8 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               reservedSize: 40,
@@ -778,8 +773,8 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -985,13 +980,6 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         color: Color.fromRGBO(accent.red, accent.green, accent.blue, 0.28),
         width: 1,
       ),
-      boxShadow: [
-        BoxShadow(
-          color: Color.fromRGBO(accent.red, accent.green, accent.blue, 0.18),
-          blurRadius: 20,
-          offset: const Offset(0, 12),
-        ),
-      ],
     );
   }
 
