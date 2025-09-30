@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ion.dart';
 import 'package:iconify_flutter/icons/ri.dart';
-import 'package:restaurante_app/presentation/widgets/navbar_item.dart';
+import 'package:restaurante_app/presentation/providers/cocina/order_provider.dart';
+import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
 
 class HomeMeseroScreen extends ConsumerStatefulWidget {
   const HomeMeseroScreen({super.key});
@@ -44,10 +45,10 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                      color: Color.fromRGBO(0, 0, 0, 0.2),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    )
+                        color: Color.fromRGBO(0, 0, 0, 0.2),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      ),
                     ],
                   ),
                   child: CircleAvatar(
@@ -72,7 +73,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
               margin: const EdgeInsets.only(right: 20),
               child: IconButton(
                 onPressed: () {
-                  // Añadir funcionalidad de notificaciones
+                  // TODO: implementar notificaciones
                 },
                 icon: Stack(
                   children: [
@@ -102,7 +103,6 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
         ),
         body: Stack(
           children: [
-            // Fondo con gradiente y overlay de imagen
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -125,103 +125,26 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                 ),
               ),
             ),
-
-            // Contenido principal
             SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Título y bienvenida
-                  Padding(
-                    padding: EdgeInsets.only(
-                      left: isTablet ? 40 : 24,
-                      right: isTablet ? 40 : 24,
-                      top: 20,
-                      bottom: 12,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '¡Bienvenido!',
-                          style: TextStyle(
-                            fontSize: isTablet ? 36 : 30,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            shadows: const [
-                              Shadow(
-                                color: Color.fromRGBO(0, 0, 0, 0.5),
-                                offset: Offset(1, 1),
-                                blurRadius: 3,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Organiza tu turno y atiende pedidos en segundos.',
-                          style: TextStyle(
-                            fontSize: isTablet ? 18 : 16,
-                            color: const Color.fromRGBO(255, 255, 255, 0.9),
-                            fontWeight: FontWeight.w300,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isTablet ? 36 : 20,
-                        vertical: 10,
-                      ),
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildShiftOverview(isTablet),
-                          const SizedBox(height: 24),
-                          _buildQuickActions(context, isTablet),
-                          const SizedBox(height: 28),
-                          _buildWorkflowShortcuts(context, isTablet),
-                          const SizedBox(height: 28),
-                          _buildSupportSection(isTablet),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Barra de navegación inferior
-                  if (!isTablet)
-                    Container(
-                      height: 70,
-                      decoration: const BoxDecoration(
-                        color: Color.fromRGBO(0, 0, 0, 0.7),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color.fromRGBO(0, 0, 0, 0.3),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          navbarItem(Icons.home_rounded, true, context),
-                          navbarItem(Icons.fastfood_rounded, false, context),
-                          navbarItem(Icons.assignment_rounded, false, context),
-                          navbarItem(Icons.settings_rounded, false, context),
-                        ],
-                      ),
-                    ),
-                ],
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 36 : 20,
+                  vertical: isTablet ? 24 : 18,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildQuickActions(context, isTablet),
+                    const SizedBox(height: 24),
+                    _buildShiftOverview(isTablet),
+                    const SizedBox(height: 24),
+                    _buildWorkflowShortcuts(context, isTablet),
+                    const SizedBox(height: 24),
+                    _buildSupportSection(isTablet),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
           ],
@@ -231,17 +154,67 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
   }
 
   Widget _buildShiftOverview(bool isTablet) {
+    final mesasAsync = ref.watch(mesasStreamProvider);
+    final orderStats = ref.watch(orderStatsProvider);
+
+    final mesasActivas = mesasAsync.when(
+      data: (mesas) {
+        const activeStates = {'ocupada', 'reservada', 'en uso', 'en servicio', 'activo', 'asignada'};
+        return mesas.where((mesa) {
+          final estado = mesa.estado.toLowerCase();
+          final hasPedido = (mesa.pedidoId?.isNotEmpty ?? false);
+          return hasPedido || activeStates.contains(estado);
+        }).length;
+      },
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
+
+    const pendingKeys = ['pendiente', 'preparando', 'nuevo', 'enPreparacion', 'en_preparacion', 'processing'];
+    const readyKeys = ['terminado', 'entregado', 'listo', 'completado', 'ready'];
+
+    int ordenesPendientes = 0;
+    for (final key in pendingKeys) {
+      ordenesPendientes += orderStats[key] ?? 0;
+    }
+
+    int entregasListas = 0;
+    for (final key in readyKeys) {
+      entregasListas += orderStats[key] ?? 0;
+    }
+
+    final stats = [
+      _ShiftStat(
+        title: 'Mesas activas',
+        value: mesasActivas.toString(),
+        icon: Icons.table_bar_rounded,
+        color: const Color(0xFF38BDF8),
+      ),
+      _ShiftStat(
+        title: 'Ordenes pendientes',
+        value: ordenesPendientes.toString(),
+        icon: Icons.timelapse_rounded,
+        color: const Color(0xFFF59E0B),
+      ),
+      _ShiftStat(
+        title: 'Entregas listas',
+        value: entregasListas.toString(),
+        icon: Icons.task_alt_rounded,
+        color: const Color(0xFF34D399),
+      ),
+    ];
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isTablet ? 28 : 20,
-        vertical: isTablet ? 22 : 18,
+        horizontal: isTablet ? 24 : 18,
+        vertical: isTablet ? 18 : 16,
       ),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: const Color.fromRGBO(255, 255, 255, 0.12),
+        borderRadius: BorderRadius.circular(20),
+        color: const Color.fromRGBO(255, 255, 255, 0.08),
         border: Border.all(
-          color: const Color.fromRGBO(255, 255, 255, 0.18),
-          width: 1.2,
+          color: const Color.fromRGBO(255, 255, 255, 0.12),
+          width: 1,
         ),
         boxShadow: const [
           BoxShadow(
@@ -257,21 +230,25 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
+                  color: const Color(0xFF22C55E).withOpacity(0.18),
                   borderRadius: BorderRadius.circular(12),
-                  color: const Color(0xFF6366F1).withOpacity(0.2),
                   border: Border.all(
-                    color: const Color(0xFF6366F1).withOpacity(0.5),
+                    color: const Color(0xFF22C55E).withOpacity(0.4),
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.flash_on_rounded, color: Colors.white, size: 18),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.circle,
+                      size: 10,
+                      color: Color(0xFF22C55E),
+                    ),
                     SizedBox(width: 6),
                     Text(
-                      'Turno en curso',
+                      'Turno activo',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -279,6 +256,15 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Turno en curso',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isTablet ? 16 : 14,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const Spacer(),
@@ -292,47 +278,28 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 420;
-              final stats = [
-                _ShiftStat(
-                  title: 'Mesas activas',
-                  value: '8',
-                  icon: Icons.table_bar_rounded,
-                  color: const Color(0xFF38BDF8),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              for (int i = 0; i < stats.length; i++) ...[
+                Expanded(
+                  child: _ShiftOverviewItem(
+                    stat: stats[i],
+                    isTablet: isTablet,
+                  ),
                 ),
-                _ShiftStat(
-                  title: 'Pedidos pendientes',
-                  value: '5',
-                  icon: Icons.timelapse_rounded,
-                  color: const Color(0xFFF59E0B),
-                ),
-                _ShiftStat(
-                  title: 'Entregas listas',
-                  value: '2',
-                  icon: Icons.task_alt_rounded,
-                  color: const Color(0xFF34D399),
-                ),
-              ];
-
-              return Wrap(
-                spacing: isWide ? 18 : 12,
-                runSpacing: 14,
-                children: stats
-                    .map(
-                      (stat) => _ShiftOverviewItem(
-                        stat: stat,
-                        width: isWide
-                            ? (constraints.maxWidth - (isWide ? 36 : 24)) /
-                                (isWide ? 3 : 2)
-                            : constraints.maxWidth,
-                      ),
-                    )
-                    .toList(),
-              );
-            },
+                if (i < stats.length - 1)
+                  Container(
+                    width: 1,
+                    height: isTablet ? 60 : 54,
+                    margin: EdgeInsets.symmetric(
+                      horizontal: isTablet ? 6 : 4,
+                    ),
+                    color: const Color.fromRGBO(255, 255, 255, 0.12),
+                  ),
+              ],
+            ],
           ),
         ],
       ),
@@ -343,30 +310,27 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
     final actions = [
       _QuickAction(
         title: 'Mesas',
-        subtitle: 'Abrir o continuar pedidos en mesa',
         color: const Color(0xFF8B5CF6),
-        icon: const Iconify(Ri.restaurant_2_fill, size: 38, color: Colors.white),
+        icon:
+            const Iconify(Ri.restaurant_2_fill, size: 34, color: Colors.white),
         onTap: () => context.push('/mesero/pedidos/mesas'),
       ),
       _QuickAction(
         title: 'Domicilios',
-        subtitle: 'Gestionar pedidos para entrega',
         color: const Color(0xFF22D3EE),
-        icon: const Iconify(Ri.motorbike_fill, size: 38, color: Colors.white),
+        icon: const Iconify(Ri.motorbike_fill, size: 34, color: Colors.white),
         onTap: () {},
       ),
       _QuickAction(
         title: 'Para llevar',
-        subtitle: 'Crear pedido para recoger en barra',
         color: const Color(0xFF34D399),
-        icon: const Iconify(Ion.fast_food, size: 38, color: Colors.white),
+        icon: const Iconify(Ion.fast_food, size: 34, color: Colors.white),
         onTap: () {},
       ),
       _QuickAction(
         title: 'Historial',
-        subtitle: 'Revisar pedidos realizados',
         color: const Color(0xFFF97316),
-        icon: const Iconify(Ri.history_fill, size: 38, color: Colors.white),
+        icon: const Iconify(Ri.history_fill, size: 34, color: Colors.white),
         onTap: () => context.push('/mesero/historial'),
       ),
     ];
@@ -375,7 +339,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Accesos rápidos',
+          'Accesos directos',
           style: TextStyle(
             color: Colors.white,
             fontSize: isTablet ? 22 : 20,
@@ -383,19 +347,56 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
             letterSpacing: 0.4,
           ),
         ),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: isTablet ? 190 : 170,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: actions.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 16),
-            itemBuilder: (context, index) {
-              final action = actions[index];
-              return _QuickActionCard(action: action, isTablet: isTablet);
-            },
-          ),
+        const SizedBox(height: 12),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            int crossAxisCount;
+
+            if (isTablet) {
+              crossAxisCount = 4;
+            } else if (width >= 540) {
+              crossAxisCount = 3;
+            } else if (width >= 360) {
+              crossAxisCount = 2;
+            } else {
+              crossAxisCount = 1;
+            }
+
+            final bool isCompact = !isTablet && crossAxisCount >= 3;
+            final bool isSingleColumn = crossAxisCount == 1;
+
+            final double aspectRatio;
+            if (isTablet) {
+              aspectRatio = 2.6;
+            } else if (isSingleColumn) {
+              aspectRatio = 3.4;
+            } else if (isCompact) {
+              aspectRatio = 2.4;
+            } else {
+              aspectRatio = 2.7;
+            }
+
+            return GridView.builder(
+              itemCount: actions.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                childAspectRatio: aspectRatio,
+              ),
+              itemBuilder: (context, index) {
+                return _QuickActionCard(
+                  action: actions[index],
+                  isTablet: isTablet,
+                  isCompact: isCompact,
+                  isSingleColumn: isSingleColumn,
+                );
+              },
+            );
+          },
         ),
       ],
     );
@@ -404,9 +405,8 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
   Widget _buildWorkflowShortcuts(BuildContext context, bool isTablet) {
     final workflows = [
       _WorkflowAction(
-        title: 'Pedido rápido',
-        description:
-            'Registra en segundos un pedido directo desde la barra.',
+        title: 'Pedido rapido',
+        description: 'Registra en segundos un pedido desde la barra.',
         icon: Icons.bolt_rounded,
         color: const Color(0xFF6366F1),
         onTap: () {},
@@ -420,14 +420,14 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
       ),
       _WorkflowAction(
         title: 'Cobrar mesa',
-        description: 'Cierra cuentas y genera recibos de forma ágil.',
+        description: 'Cierra cuentas y genera recibos de forma agil.',
         icon: Icons.attach_money_rounded,
         color: const Color(0xFF22C55E),
         onTap: () {},
       ),
       _WorkflowAction(
         title: 'Reportar incidencia',
-        description: 'Comunica problemas a cocina o administración.',
+        description: 'Comunicate con cocina o administracion al instante.',
         icon: Icons.support_agent_rounded,
         color: const Color(0xFFF97316),
         onTap: () {},
@@ -466,7 +466,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(
         horizontal: isTablet ? 28 : 22,
-        vertical: isTablet ? 22 : 20,
+        vertical: isTablet ? 20 : 18,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -486,7 +486,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
           ),
         ],
       ),
-    child: Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
@@ -505,12 +505,12 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
             ),
           ),
           const SizedBox(width: 18),
-          Expanded(
+          const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  '¿Necesitas ayuda?',
+                  'Necesitas ayuda?',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -519,7 +519,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'Comunícate con el administrador o revisa los tutoriales para resolver dudas durante tu turno.',
+                  'Comunicate con el administrador o revisa los tutoriales para resolver dudas durante tu turno.',
                   style: TextStyle(
                     color: Color.fromRGBO(255, 255, 255, 0.85),
                     fontSize: 14,
@@ -545,7 +545,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
             ),
             onPressed: () {},
             child: const Text(
-              'Ver guía',
+              'Ver guia',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
               ),
@@ -573,66 +573,51 @@ class _ShiftStat {
 
 class _ShiftOverviewItem extends StatelessWidget {
   final _ShiftStat stat;
-  final double width;
+  final bool isTablet;
 
   const _ShiftOverviewItem({
     required this.stat,
-    required this.width,
+    required this.isTablet,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: const Color.fromRGBO(15, 23, 42, 0.6),
-        border: Border.all(
-          color: stat.color.withOpacity(0.4),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: stat.color.withOpacity(0.25),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
+    final double iconSize = isTablet ? 26 : 23;
+    final double circleSize = isTablet ? 42 : 38;
+    final TextStyle valueStyle = TextStyle(
+      color: Colors.white,
+      fontSize: isTablet ? 24 : 20,
+      fontWeight: FontWeight.bold,
+    );
+    final TextStyle labelStyle = TextStyle(
+        color: const Color.fromRGBO(255, 255, 255, 0.75),
+        fontSize: isTablet ? 13 : 12,
+        letterSpacing: 0.2,
+        overflow: TextOverflow.ellipsis);
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isTablet ? 10 : 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: stat.color.withOpacity(0.18),
-            ),
-            child: Icon(stat.icon, color: stat.color, size: 26),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  stat.value,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            children: [
+              Container(
+                height: circleSize,
+                width: circleSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: stat.color.withOpacity(0.18),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  stat.title,
-                  style: const TextStyle(
-                    color: Color.fromRGBO(255, 255, 255, 0.8),
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
+                child: Icon(stat.icon, color: stat.color, size: iconSize),
+              ),
+              SizedBox(width: isTablet ? 12 : 8),
+              Text(stat.value, style: valueStyle),
+            ],
           ),
+          const SizedBox(height: 4),
+          Text(stat.title, style: labelStyle),
         ],
       ),
     );
@@ -641,14 +626,12 @@ class _ShiftOverviewItem extends StatelessWidget {
 
 class _QuickAction {
   final String title;
-  final String subtitle;
   final Color color;
   final Widget icon;
   final VoidCallback onTap;
 
   const _QuickAction({
     required this.title,
-    required this.subtitle,
     required this.color,
     required this.icon,
     required this.onTap,
@@ -658,21 +641,58 @@ class _QuickAction {
 class _QuickActionCard extends StatelessWidget {
   final _QuickAction action;
   final bool isTablet;
+  final bool isCompact;
+  final bool isSingleColumn;
 
   const _QuickActionCard({
     required this.action,
     required this.isTablet,
+    required this.isCompact,
+    required this.isSingleColumn,
   });
 
   @override
   Widget build(BuildContext context) {
+    final double minHeight;
+    if (isTablet) {
+      minHeight = 122;
+    } else if (isSingleColumn) {
+      minHeight = 110;
+    } else if (isCompact) {
+      minHeight = 96;
+    } else {
+      minHeight = 104;
+    }
+
+    final double circleSize = isTablet
+        ? 60
+        : isCompact
+            ? 50
+            : 56;
+
+    final double iconScale = isCompact ? 0.9 : 1.0;
+    final double spacing = isTablet ? 14 : 12;
+
+    final TextStyle titleStyle = TextStyle(
+      color: Colors.white,
+      fontSize: isTablet
+          ? 18
+          : isCompact
+              ? 15
+              : 16,
+      fontWeight: FontWeight.w700,
+    );
+
     return GestureDetector(
       onTap: action.onTap,
       child: Container(
-        width: isTablet ? 240 : 210,
-        padding: const EdgeInsets.all(18),
+        constraints: BoxConstraints(minHeight: minHeight),
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet || isSingleColumn ? 18 : 14,
+          vertical: isTablet ? 16 : 14,
+        ),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
             colors: [
               action.color.withOpacity(0.95),
@@ -681,47 +701,32 @@ class _QuickActionCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: action.color.withOpacity(0.35),
-              blurRadius: 14,
-              offset: const Offset(0, 8),
-            ),
-          ],
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-            width: 1.2,
+            color: Colors.white.withOpacity(0.18),
+            width: 1.1,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Container(
-              height: 52,
-              width: 52,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.18),
-              ),
-              child: Center(child: action.icon),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              action.title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Center(
+              child: Transform.scale(
+                scale: iconScale,
+                child: action.icon,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              action.subtitle,
-              style: const TextStyle(
-                color: Color.fromRGBO(255, 255, 255, 0.85),
-                fontSize: 13,
-                height: 1.3,
+            SizedBox(width: spacing),
+            Expanded(
+              child: Text(
+                action.title,
+                style: titleStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white.withOpacity(0.9),
+              size: isCompact ? 16 : 18,
             ),
           ],
         ),
@@ -778,7 +783,7 @@ class _WorkflowCard extends StatelessWidget {
           ],
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(10),
