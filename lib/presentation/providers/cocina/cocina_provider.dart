@@ -64,15 +64,17 @@ final pendingPedidosProvider = Provider<AsyncValue<List<Pedido>>>((ref) {
   return pedidosAsync.when(
     data: (pedidos) {
       print("🟡 PENDING PROVIDER: Recibidos ${pedidos.length} pedidos");
-      
+
       final pendientes = pedidos.where((pedido) {
         final esPendiente = pedido.status == 'pendiente' || pedido.status == 'preparando';
         print("🟡 Pedido ${pedido.id} - Status: '${pedido.status}' - Es pendiente: $esPendiente");
         return esPendiente;
       }).toList();
-      
+
+      final ordenados = _sortByRecent(pendientes);
+
       print("🟡 PEDIDOS PENDIENTES FILTRADOS: ${pendientes.length}");
-      return AsyncValue.data(pendientes);
+      return AsyncValue.data(ordenados);
     },
     loading: () {
       print("🟡 PENDING PROVIDER: Loading...");
@@ -96,17 +98,19 @@ final completedPedidosProvider = Provider<AsyncValue<List<Pedido>>>((ref) {
       
       final completados = pedidos.where((pedido) {
         // ✅ Incluir TODOS los estados completados
-        final esCompletado = pedido.status == 'terminado' || 
+        final esCompletado = pedido.status == 'terminado' ||
                             pedido.status == 'cancelado' ||
                             pedido.status == 'pagado' ||      // ✅ Añadir 'pagado'
                             pedido.status == 'entregado';     // ✅ Añadir 'entregado' por si acaso
-        
+
         print("🟢 Pedido ${pedido.id} - Status: '${pedido.status}' - Es completado: $esCompletado");
         return esCompletado;
       }).toList();
-      
+
+      final ordenados = _sortByRecent(completados);
+
       print("🟢 PEDIDOS COMPLETADOS FILTRADOS: ${completados.length}");
-      return AsyncValue.data(completados);
+      return AsyncValue.data(ordenados);
     },
     loading: () {
       print("🟢 COMPLETED PROVIDER: Loading...");
@@ -216,6 +220,7 @@ final pedidoStatsProvider = Provider<AsyncValue<Map<String, int>>>((ref) {
         'terminado': 0,  // Cambié 'listo' por 'terminado'
         'entregado': 0,
         'cancelado': 0,
+        'pagado': 0,
       };
 
       for (final pedido in pedidos) {
@@ -235,3 +240,13 @@ final pedidoStatsProvider = Provider<AsyncValue<Map<String, int>>>((ref) {
     },
   );
 });
+
+List<Pedido> _sortByRecent(List<Pedido> pedidos) {
+  final ordered = List<Pedido>.from(pedidos);
+  ordered.sort((a, b) {
+    final aDate = a.updatedAt ?? a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    final bDate = b.updatedAt ?? b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+    return bDate.compareTo(aDate);
+  });
+  return ordered;
+}

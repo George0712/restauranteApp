@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 
 class KitchenStats extends ConsumerWidget {
-  const KitchenStats({Key? key}) : super(key: key);
+  final EdgeInsetsGeometry? margin;
+
+  const KitchenStats({Key? key, this.margin}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,35 +19,28 @@ class KitchenStats extends ConsumerWidget {
   }
 
   Widget _buildStatsContainer(Map<String, int> stats) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF3D3D3D),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.2),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return _buildShell(
+      Row(
         children: [
           _buildStatItem(
             'Preparando',
-            stats['preparando'] ?? 0, // Cambié 'enPreparacion' por 'preparando'
-            Colors.orange,
-            Icons.restaurant,
+            stats['preparando'] ?? 0,
+            const Color(0xFFF97316),
+            Icons.local_fire_department_rounded,
           ),
-          _buildDivider(),
+          _buildVerticalDivider(),
           _buildStatItem(
             'Terminados',
-            stats['terminado'] ?? 0, // Cambié 'listo' por 'terminado' 
-            Colors.green,
-            Icons.check_circle,
+            (stats['terminado'] ?? 0) + (stats['pagado'] ?? 0) + (stats['entregado'] ?? 0),
+            const Color(0xFF10B981),
+            Icons.flag_circle_rounded,
+          ),
+          _buildVerticalDivider(),
+          _buildStatItem(
+            'Cancelados',
+            stats['cancelado'] ?? 0,
+            const Color(0xFF64748B),
+            Icons.cancel_schedule_send,
           ),
         ],
       ),
@@ -53,52 +48,31 @@ class KitchenStats extends ConsumerWidget {
   }
 
   Widget _buildLoadingContainer() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
-      height: 80,
-      decoration: BoxDecoration(
-        color: const Color(0xFF3D3D3D),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.2),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+    return _buildShell(
+      const SizedBox(
+        height: 60,
+        child: Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFFF97316),
+            strokeWidth: 2.5,
           ),
-        ],
-      ),
-      child: const Center(
-        child: CircularProgressIndicator(
-          color: Colors.orange,
-          strokeWidth: 2,
         ),
       ),
     );
   }
 
   Widget _buildErrorContainer() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(16),
-      height: 80,
-      decoration: BoxDecoration(
-        color: const Color(0xFF3D3D3D),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.2),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          'Error al cargar estadísticas',
-          style: TextStyle(
-            color: Colors.red[300],
-            fontSize: 14,
+    return _buildShell(
+      SizedBox(
+        height: 60,
+        child: Center(
+          child: Text(
+            'Error al cargar estadísticas',
+            style: TextStyle(
+              color: Colors.red[300],
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -108,38 +82,33 @@ class KitchenStats extends ConsumerWidget {
   Widget _buildStatItem(String label, int count, Color color, IconData icon) {
     return Expanded(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Color.fromRGBO(
-                color.red,
-                color.green,
-                color.blue,
-                0.2,
-              ),
-              borderRadius: BorderRadius.circular(8),
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 24,
-            ),
+            child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             '$count',
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
               color: color,
+              letterSpacing: 0.5,
             ),
           ),
+          const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[400],
+              color: Colors.white.withOpacity(0.7),
+              letterSpacing: 0.2,
             ),
             textAlign: TextAlign.center,
           ),
@@ -148,12 +117,42 @@ class KitchenStats extends ConsumerWidget {
     );
   }
 
-  Widget _buildDivider() {
+  Widget _buildVerticalDivider() {
     return Container(
-      height: 40,
+      height: 50,
       width: 1,
-      color: Colors.grey[600],
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+
+  Widget _buildShell(Widget child) {
+    return Container(
+      margin: margin ?? EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1F2937),
+            Color(0xFF111827),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromRGBO(15, 23, 42, 0.45),
+            blurRadius: 18,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }
