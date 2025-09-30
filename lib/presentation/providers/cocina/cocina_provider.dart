@@ -13,47 +13,52 @@ final pedidosStreamProvider = StreamProvider<List<Pedido>>((ref) {
       .collection('pedido')
       .orderBy('createdAt', descending: true)
       .snapshots()
-      .map((snapshot) {
-        print("🔥 SNAPSHOT RECIBIDO: ${snapshot.docs.length} documentos");
-        
-        if (snapshot.docs.isEmpty) {
-          print("⚠️ COLECCIÓN 'pedido' ESTÁ VACÍA");
-          return <Pedido>[];
+      .asyncMap((snapshot) async {
+    final pedidos = <Pedido>[];
+    final autoCancelFutures = <Future<void>>[];
+    final now = DateTime.now();
+
+    for (final doc in snapshot.docs) {
+      try {
+        final data = doc.data();
+        final status = data['status'] as String? ?? 'pendiente';
+        final updatedAt = (data['updatedAt'] as Timestamp?)?.toDate();
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        final referenceDate = updatedAt ?? createdAt;
+        final shouldAutoCancel = status == 'pendiente' &&
+            referenceDate != null &&
+            now.difference(referenceDate) >= const Duration(hours: 3);
+
+        if (shouldAutoCancel) {
+          print('Pedido ${doc.id} supero las 3 horas pendiente; se cancela automaticamente.');
+          autoCancelFutures.add(
+            doc.reference.update({
+              'status': 'cancelado',
+              'cancelledAt': FieldValue.serverTimestamp(),
+              'updatedAt': FieldValue.serverTimestamp(),
+            }).catchError((error) {
+              print('Error al cancelar automaticamente el pedido ${doc.id}: $error');
+            }),
+          );
+          continue;
         }
 
-        List<Pedido> pedidos = [];
-        
-        for (var doc in snapshot.docs) {
-          try {
-            final data = doc.data();
-            print("🔥 DOCUMENTO ${doc.id}:");
-            print("   - Status: ${data['status']}");
-            print("   - Items: ${data['items']?.length ?? 0}");
-            print("   - CreatedAt: ${data['createdAt']}");
-            
-            // ✅ Añadir verificación específica para tu documento
-            if (doc.id == 'yLZQTbwIH75108cAvvog') {
-              print("🎯 DOCUMENTO TARGET ENCONTRADO!");
-              print("   - Data completa: $data");
-            }
-            
-            final pedido = Pedido.fromJson({...data, 'id': doc.id});
-            pedidos.add(pedido);
-            print("✅ Pedido ${doc.id} añadido - Status: ${pedido.status}");
-            
-          } catch (e, stackTrace) {
-            print("🚨 ERROR procesando documento ${doc.id}: $e");
-            print("🚨 STACK: $stackTrace");
-          }
-        }
-        
-        print("🔥 TOTAL PEDIDOS PROCESADOS: ${pedidos.length}");
-        return pedidos;
-        
-      }).handleError((error, stackTrace) {
-        print("🚨 ERROR EN STREAM: $error");
-        throw error;
-      });
+        pedidos.add(Pedido.fromJson({...data, 'id': doc.id}));
+      } catch (e, stackTrace) {
+        print('Error procesando pedido ${doc.id}: $e');
+        print(stackTrace);
+      }
+    }
+
+    if (autoCancelFutures.isNotEmpty) {
+      await Future.wait(autoCancelFutures);
+    }
+
+    return pedidos;
+  }).handleError((error, stackTrace) {
+    print('Error en stream de pedidos: $error');
+    throw error;
+  });
 });
 
 

@@ -47,36 +47,40 @@ class HomeCocineroScreen extends ConsumerWidget {
                     ),
                   ),
                   SafeArea(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 12),
-                        _buildIntroHeader(context),
-                        KitchenStats(
-                          margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                        ),
-                        const SizedBox(height: 18),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: _KitchenTabBar(
-                            pendingCount: pendingCount,
-                            completedCount: completedCount,
+                    child: SingleChildScrollView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12),
+                          _buildIntroHeader(context),
+                          const KitchenStats(
+                            margin: EdgeInsets.fromLTRB(20, 16, 20, 0),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: TabBarView(
-                              physics: const BouncingScrollPhysics(),
-                              children: const [
-                                _PendingOrdersTab(),
-                                _CompletedOrdersTab(),
-                              ],
+                          const SizedBox(height: 18),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _KitchenTabBar(
+                              pendingCount: pendingCount,
+                              completedCount: completedCount,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: TabBarView(
+                                physics: BouncingScrollPhysics(),
+                                children: [
+                                  _PendingOrdersTab(),
+                                  _CompletedOrdersTab(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -142,20 +146,12 @@ class HomeCocineroScreen extends ConsumerWidget {
           ),
         ),
       ),
-      title: const Text(
-        'Cocina',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 24,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
-        ),
-      ),
       actions: [
         IconButton(
-          onPressed: () => _showStatsDialog(context, stats),
-          icon: const Icon(Icons.analytics_outlined, color: Colors.white),
-          tooltip: 'Ver estadísticas',
+          onPressed: () => 
+        (),
+          icon: const Icon(Icons.notifications, color: Colors.white),
+          tooltip: 'Notificaciones',
         ),
         const SizedBox(width: 12),
       ],
@@ -181,103 +177,12 @@ class HomeCocineroScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Control de pedidos',
+            'CONTROL DE COCINA',
             style: TextStyle(
               color: Color(0xFFF8FAFC),
               fontSize: 22,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.3,
-            ),
-          ),
-          SizedBox(height: 6),
-          Text(
-            'Supervisa el flujo de la cocina y mantén el ritmo del servicio.',
-            style: TextStyle(
-              color: Color(0xFF94A3B8),
-              fontSize: 13.5,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showStatsDialog(BuildContext context, Map<String, int> stats) {
-    final totalCount = stats.values.fold<int>(0, (acc, value) => acc + value);
-    final pendientes = (stats['pendiente'] ?? 0) + (stats['preparando'] ?? 0);
-    final completados = (stats['terminado'] ?? 0) +
-        (stats['pagado'] ?? 0) +
-        (stats['entregado'] ?? 0);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF111827),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Estadísticas de cocina',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.2,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildStatRow('Pendientes', pendientes, const Color(0xFFF97316)),
-            _buildStatRow('En preparación', stats['preparando'] ?? 0,
-                const Color(0xFFFFB347)),
-            _buildStatRow('Terminados', completados, const Color(0xFF10B981)),
-            _buildStatRow('Cancelados', stats['cancelado'] ?? 0,
-                const Color(0xFF94A3B8)),
-            const Divider(color: Color(0xFF1E293B)),
-            _buildStatRow('Total', totalCount, const Color(0xFF38BDF8)),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatRow(String label, int count, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration:
-                    BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            '$count',
-            style: TextStyle(
-              color: color,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -298,6 +203,7 @@ class _KitchenTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final unselectedColor = Colors.white.withOpacity(0.65);
+    final theme = Theme.of(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -309,8 +215,9 @@ class _KitchenTabBar extends StatelessWidget {
       child: TabBar(
         indicator: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: Colors.white.withOpacity(0.12),
+          color: theme.primaryColor.withOpacity(0.12),
         ),
+        dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
         unselectedLabelColor: unselectedColor,
@@ -387,7 +294,7 @@ class _TabLabel extends StatelessWidget {
 
 // -------------------- Pestaña Pendientes --------------------
 class _PendingOrdersTab extends ConsumerWidget {
-  const _PendingOrdersTab({super.key});
+  const _PendingOrdersTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -407,7 +314,7 @@ class _PendingOrdersTab extends ConsumerWidget {
         return LayoutBuilder(
           builder: (context, constraints) {
             final isWide = constraints.maxWidth > 820;
-            final refresh = () async => ref.invalidate(pedidosStreamProvider);
+            refresh() async => ref.invalidate(pedidosStreamProvider);
 
             if (!isWide) {
               return RefreshIndicator(
@@ -464,7 +371,7 @@ class _PendingOrdersTab extends ConsumerWidget {
 
 // -------------------- Pestaña Completados --------------------
 class _CompletedOrdersTab extends ConsumerWidget {
-  const _CompletedOrdersTab({super.key});
+  const _CompletedOrdersTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

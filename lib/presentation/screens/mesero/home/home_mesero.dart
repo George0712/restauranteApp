@@ -664,12 +664,6 @@ class _QuickActionCard extends StatelessWidget {
       minHeight = 104;
     }
 
-    final double circleSize = isTablet
-        ? 60
-        : isCompact
-            ? 50
-            : 56;
-
     final double iconScale = isCompact ? 0.9 : 1.0;
     final double spacing = isTablet ? 14 : 12;
 

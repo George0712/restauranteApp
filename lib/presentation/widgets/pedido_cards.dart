@@ -66,8 +66,6 @@ class PedidoCard extends ConsumerWidget {
                 _buildNotes(),
               ],
               const SizedBox(height: 18),
-              _buildTotalsRow(),
-              const SizedBox(height: 18),
               _buildActionButtons(context, ref, isProcessing),
             ],
           ),
@@ -160,15 +158,6 @@ class PedidoCard extends ConsumerWidget {
       );
     }
 
-    chips.add(
-      _InfoChip(
-        icon: Icons.payments_outlined,
-        label: _formatCurrency(pedido.total),
-        color: const Color(0xFFF97316),
-        backgroundColor: const Color(0xFFF97316).withOpacity(0.14),
-      ),
-    );
-
     return Wrap(
       spacing: 10,
       runSpacing: 10,
@@ -176,6 +165,7 @@ class PedidoCard extends ConsumerWidget {
       children: chips,
     );
   }
+
 
   Widget _buildItemsList(Color statusColor) {
     return Container(
@@ -266,15 +256,6 @@ class PedidoCard extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_formatCurrency(item.precio)} c/u · ${_formatCurrency(item.precio * item.cantidad)}',
-                  style: const TextStyle(
-                    color: Color(0xFF94A3B8),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
                 if (item.adicionales != null && item.adicionales!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
@@ -285,16 +266,11 @@ class PedidoCard extends ConsumerWidget {
                             final nombre = adicional['name']?.toString() ??
                                 adicional['nombre']?.toString() ??
                                 'Adicional';
-                            final rawPrice =
-                                adicional['price'] ?? adicional['precio'];
-                            final double? precio = rawPrice is num
-                                ? rawPrice.toDouble()
-                                : double.tryParse('$rawPrice');
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 4),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Icon(Icons.add_circle_outline,
                                       size: 13,
@@ -310,17 +286,6 @@ class PedidoCard extends ConsumerWidget {
                                       ),
                                     ),
                                   ),
-                                  if (precio != null) ...[
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '+${_formatCurrency(precio)}',
-                                      style: TextStyle(
-                                        color: statusColor.withOpacity(0.9),
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
                                 ],
                               ),
                             );
@@ -331,7 +296,7 @@ class PedidoCard extends ConsumerWidget {
                 if (item.tiempoPreparacion != null &&
                     item.tiempoPreparacion! > 0)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4),
+                    padding: const EdgeInsets.only(top: 6),
                     child: Row(
                       children: [
                         Icon(Icons.timer,
@@ -378,6 +343,7 @@ class PedidoCard extends ConsumerWidget {
     );
   }
 
+
   Widget _buildNotes() {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -404,34 +370,6 @@ class PedidoCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTotalsRow() {
-    final subtotal = pedido.subtotal;
-    final total = pedido.total;
-    final hasExtras = (total - subtotal).abs() > 0.01;
-
-    return Wrap(
-      spacing: 14,
-      runSpacing: 12,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (hasExtras)
-          _AmountChip(
-            label: 'Subtotal',
-            value: _formatCurrency(subtotal),
-            color: const Color(0xFFCBD5F5),
-            background: Colors.white.withOpacity(0.04),
-          ),
-        _AmountChip(
-          label: 'Total de la orden',
-          value: _formatCurrency(total),
-          color: const Color(0xFFF97316),
-          background: const Color(0xFFF97316).withOpacity(0.16),
-          emphasized: true,
-        ),
-      ],
     );
   }
 
@@ -733,15 +671,6 @@ class PedidoCard extends ConsumerWidget {
     return DateFormat('dd MMM • HH:mm', 'es').format(date);
   }
 
-  String _formatCurrency(double value) {
-    final hasDecimals = (value % 1) != 0;
-    final formatter = NumberFormat.currency(
-      locale: 'es_CO',
-      symbol: r'$',
-      decimalDigits: hasDecimals ? 2 : 0,
-    );
-    return formatter.format(value);
-  }
 
   int _getTotalPreparationTime() {
     int totalTime = 0;
@@ -760,13 +689,11 @@ class _InfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
-  final Color? backgroundColor;
 
   const _InfoChip({
     required this.icon,
     required this.label,
     required this.color,
-    this.backgroundColor,
   });
 
   @override
@@ -774,7 +701,7 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.white.withOpacity(0.04),
+        color: Colors.white.withOpacity(0.04),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
       ),
@@ -800,57 +727,6 @@ class _InfoChip extends StatelessWidget {
   }
 }
 
-class _AmountChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  final Color background;
-  final bool emphasized;
-
-  const _AmountChip({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.background,
-    this.emphasized = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: color.withOpacity(emphasized ? 0.9 : 0.7),
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.2,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: emphasized ? 18 : 15,
-              fontWeight: emphasized ? FontWeight.w800 : FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _StatusPill extends StatelessWidget {
   final String label;
