@@ -79,6 +79,253 @@ final productosProvider = StreamProvider<int>((ref) {
     .map((snapshot) => snapshot.size);
 });
 
+class SalesPoint {
+  final DateTime date;
+  final double total;
+
+  const SalesPoint({required this.date, required this.total});
+}
+
+class OrderStatusMetric {
+  final String status;
+  final int count;
+
+  const OrderStatusMetric({required this.status, required this.count});
+}
+
+class TopProductMetric {
+  final String name;
+  final int quantity;
+  final double total;
+
+  const TopProductMetric({
+    required this.name,
+    required this.quantity,
+    required this.total,
+  });
+}
+
+final weeklySalesProvider = StreamProvider<List<SalesPoint>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+
+  return firestore
+      .collection('pedido')
+      .where('status', isEqualTo: 'terminado')
+      .snapshots()
+      .map((snapshot) {
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+
+    final Map<DateTime, double> totalsByDay = {};
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final createdAt = _parseTimestamp(data['createdAt']) ??
+          _parseTimestamp(data['fechaCreacion']) ??
+          _parseTimestamp(data['fecha']);
+
+      if (createdAt == null) continue;
+
+      final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      if (dayKey.isBefore(startDate)) continue;
+
+      final total = (data['total'] as num?)?.toDouble() ?? 0.0;
+      totalsByDay.update(dayKey, (value) => value + total, ifAbsent: () => total);
+    }
+
+    final List<SalesPoint> points = [];
+    for (int i = 0; i < 7; i++) {
+      final day = startDate.add(Duration(days: i));
+      points.add(
+        SalesPoint(
+          date: day,
+          total: totalsByDay[day] ?? 0,
+        ),
+      );
+    }
+
+    return points;
+  });
+});
+
+final todaySalesProvider = StreamProvider<double>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+
+  return firestore
+      .collection('pedido')
+      .where('status', isEqualTo: 'terminado')
+      .snapshots()
+      .map((snapshot) {
+    final today = DateTime.now();
+    final todayKey = DateTime(today.year, today.month, today.day);
+
+    double totalSales = 0;
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final createdAt = _parseTimestamp(data['createdAt']) ??
+          _parseTimestamp(data['fechaCreacion']) ??
+          _parseTimestamp(data['fecha']);
+
+      if (createdAt == null) continue;
+
+      final orderDay = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      if (orderDay != todayKey) continue;
+
+      totalSales += (data['total'] as num?)?.toDouble() ?? 0;
+    }
+    return totalSales;
+  });
+});
+
+final completedTodayProvider = StreamProvider<int>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+
+  return firestore
+      .collection('pedido')
+      .where('status', isEqualTo: 'terminado')
+      .snapshots()
+      .map((snapshot) {
+    final today = DateTime.now();
+    final todayKey = DateTime(today.year, today.month, today.day);
+
+    int completed = 0;
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final createdAt = _parseTimestamp(data['createdAt']) ??
+          _parseTimestamp(data['fechaCreacion']) ??
+          _parseTimestamp(data['fecha']);
+
+      if (createdAt == null) continue;
+
+      final orderDay = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      if (orderDay == todayKey) {
+        completed++;
+      }
+    }
+
+    return completed;
+  });
+});
+
+final averageTicketProvider = StreamProvider<double>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+
+  return firestore
+      .collection('pedido')
+      .where('status', isEqualTo: 'terminado')
+      .snapshots()
+      .map((snapshot) {
+    if (snapshot.size == 0) return 0.0;
+
+    double totalSales = 0;
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      totalSales += (data['total'] as num?)?.toDouble() ?? 0;
+    }
+
+    return snapshot.size == 0 ? 0.0 : totalSales / snapshot.size;
+  });
+});
+
+final orderStatusSummaryProvider = StreamProvider<List<OrderStatusMetric>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+
+  return firestore.collection('pedido').snapshots().map((snapshot) {
+    final Map<String, int> counts = {
+      'pendiente': 0,
+      'preparando': 0,
+      'terminado': 0,
+      'cancelado': 0,
+    };
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final status = (data['status'] ?? data['estado'] ?? '').toString().toLowerCase();
+      if (counts.containsKey(status)) {
+        counts[status] = counts[status]! + 1;
+      }
+    }
+
+    return counts.entries
+        .map((entry) => OrderStatusMetric(status: entry.key, count: entry.value))
+        .toList();
+  });
+});
+
+final topProductsProvider = StreamProvider<List<TopProductMetric>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+
+  return firestore
+      .collection('pedido')
+      .where('status', isEqualTo: 'terminado')
+      .snapshots()
+      .map((snapshot) {
+    final Map<String, _ProductAccumulator> aggregated = {};
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final items = data['items'] ?? data['productos'];
+
+      if (items is List) {
+        for (final item in items) {
+          if (item is Map<String, dynamic>) {
+            final name = (item['name'] ?? item['nombre'] ?? 'Producto').toString();
+            final quantity = (item['quantity'] ?? item['cantidad'] ?? 0) as num?;
+            final price = (item['price'] ?? item['precio'] ?? 0) as num?;
+
+            final safeQuantity = quantity?.toInt() ?? 0;
+            final safeTotal = (price?.toDouble() ?? 0) * safeQuantity;
+
+            final accumulator = aggregated.putIfAbsent(
+              name,
+              () => _ProductAccumulator(name: name),
+            );
+
+            accumulator.quantity += safeQuantity;
+            accumulator.total += safeTotal;
+          }
+        }
+      }
+    }
+
+    final List<TopProductMetric> products = aggregated.values
+        .map((value) => TopProductMetric(
+              name: value.name,
+              quantity: value.quantity,
+              total: value.total,
+            ))
+        .toList();
+
+    products.sort((a, b) => b.quantity.compareTo(a.quantity));
+    return products.take(5).toList();
+  });
+});
+
+DateTime? _parseTimestamp(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    try {
+      return DateTime.parse(value);
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
+}
+
+class _ProductAccumulator {
+  final String name;
+  int quantity;
+  double total;
+
+  _ProductAccumulator({required this.name, this.quantity = 0, this.total = 0});
+}
+
 //Providers Users
 final registerUserControllerProvider = Provider<UserController>((ref) {
   final controller = UserController();
