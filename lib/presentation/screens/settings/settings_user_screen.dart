@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 
 class SettingsUserScreen extends ConsumerWidget {
@@ -117,8 +118,16 @@ class SettingsUserScreen extends ConsumerWidget {
                 icon: Icons.logout,
                 label: 'Cerrar sesión',
                 onTap: () async {
-                  await ref.read(authProvider).signOut();
-                  context.go('/login');
+                  try {
+                    await ref.read(authControllerProvider).signOut();
+                    if (!context.mounted) return;
+                    context.go('/login');
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    SnackbarHelper.showError(
+                      'No se pudo cerrar sesión. Inténtalo nuevamente.',
+                    );
+                  }
                 },
               ),
             ],
