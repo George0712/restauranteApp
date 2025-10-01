@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -167,7 +167,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            AppStrings.dashboard,
+            'Dashboard',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -176,12 +176,17 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildQuickStats(isTablet),
-          const SizedBox(height: 28),
+          
+          // 1. VENTAS TOTALES - Métrica más importante
+          _buildTopMetric(isTablet),
+          
+          const SizedBox(height: 24),
+          
+          // 2. MÉTRICAS DEL DÍA - Alta prioridad
           const Text(
-            AppStrings.keyStats,
+            'Rendimiento de Hoy',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
               color: Colors.white,
@@ -189,11 +194,14 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           ),
           const SizedBox(height: 12),
           _buildHighlightMetrics(isTablet),
+          
           const SizedBox(height: 28),
+          
+          // 3. ANALÍTICA VISUAL - Media prioridad
           const Text(
-            AppStrings.analitics,
+            'Análisis y Tendencias',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
               color: Colors.white,
@@ -201,6 +209,22 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           ),
           const SizedBox(height: 12),
           _buildAnalyticsSection(isTablet),
+          
+          const SizedBox(height: 28),
+          
+          // 4. ESTADÍSTICAS GENERALES - Baja prioridad
+          const Text(
+            'Estadísticas Generales',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildGeneralStats(isTablet),
+          
           const SizedBox(height: 32),
         ],
       ),
@@ -261,59 +285,45 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
     );
   }
 
-  Widget _buildQuickStats(bool isTablet) {
-    final cards = [
-      buildNeonStatCard(
-        ref,
-        'Ventas',
-        'Totales',
-        totalVentasProvider,
-        const Color(0xFF00D4AA),
-        Icons.monetization_on,
-        isCurrency: true,
-      ),
-      buildNeonStatCard(
-        ref,
-        'Órdenes',
-        'Activas',
-        ordenesProvider,
-        const Color(0xFF6366F1),
-        Icons.receipt_long,
-      ),
-      buildNeonStatCard(
-        ref,
-        'Usuarios',
-        'Registrados',
-        usuariosProvider,
-        const Color(0xFFFF6B6B),
-        Icons.group,
-      ),
-      buildNeonStatCard(
-        ref,
-        'Productos',
-        'Disponibles',
-        productosProvider,
-        const Color(0xFFFFD23F),
-        Icons.inventory_2,
-      ),
-    ];
+  // Nueva función para métrica principal (Ventas Totales)
+  Widget _buildTopMetric(bool isTablet) {
+    return buildNeonStatCard(
+      ref,
+      'Ventas Totales',
+      'Total de ventas registradas',
+      totalVentasProvider,
+      const Color(0xFF00D4AA),
+      Icons.monetization_on,
+      isCurrency: true,
+    );
+  }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = isTablet ? 4 : 2;
-        const spacing = 12.0;
-        final height = isTablet ? 165.0 : 135.0;
-        final width = (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
-            crossAxisCount;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: cards
-              .map(
-                  (card) => SizedBox(width: width, height: height, child: card))
-              .toList(),
-        );
-      },
+  // Estadísticas generales (Usuarios y Productos)
+  Widget _buildGeneralStats(bool isTablet) {
+    return Row(
+      children: [
+        Expanded(
+          child: buildNeonStatCard(
+            ref,
+            'Usuarios',
+            'Registrados',
+            usuariosProvider,
+            const Color(0xFFFF6B6B),
+            Icons.group,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: buildNeonStatCard(
+            ref,
+            'Productos',
+            'Disponibles',
+            productosProvider,
+            const Color(0xFFFFD23F),
+            Icons.inventory_2,
+          ),
+        ),
+      ],
     );
   }
 

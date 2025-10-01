@@ -47,7 +47,7 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final highlight = const Color(0xFF38BDF8);
+    const highlight = Color(0xFF38BDF8);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -240,21 +240,21 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
                     : null,
               ),
               Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       '$_numeroPersonas',
                       style: const TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(width: 8),
                     Text(
-                      _numeroPersonas == 1 ? 'persona' : 'personas',
-                      style: const TextStyle(color: Colors.white54),
+                      _numeroPersonas == 1 ? 'Persona' : 'Personas',
+                      style: const TextStyle(color: Colors.white70),
                     ),
                   ],
                 ),
@@ -346,7 +346,7 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
                         strokeWidth: 2, color: Colors.white),
                   )
                 : const Icon(Icons.event_available_outlined),
-            label: Text(_isSubmitting ? 'Reservando...' : 'Confirmar reserva'),
+            label: Text(_isSubmitting ? 'Reservando...' : 'Reservar'),
           ),
         ),
       ],
@@ -408,11 +408,11 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
 
     final nombre = _clienteController.text.trim();
     final extras = <String>[];
-    extras.add('${_numeroPersonas} pax');
+    extras.add('$_numeroPersonas per');
 
     final telefono = _telefonoController.text.trim();
     if (telefono.isNotEmpty) {
-      extras.add('Tel ${telefono}');
+      extras.add('Tel $telefono');
     }
 
     final notas = _notasController.text.trim();

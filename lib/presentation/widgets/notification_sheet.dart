@@ -211,6 +211,6 @@ class NotificationSheet extends ConsumerWidget {
     }
 
     final days = difference.inDays;
-    return days == 1 ? 'ayer' : 'hace ${days} dias';
+    return days == 1 ? 'ayer' : 'hace $days dias';
   }
 }

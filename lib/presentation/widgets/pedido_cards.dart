@@ -499,9 +499,9 @@ class PedidoCard extends ConsumerWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: const Color(0xFF10B981).withOpacity(0.45)),
           ),
-          child: Row(
+          child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Icon(Icons.check_circle, color: Color(0xFF10B981)),
               SizedBox(width: 8),
               Text(

@@ -43,7 +43,7 @@ class _OcuparMesaDialogState extends State<OcuparMesaDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final highlight = const Color(0xFF8B5CF6);
+    const highlight = Color(0xFF8B5CF6);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -319,11 +319,11 @@ class _OcuparMesaDialogState extends State<OcuparMesaDialog> {
 
     final nombre = _clienteController.text.trim();
     final extras = <String>[];
-    extras.add('${_numeroPersonas} pax');
+    extras.add('$_numeroPersonas pax');
 
     final telefono = _telefonoController.text.trim();
     if (telefono.isNotEmpty) {
-      extras.add('Tel ${telefono}');
+      extras.add('Tel $telefono');
     }
 
     final notas = _notasController.text.trim();

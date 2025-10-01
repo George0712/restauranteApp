@@ -148,9 +148,9 @@ class HomeCocineroScreen extends ConsumerWidget {
           ),
         ),
       ),
-      actions: [
-        const NotificationBell(role: NotificationRole.kitchen),
-        const SizedBox(width: 12),
+      actions: const [
+        NotificationBell(role: NotificationRole.kitchen),
+        SizedBox(width: 12),
       ],
       flexibleSpace: Container(
         decoration: const BoxDecoration(
@@ -387,7 +387,7 @@ class _CompletedOrdersTab extends ConsumerWidget {
         return LayoutBuilder(
           builder: (context, constraints) {
             final isWide = constraints.maxWidth > 820;
-            final refresh = () async => ref.invalidate(pedidosStreamProvider);
+            refresh() async => ref.invalidate(pedidosStreamProvider);
 
             if (!isWide) {
               return RefreshIndicator(

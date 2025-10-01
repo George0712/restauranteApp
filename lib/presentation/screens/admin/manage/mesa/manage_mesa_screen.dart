@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:restaurante_app/data/models/mesa_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 
@@ -201,7 +202,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
       itemCount: mesas.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: isTablet ? 4 : 2,
-        childAspectRatio: 1,
+        childAspectRatio: 0.54,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
       ),
@@ -213,172 +214,113 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
   }
 
   Widget _buildMesaCard(MesaModel mesa) {
-    Color colorEstado;
-    IconData iconoEstado;
+    const headerGradient = LinearGradient(
+      colors: [
+        Color(0xFF8B5CF6),
+        Color(0xFF6366F1),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
 
-    switch (mesa.estado) {
-      case 'disponible':
-        colorEstado = Colors.green;
-        iconoEstado = Icons.check_circle;
-        break;
-      case 'ocupada':
-        colorEstado = Colors.orange;
-        iconoEstado = Icons.people;
-        break;
-      case 'reservada':
-        colorEstado = Colors.blue;
-        iconoEstado = Icons.event;
-        break;
-      default:
-        colorEstado = Colors.grey;
-        iconoEstado = Icons.help;
-    }
+    final reservaTexto = _buildReservaTexto(mesa);
 
     return GestureDetector(
       onTap: () => _mostrarOpcionesMesa(mesa),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [
-              Colors.white.withOpacity(0.1),
-              Colors.white.withOpacity(0.05),
+              Color(0xFF20223C),
+              Color(0xFF191A2D),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: colorEstado.withOpacity(0.3),
-            width: 1,
+            color: Colors.white.withOpacity(0.08),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.25),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header con número y estado
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorEstado.withOpacity(0.3),
-                    colorEstado.withOpacity(0.2),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              decoration: const BoxDecoration(
+                gradient: headerGradient,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
                 ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Mesa ${mesa.id}',
+                    'Mesa ${mesa.id.toString().padLeft(2, '0')}',
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: colorEstado.withOpacity(0.2),
-                      shape: BoxShape.circle,
+                  const SizedBox(height: 6),
+                  Text(
+                    'Gestión de capacidad',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.75),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
-                    child: Icon(iconoEstado, color: colorEstado, size: 16),
                   ),
                 ],
               ),
             ),
-
-            // Contenido
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.people_outline,
-                            color: Colors.white70, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${mesa.capacidad} personas',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                    _buildAdminMesaDetail(
+                      icon: Icons.people_alt_outlined,
+                      label: 'Capacidad',
+                      value: '${mesa.capacidad} personas',
                     ),
-                    if (mesa.estado != 'disponible') ...[
-                      Text(
-                        mesa.cliente ?? '',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
-                        maxLines: 1,
+                    const SizedBox(height: 14),
+                    _buildAdminMesaDetail(
+                      icon: Icons.qr_code_2,
+                      label: 'Referencia interna',
+                      value: _buildReferenciaMesa(mesa),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildAdminMesaDetail(
+                      icon: Icons.event_available_outlined,
+                      label: 'Próxima reserva',
+                      value: reservaTexto,
+                    ),
+                    const Spacer(),
+                    const Divider(color: Colors.white12, height: 1),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Toca para editar detalles',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (mesa.estado == 'ocupada') ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: colorEstado.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.access_time,
-                                  size: 12, color: colorEstado),
-                              const SizedBox(width: 4),
-                              Text(
-                                mesa.tiempoTranscurrido,
-                                style: TextStyle(
-                                  color: colorEstado,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ] else if (mesa.estado == 'reservada') ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: colorEstado.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.schedule,
-                                  size: 12, color: colorEstado),
-                              const SizedBox(width: 4),
-                              Text(
-                                mesa.tiempo ?? '',
-                                style: TextStyle(
-                                  color: colorEstado,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ],
                 ),
               ),
@@ -388,6 +330,76 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
       ),
     );
   }
+
+  Widget _buildAdminMesaDetail({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 34,
+          width: 34,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: Colors.white70, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.65),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _buildReferenciaMesa(MesaModel mesa) {
+    final id = mesa.docId;
+    if (id == null || id.trim().isEmpty) {
+      return 'Pendiente de sincronizaci�n';
+    }
+    return id.length <= 6 ? id.toUpperCase() : id.substring(id.length - 6).toUpperCase();
+  }
+
+  String _buildReservaTexto(MesaModel mesa) {
+    final fecha = mesa.fechaReserva;
+    if (fecha == null) {
+      return 'Sin reservas programadas';
+    }
+
+    final hora = mesa.tiempo;
+    final fechaFormateada = DateFormat('dd MMM yyyy', 'es').format(fecha);
+
+    if (hora != null && hora.trim().isNotEmpty) {
+      return '$fechaFormateada • $hora';
+    }
+    return fechaFormateada;
+  }
+
 
   void _mostrarOpcionesMesa(MesaModel mesa) {
     showModalBottomSheet(
@@ -399,27 +411,14 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
   }
 
   Widget _buildOpcionesBottomSheet(MesaModel mesa) {
-    Color colorEstado;
-    switch (mesa.estado) {
-      case 'disponible':
-        colorEstado = Colors.green;
-        break;
-      case 'ocupada':
-        colorEstado = Colors.orange;
-        break;
-      case 'reservada':
-        colorEstado = Colors.blue;
-        break;
-      default:
-        colorEstado = Colors.grey;
-    }
+    const accentColor = Color(0xFF8B5CF6);
 
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
             Color(0xFF1A1A2E),
-            Color(0xFF16213E),
+            Color(0xFF14162B),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -444,12 +443,12 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colorEstado.withOpacity(0.2),
+                  color: accentColor.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.table_restaurant,
-                  color: colorEstado,
+                  color: accentColor,
                   size: 24,
                 ),
               ),
@@ -466,8 +465,9 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
                         color: Colors.white,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
-                      '${mesa.capacidad} personas • ${mesa.estado}',
+                      'Capacidad • ${mesa.capacidad} personas',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.white70,
@@ -478,34 +478,18 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
               ),
             ],
           ),
-          if (mesa.cliente != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorEstado.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colorEstado.withOpacity(0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.person, color: colorEstado, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    mesa.cliente!,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          const SizedBox(height: 20),
+          _buildAdminMesaDetail(
+            icon: Icons.qr_code_2,
+            label: 'Referencia interna',
+            value: _buildReferenciaMesa(mesa),
+          ),
+          const SizedBox(height: 12),
+          _buildAdminMesaDetail(
+            icon: Icons.event_available_outlined,
+            label: 'Próxima reserva',
+            value: _buildReservaTexto(mesa),
+          ),
           const SizedBox(height: 24),
           Row(
             children: [

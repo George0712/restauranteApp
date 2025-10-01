@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/widgets/dialog_ocupar_mesa.dart';
 import 'package:restaurante_app/presentation/widgets/dialog_reservar_mesa.dart';
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
 import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart'
     as pedidos;
@@ -25,11 +28,32 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
   String filtro = 'Todas';
   String searchTerm = '';
   final ScrollController _scrollController = ScrollController();
+  Timer? _tiempoTicker;
+  DateTime _relojActual = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _iniciarTickerTiempo();
+  }
 
   @override
   void dispose() {
+    _tiempoTicker?.cancel();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _iniciarTickerTiempo() {
+    _tiempoTicker?.cancel();
+    _tiempoTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _relojActual = DateTime.now();
+      });
+    });
   }
 
   @override
@@ -425,19 +449,16 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
           ValueKey('acciones-${mesa.id}-${mesa.estado}-${mesa.pedidoId ?? ''}'),
       width: double.infinity,
       padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 0),
-      decoration: BoxDecoration(
-         gradient: const LinearGradient(
-          colors: [Color(0xFF0F172A), Color(0xFF111827)],
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF1A1A2E),
+            Color(0xFF14162B),
+          ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.2)),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -863,15 +884,23 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       );
     }
 
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = _gridColumnCount(width);
+    final childAspectRatio = width >= 1100
+        ? 1.05
+        : width >= 900
+            ? 0.95
+            : 0.8;
+
     return GridView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       itemCount: mesas.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
-        childAspectRatio: 0.85,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
+        crossAxisCount: crossAxisCount,
+        childAspectRatio: childAspectRatio,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
       ),
       itemBuilder: (context, index) {
         final mesa = mesas[index];
@@ -884,6 +913,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     final isSelected = mesa.id == mesaSeleccionadaId;
     final colorEstado = _colorPorEstado(mesa.estado);
     final iconoEstado = _iconoPorEstado(mesa.estado);
+    final estadoTexto = _estadoCapitalizado(mesa.estado);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -903,138 +933,111 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       onLongPress: () => _mostrarOpcionesMesa(mesa),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(isSelected ? 0.18 : 0.1),
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white.withOpacity(isSelected ? 0.2 : 0.12),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFF8B5CF6)
-                : Colors.white.withOpacity(0.2),
+                : Colors.white.withOpacity(0.18),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(isSelected ? 0.28 : 0.18),
+              blurRadius: isSelected ? 16 : 12,
+              offset: const Offset(0, 6),
             ),
-            if (isSelected)
-              BoxShadow(
-                color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header con número y estado
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorEstado.withOpacity(0.3),
-                    colorEstado.withOpacity(0.2),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Mesa ${mesa.id}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colorEstado.withOpacity(0.16),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: colorEstado.withOpacity(0.35)),
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: colorEstado.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(iconoEstado, color: colorEstado, size: 16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(iconoEstado, color: colorEstado, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        estadoTexto,
+                        style: TextStyle(
+                          color: colorEstado,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Mesa ${mesa.id.toString().padLeft(2, '0')}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
               ),
             ),
-
-            // Contenido
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.people_outline,
-                            color: Colors.white.withOpacity(0.6), size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${mesa.capacidad} personas',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.6),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (mesa.estado != 'disponible') ...[
-                      Text(
-                        mesa.cliente ?? '',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                          color: Colors.white70,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (mesa.estado == 'ocupada') ...[
-                        Row(
-                          children: [
-                            Icon(Icons.access_time,
-                                size: 12, color: colorEstado),
-                            const SizedBox(width: 4),
-                            Text(
-                              mesa.tiempoTranscurrido,
-                              style: TextStyle(
-                                color: colorEstado,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ] else if (mesa.estado == 'reservada') ...[
-                        Row(
-                          children: [
-                            Icon(Icons.schedule, size: 12, color: colorEstado),
-                            const SizedBox(width: 4),
-                            Text(
-                              mesa.tiempo ?? '',
-                              style: TextStyle(
-                                color: colorEstado,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ],
+            const SizedBox(height: 4),
+            Text(
+              '${mesa.capacidad} personas',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.65),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (mesa.cliente != null && mesa.cliente!.trim().isNotEmpty) ...[
+              Text(
+                mesa.cliente!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (mesa.estado == 'ocupada') ...[
+              const Spacer(),
+              _buildTiempoActivoChip(colorEstado, mesa),
+            ] else if (mesa.estado == 'reservada') ...[
+              const Spacer(),
+              _buildReservaChip(colorEstado, mesa),
+            ] else ...[
+              Text(
+                'Disponible para asignar',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.6),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+            const Spacer(),
+            Divider(color: Colors.white.withOpacity(0.12)),
+            Text(
+              isSelected ? 'Acciones rápidas' : 'Toca para gestionar',
+              style: TextStyle(
+                color: Colors.white70.withOpacity(0.4),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -1042,6 +1045,96 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       ),
     );
   }
+
+  Widget _buildTiempoActivoChip(Color colorEstado, MesaModel mesa) {
+    final tiempo = _formatearTiempoActivo(mesa);
+    return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.timer_outlined, color: colorEstado, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            tiempo,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              letterSpacing: 0.4,
+              color: colorEstado,
+            ),
+          ),
+        ],
+      );
+  }
+
+  Widget _buildReservaChip(Color colorEstado, MesaModel mesa) {
+    final resumen = _textoReserva(mesa);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.event_outlined, color: colorEstado, size: 16),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            resumen,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: colorEstado,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _textoReserva(MesaModel mesa) {
+    final fecha = mesa.fechaReserva;
+    final hora = mesa.tiempo;
+
+    if (fecha == null) {
+      if (hora != null && hora.trim().isNotEmpty) {
+        return 'Hoy • $hora';
+      }
+      return 'Horario por confirmar';
+    }
+
+    final fechaFormateada = DateFormat('dd MMM', 'es').format(fecha);
+    if (hora != null && hora.trim().isNotEmpty) {
+      return '$fechaFormateada • $hora';
+    }
+    return fechaFormateada;
+  }
+
+  int _gridColumnCount(double width) {
+    if (width >= 1200) {
+      return 4;
+    }
+    if (width >= 900) {
+      return 3;
+    }
+    return 2;
+  }
+
+  String _formatearTiempoActivo(MesaModel mesa) {
+    final inicio = mesa.horaOcupacion;
+    if (inicio == null) {
+      return '00:00:00';
+    }
+
+    final diferencia = _relojActual.difference(inicio);
+    if (diferencia.isNegative) {
+      return '00:00:00';
+    }
+
+    final horas = diferencia.inHours;
+    final minutos = diferencia.inMinutes % 60;
+    final segundos = diferencia.inSeconds % 60;
+
+    return '${horas.toString().padLeft(2, '0')}:${minutos.toString().padLeft(2, '0')}:${segundos.toString().padLeft(2, '0')}';
+  }
+
 
   void _mostrarOpcionesMesa(MesaModel mesa) {
     setState(() => mesaSeleccionadaId = mesa.id);
@@ -1055,20 +1148,16 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
 
   Widget _buildOpcionesBottomSheet(MesaModel mesa) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+       decoration: const BoxDecoration(
+        gradient: LinearGradient(
           colors: [
             Color(0xFF1A1A2E),
-            Color(0xFF16213E),
+            Color(0xFF14162B),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-          width: 1,
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -1362,19 +1451,14 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
 
       setState(() => mesaSeleccionadaId = null);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mesa liberada y pedido cancelado.')),
-      );
+      SnackbarHelper.showSuccess('Mesa liberada y pedido cancelado.');
+      
     } catch (e) {
       print('Error liberando mesa ${mesa.id}: $e');
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo liberar la mesa. Inténtalo nuevamente.'),
-        ),
-      );
+      SnackbarHelper.showError('No se pudo liberar la mesa. Inténtalo nuevamente.');
     }
   }
 
