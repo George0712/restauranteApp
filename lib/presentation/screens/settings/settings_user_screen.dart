@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,10 +9,8 @@ class SettingsUserScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(userModelProvider);
-    final currentLocation = GoRouter.of(context)
-        .routerDelegate
-        .currentConfiguration
-        .fullPath;
+    final currentLocation =
+        GoRouter.of(context).routerDelegate.currentConfiguration.fullPath;
 
     return Scaffold(
       appBar: AppBar(
@@ -85,33 +82,37 @@ class SettingsUserScreen extends ConsumerWidget {
                 backgroundColor: const Color.fromRGBO(103, 58, 183, 0.4),
               ),
               const Divider(height: 32, color: Colors.white24),
-
               if (user.rol == 'admin') ...[
-                // Si la ruta actual es /mesero/home, mostrar enlace a Admin
-                if (currentLocation.startsWith('/mesero')) ...[
+                // Mostrar botón de Admin solo si NO estás en /admin
+                if (!currentLocation.startsWith('/admin')) ...[
                   _customTile(
                     icon: Icons.admin_panel_settings,
                     label: 'Ir a vista de Administrador',
                     onTap: () => context.go('/admin/home'),
                   ),
-                ] else ...[
+                  const SizedBox(height: 12),
+                ],
+
+                // Mostrar botón de Mesero solo si NO estás en /mesero
+                if (!currentLocation.startsWith('/mesero')) ...[
                   _customTile(
                     icon: Icons.restaurant_menu_rounded,
-                    
                     label: 'Ir a vista de Mesero',
                     onTap: () => context.go('/mesero/home'),
                   ),
+                  const SizedBox(height: 12),
                 ],
-                const SizedBox(height: 12),
-                // Nuevo botón: Ir a vista de Cocina
-                _customTile(
-                  icon: Icons.kitchen,
-                  label: 'Ir a vista de Cocina',
-                  onTap: () => context.go('/cocinero/home'),
-                ),
-                const SizedBox(height: 12),
-              ],
 
+                // Mostrar botón de Cocina solo si NO estás en /cocinero
+                if (!currentLocation.startsWith('/cocinero')) ...[
+                  _customTile(
+                    icon: Icons.kitchen,
+                    label: 'Ir a vista de Cocina',
+                    onTap: () => context.go('/cocinero/home'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ],
               _customTile(
                 icon: Icons.logout,
                 label: 'Cerrar sesión',

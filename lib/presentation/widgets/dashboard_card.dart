@@ -11,12 +11,13 @@ Widget buildNeonStatCard(
   StreamProvider<int> provider,
   Color color,
   IconData icon,
+  {bool isCurrency = false}
 ) {
   final asyncValue = ref.watch(provider);
 
   return asyncValue.when(
     data: (value) =>
-        buildNeonStatCardWithValue(title, subtitle, value, color, icon),
+        buildNeonStatCardWithValue(title, subtitle, value, color, icon, isCurrency: isCurrency),
     loading: () => Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -54,7 +55,21 @@ Widget buildNeonStatCardWithValue(
   int value,
   Color color,
   IconData icon,
+  {bool isCurrency = false}
 ) {
+  String formattedValue;
+  if (isCurrency) {
+    // Formato de moneda colombiana con separador de miles
+    final currencyFormat = NumberFormat.currency(
+      locale: 'es_CO',
+      symbol: '\$',
+      decimalDigits: 2, // Sin decimales
+    );
+    formattedValue = currencyFormat.format(value);
+  } else {
+    formattedValue = value.toString();
+  }
+  
   return Container(
     padding: const EdgeInsets.all(20),
     constraints: const BoxConstraints(minHeight: 150),
@@ -116,7 +131,7 @@ Widget buildNeonStatCardWithValue(
         ),
         const SizedBox(height: 18),
         Text(
-          value.toString(),
+          formattedValue,
           style: const TextStyle(
             fontSize: 22.0,
             fontWeight: FontWeight.bold,

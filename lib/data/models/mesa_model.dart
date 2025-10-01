@@ -2,7 +2,7 @@
 class MesaModel {
   final String? docId; // ID del documento en Firestore
   final int id;
-  final String estado; 
+  final String estado;
   final int capacidad;
   final String? cliente;
   final String? tiempo;
@@ -24,29 +24,35 @@ class MesaModel {
     this.horaOcupacion,
   });
 
+  static const _undefined = Object();
+
   MesaModel copyWith({
     String? docId,
     int? id,
     String? estado,
     int? capacidad,
-    String? cliente,
-    String? tiempo,
-    double? total,
-    String? pedidoId,
-    DateTime? fechaReserva,
-    DateTime? horaOcupacion,
+    Object? cliente = _undefined,
+    Object? tiempo = _undefined,
+    Object? total = _undefined,
+    Object? pedidoId = _undefined,
+    Object? fechaReserva = _undefined,
+    Object? horaOcupacion = _undefined,
   }) {
     return MesaModel(
       docId: docId ?? this.docId,
       id: id ?? this.id,
       estado: estado ?? this.estado,
       capacidad: capacidad ?? this.capacidad,
-      cliente: cliente ?? this.cliente,
-      tiempo: tiempo ?? this.tiempo,
-      total: total ?? this.total,
-      pedidoId: pedidoId ?? this.pedidoId,
-      fechaReserva: fechaReserva ?? this.fechaReserva,
-      horaOcupacion: horaOcupacion ?? this.horaOcupacion,
+      cliente: cliente == _undefined ? this.cliente : cliente as String?,
+      tiempo: tiempo == _undefined ? this.tiempo : tiempo as String?,
+      total: total == _undefined ? this.total : total as double?,
+      pedidoId: pedidoId == _undefined ? this.pedidoId : pedidoId as String?,
+      fechaReserva: fechaReserva == _undefined
+          ? this.fechaReserva
+          : fechaReserva as DateTime?,
+      horaOcupacion: horaOcupacion == _undefined
+          ? this.horaOcupacion
+          : horaOcupacion as DateTime?,
     );
   }
 
@@ -85,11 +91,11 @@ class MesaModel {
       tiempo: map['tiempo'],
       total: map['total']?.toDouble(),
       pedidoId: map['pedidoId'],
-      fechaReserva: map['fechaReserva'] != null 
-          ? DateTime.parse(map['fechaReserva']) 
+      fechaReserva: map['fechaReserva'] != null
+          ? DateTime.parse(map['fechaReserva'])
           : null,
-      horaOcupacion: map['horaOcupacion'] != null 
-          ? DateTime.parse(map['horaOcupacion']) 
+      horaOcupacion: map['horaOcupacion'] != null
+          ? DateTime.parse(map['horaOcupacion'])
           : null,
     );
   }

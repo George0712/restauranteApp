@@ -295,6 +295,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         totalVentasProvider,
         const Color(0xFF00D4AA),
         Icons.monetization_on,
+        isCurrency: true,
       ),
       buildNeonStatCard(
         ref,
