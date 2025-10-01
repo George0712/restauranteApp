@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +13,8 @@ import 'package:intl/intl.dart';
 
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/data/models/notification_model.dart';
+import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/widgets/dashboard_card.dart';
 import 'package:restaurante_app/presentation/widgets/option_button_card.dart';
 
@@ -154,33 +156,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
   Widget _buildNotificationButton() {
     return Container(
       margin: const EdgeInsets.only(right: 20),
-      child: IconButton(
-        onPressed: () {
-          // Próximamente: notificaciones para el administrador
-        },
-        icon: Stack(
-          children: [
-            const Icon(
-              Icons.notifications_rounded,
-              color: Colors.white,
-              size: 30,
-            ),
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: const NotificationBell(role: NotificationRole.admin),
     );
   }
 
@@ -245,7 +221,6 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               color: Colors.white,
             ),
           ),
-          
           const SizedBox(height: 20),
           GridView.count(
             shrinkWrap: true,
@@ -328,13 +303,14 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         final crossAxisCount = isTablet ? 4 : 2;
         const spacing = 12.0;
         final height = isTablet ? 165.0 : 135.0;
-        final width =
-            (constraints.maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount;
+        final width = (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
+            crossAxisCount;
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
           children: cards
-              .map((card) => SizedBox(width: width, height: height, child: card))
+              .map(
+                  (card) => SizedBox(width: width, height: height, child: card))
               .toList(),
         );
       },
@@ -629,13 +605,18 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
       );
     }
 
-    final spots = data.asMap()
-        .entries.map((entry) => FlSpot(entry.key.toDouble(), entry.value.total))
+    final spots = data
+        .asMap()
+        .entries
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.total))
         .toList();
 
     final maxY = spots.isEmpty
         ? 1.0
-        : spots.map((spot) => spot.y).reduce(math.max).clamp(1.0, double.infinity);
+        : spots
+            .map((spot) => spot.y)
+            .reduce(math.max)
+            .clamp(1.0, double.infinity);
     final interval = _calculateInterval(maxY);
 
     return LineChart(
@@ -653,8 +634,10 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               reservedSize: 40,
@@ -774,8 +757,10 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -855,7 +840,8 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                   color: const Color(0xFFFACC15).withOpacity(0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.local_fire_department, color: Colors.white),
+                child: const Icon(Icons.local_fire_department,
+                    color: Colors.white),
               ),
             ],
           ),

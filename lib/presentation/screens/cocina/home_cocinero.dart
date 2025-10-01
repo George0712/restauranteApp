@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
+import 'package:restaurante_app/data/models/notification_model.dart';
+import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/widgets/kitchen_stats.dart';
 import 'package:restaurante_app/presentation/widgets/pedido_cards.dart';
 
@@ -99,7 +101,7 @@ class HomeCocineroScreen extends ConsumerWidget {
         backgroundColor: Colors.black,
         body: Center(
           child: Text(
-            'Error al cargar estadísticas: $error',
+            'Error al cargar estadisticas: $error',
             style: const TextStyle(
               color: Color(0xFFCBD5F5),
               fontSize: 14,
@@ -147,12 +149,7 @@ class HomeCocineroScreen extends ConsumerWidget {
         ),
       ),
       actions: [
-        IconButton(
-          onPressed: () => 
-        (),
-          icon: const Icon(Icons.notifications, color: Colors.white),
-          tooltip: 'Notificaciones',
-        ),
+        const NotificationBell(role: NotificationRole.kitchen),
         const SizedBox(width: 12),
       ],
       flexibleSpace: Container(
@@ -292,7 +289,7 @@ class _TabLabel extends StatelessWidget {
   }
 }
 
-// -------------------- Pestaña Pendientes --------------------
+// -------------------- Pestana Pendientes --------------------
 class _PendingOrdersTab extends ConsumerWidget {
   const _PendingOrdersTab();
 
@@ -305,7 +302,7 @@ class _PendingOrdersTab extends ConsumerWidget {
         if (pedidos.isEmpty) {
           return const _EmptyState(
             icon: Icons.emoji_food_beverage,
-            title: '¡Todo al día!',
+            title: 'Todo al dia!',
             subtitle: 'No hay pedidos pendientes',
             color: Color(0xFF10B981),
           );
@@ -343,8 +340,7 @@ class _PendingOrdersTab extends ConsumerWidget {
                     parent: BouncingScrollPhysics(),
                   ),
                   padding: const EdgeInsets.fromLTRB(4, 12, 4, 120),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.78,
                     crossAxisSpacing: 16,
@@ -369,7 +365,7 @@ class _PendingOrdersTab extends ConsumerWidget {
   }
 }
 
-// -------------------- Pestaña Completados --------------------
+// -------------------- Pestana Completados --------------------
 class _CompletedOrdersTab extends ConsumerWidget {
   const _CompletedOrdersTab();
 
@@ -383,7 +379,7 @@ class _CompletedOrdersTab extends ConsumerWidget {
           return const _EmptyState(
             icon: Icons.history_toggle_off,
             title: 'Sin pedidos completados',
-            subtitle: 'Los pedidos terminados aparecerán aquí',
+            subtitle: 'Los pedidos terminados apareceran aqui',
             color: Color(0xFF38BDF8),
           );
         }
@@ -420,8 +416,7 @@ class _CompletedOrdersTab extends ConsumerWidget {
                     parent: BouncingScrollPhysics(),
                   ),
                   padding: const EdgeInsets.fromLTRB(4, 12, 4, 120),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.78,
                     crossAxisSpacing: 16,
@@ -446,7 +441,7 @@ class _CompletedOrdersTab extends ConsumerWidget {
   }
 }
 
-// -------------------- Estados Vacío y Error --------------------
+// -------------------- Estados Vacio y Error --------------------
 class _EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;

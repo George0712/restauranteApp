@@ -425,16 +425,18 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
           ValueKey('acciones-${mesa.id}-${mesa.estado}-${mesa.pedidoId ?? ''}'),
       width: double.infinity,
       padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 0),
-      decoration: const  BoxDecoration(
-        color: Color(0xFF1A1A2E),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+         gradient: const LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF111827)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
         border: Border(
-          left: BorderSide(color: Colors.white24),
-          right: BorderSide(color: Colors.white24),
-          top: BorderSide(color: Colors.white24),
+          top: BorderSide(color: Colors.white.withOpacity(0.2)),
         ),
       ),
       child: Column(

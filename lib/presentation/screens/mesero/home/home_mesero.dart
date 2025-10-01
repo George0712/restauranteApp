@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ion.dart';
 import 'package:iconify_flutter/icons/ri.dart';
+import 'package:restaurante_app/data/models/notification_model.dart';
+import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/providers/cocina/order_provider.dart';
 import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
 
@@ -71,33 +73,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
           actions: [
             Container(
               margin: const EdgeInsets.only(right: 20),
-              child: IconButton(
-                onPressed: () {
-                  // TODO: implementar notificaciones
-                },
-                icon: Stack(
-                  children: [
-                    const Icon(
-                      Icons.notifications_rounded,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: const NotificationBell(role: NotificationRole.waiter),
             ),
           ],
         ),
@@ -159,7 +135,14 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
 
     final mesasActivas = mesasAsync.when(
       data: (mesas) {
-        const activeStates = {'ocupada', 'reservada', 'en uso', 'en servicio', 'activo', 'asignada'};
+        const activeStates = {
+          'ocupada',
+          'reservada',
+          'en uso',
+          'en servicio',
+          'activo',
+          'asignada'
+        };
         return mesas.where((mesa) {
           final estado = mesa.estado.toLowerCase();
           final hasPedido = (mesa.pedidoId?.isNotEmpty ?? false);
@@ -170,8 +153,21 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
       error: (_, __) => 0,
     );
 
-    const pendingKeys = ['pendiente', 'preparando', 'nuevo', 'enPreparacion', 'en_preparacion', 'processing'];
-    const readyKeys = ['terminado', 'entregado', 'listo', 'completado', 'ready'];
+    const pendingKeys = [
+      'pendiente',
+      'preparando',
+      'nuevo',
+      'enPreparacion',
+      'en_preparacion',
+      'processing'
+    ];
+    const readyKeys = [
+      'terminado',
+      'entregado',
+      'listo',
+      'completado',
+      'ready'
+    ];
 
     int ordenesPendientes = 0;
     for (final key in pendingKeys) {
