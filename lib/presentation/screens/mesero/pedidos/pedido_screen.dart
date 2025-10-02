@@ -10,6 +10,10 @@ import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/detalle_producto_screen.dart';
 import 'package:restaurante_app/presentation/widgets/carrito_bottom.dart';
+import 'package:restaurante_app/presentation/widgets/payment/payment_bottom_sheet.dart';
+import 'package:restaurante_app/data/models/mesa_model.dart';
+import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class SeleccionProductosScreen extends ConsumerStatefulWidget {
   final String pedidoId;
@@ -39,6 +43,7 @@ class _SeleccionProductosScreenState
   String filtroTexto = '';
   final TextEditingController _searchController = TextEditingController();
   bool pedidoConfirmado = false;
+  bool _agregandoExtras = false;
 
   @override
   void initState() {
@@ -60,7 +65,7 @@ class _SeleccionProductosScreenState
     });
   }
 
-  // ✅ NUEVO: Método para cargar el carrito desde Firestore
+  // ✅ NUEVO: Metodo para cargar el carrito desde Firestore
   Future<void> _cargarCarritoDelPedido() async {
     try {
       final productos = await ref.read(productsProvider.future);
@@ -101,6 +106,7 @@ class _SeleccionProductosScreenState
             children: [
               _buildSearchBar(),
               _buildCategorias(categorias),
+              if (_agregandoExtras) _buildExtrasBanner(),
               Expanded(
                 child: _buildProductosGrid(productos),
               ),
@@ -207,6 +213,52 @@ class _SeleccionProductosScreenState
           fillColor: Colors.white,
         ),
         onChanged: (value) => setState(() => filtroTexto = value),
+      ),
+    );
+  }
+
+  Widget _buildExtrasBanner() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFEFF6FF),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFBFDBFE)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.add_circle_outline,
+                color: Color(0xFF2563EB), size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text(
+                    'Agregando productos al pedido en preparacion',
+                    style: TextStyle(
+                      color: Color(0xFF1D4ED8),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Estos articulos se sumaran al pedido ya enviado a cocina. Los productos actuales no podran modificarse ni eliminarse.',
+                    style: TextStyle(
+                      color: Color(0xFF1E3A8A),
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -587,146 +639,374 @@ class _SeleccionProductosScreenState
         pedidoId: widget.pedidoId, // Pasar el ID del pedido
         onConfirmarSinPagar: () => _confirmarPedidoSinPagar(context),
         onConfirmarYPagar: () => _confirmarPedidoYPagar(context),
-        onProcederPago: () => _procederAlPago(context),
+        onRegistrarPago: () { _registrarPago(context); },
         onModificarPedido: () => _modificarPedido(context),
         onCancelarPedido: () => _cancelarPedido(context),
+        onActualizarPedido: () { _actualizarPedidoExistente(context); },
+        onGenerarTicket: () => _mostrarTicketDesdeCarrito(context),
       ),
     );
   }
-
-  void _confirmarPedidoSinPagar(BuildContext context) async {
+  Future<void> _confirmarPedidoSinPagar(BuildContext sheetContext) async {
+    final carrito = ref.read(carritoProvider);
+    if (carrito.isEmpty) {
+      _mostrarError(context, 'Agrega productos antes de enviar el pedido.');
+      return;
+    }
     try {
-      final carrito = ref.read(carritoProvider);
-
-      // ✅ Verificar estado actual
-      final pedidoDoc = await FirebaseFirestore.instance
-          .collection('pedido')
-          .doc(widget.pedidoId)
-          .get();
-
-      if (pedidoDoc.exists) {
-        final pedidoData = pedidoDoc.data() as Map<String, dynamic>;
-        final estadoActual = pedidoData['status'] ?? 'nuevo';
-        final items = pedidoData['items'] as List?;
-
-        if (estadoActual != 'nuevo' && items != null && items.isNotEmpty) {
-          // Ya está confirmado
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('El pedido ya está confirmado')),
-            );
-            Navigator.pop(context);
-          }
-          return;
-        }
-      }
-
-      // Proceder con la confirmación
       await _crearActualizarPedido(carrito, 'pendiente', false);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pedido confirmado sin pagar')),
-        );
-      }
+      await _cargarCarritoDelPedido();
+      Navigator.of(sheetContext).pop();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pedido enviado a cocina')),
+      );
     } catch (e) {
       _mostrarError(context, 'Error al confirmar pedido: $e');
     }
   }
-
-  void _confirmarPedidoYPagar(BuildContext context) async {
+  Future<void> _confirmarPedidoYPagar(BuildContext sheetContext) async {
+    final carrito = ref.read(carritoProvider);
+    if (carrito.isEmpty) {
+      _mostrarError(context, 'Agrega productos antes de generar el ticket.');
+      return;
+    }
     try {
-      final carrito = ref.read(carritoProvider);
-      _crearActualizarPedido(carrito, 'pagado', true);
-
-      // Limpiar carrito después del pago
-      ref.read(carritoProvider.notifier).limpiarCarrito();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Pedido confirmado y pagado exitosamente')),
-        );
-        Navigator.pop(context);
-      }
+      await _crearActualizarPedido(carrito, 'pendiente', false);
+      final ticketInfo =
+          await _generarTicketFactura(context, mostrarMensaje: false);
+      await _cargarCarritoDelPedido();
+      Navigator.of(sheetContext).pop();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pedido enviado y ticket generado')),
+      );
+      await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
     } catch (e) {
-      _mostrarError(context, 'Error al confirmar y pagar: $e');
+      _mostrarError(context, 'Error al confirmar y generar ticket: $e');
     }
   }
-
-  void _procederAlPago(BuildContext context) async {
+  Future<void> _actualizarPedidoExistente(BuildContext sheetContext) async {
+    final carrito = ref.read(carritoProvider);
+    if (carrito.isEmpty) {
+      _mostrarError(context, 'No hay cambios para enviar a cocina.');
+      return;
+    }
     try {
-      await FirebaseFirestore.instance
+      final pedidoDoc = await FirebaseFirestore.instance
           .collection('pedido')
           .doc(widget.pedidoId)
-          .update({
-        'status': 'pagado',
-        'pagado': true,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-
-      // Limpiar carrito después del pago
-      ref.read(carritoProvider.notifier).limpiarCarrito();
-
-      if (mounted) {
+          .get();
+      final data = pedidoDoc.data() as Map<String, dynamic>?;
+      final estadoActual = (data?['status'] ?? 'pendiente').toString();
+      final pagadoActual = data?['pagado'] == true;
+      await _crearActualizarPedido(carrito, estadoActual, pagadoActual);
+      await _cargarCarritoDelPedido();
+      Navigator.of(sheetContext).pop();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pedido actualizado y enviado a cocina')),
+      );
+    } catch (e) {
+      _mostrarError(context, 'Error al actualizar el pedido: $e');
+    }
+  }
+  Future<void> _registrarPago(BuildContext sheetContext) async {
+    Navigator.of(sheetContext).pop();
+    try {
+      final pagoCompletado = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => PaymentBottomSheet(
+          pedidoId: widget.pedidoId,
+          onPaid: () => ref.read(carritoProvider.notifier).limpiarCarrito(),
+        ),
+      );
+      if (pagoCompletado == true) {
+        await _cargarCarritoDelPedido();
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago procesado exitosamente')),
+          const SnackBar(content: Text('Pago enviado a la pasarela.')),
         );
-        Navigator.pop(context);
+        final ticketInfo =
+            await _generarTicketFactura(context, mostrarMensaje: false);
+        await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
       }
     } catch (e) {
-      _mostrarError(context, 'Error al procesar pago: $e');
+      _mostrarError(context, 'Error al registrar el pago: $e');
     }
   }
 
-  void _modificarPedido(BuildContext context) {
-    Navigator.pop(context); // Cerrar el carrito y permitir modificaciones
+  Future<void> _mostrarTicketDesdeCarrito(BuildContext sheetContext) async {
+    final ticketInfo =
+        await _generarTicketFactura(context, mostrarMensaje: true);
+    if (ticketInfo == null) {
+      return;
+    }
+    Navigator.of(sheetContext).pop();
+    await _abrirTicketPreview(ticketId: ticketInfo['ticketId'] as String?);
+  }
+
+  Future<void> _abrirTicketPreview({String? ticketId}) async {
+    if (!mounted) return;
+    final queryParams = <String, String>{};
+    if (widget.mesaId != null && widget.mesaId!.isNotEmpty) {
+      queryParams['mesaId'] = widget.mesaId!;
+    }
+    final mesaNombre = _decodeIfNeeded(widget.mesaNombre);
+    final clienteNombre = _decodeIfNeeded(widget.clienteNombre);
+    if (mesaNombre != null && mesaNombre.isNotEmpty) {
+      queryParams['mesaNombre'] = mesaNombre;
+    }
+    if (clienteNombre != null && clienteNombre.isNotEmpty) {
+      queryParams['clienteNombre'] = clienteNombre;
+    }
+    if (ticketId != null && ticketId.isNotEmpty) {
+      queryParams['ticketId'] = ticketId;
+    }
+    final uri = Uri(
+      path: '/mesero/pedidos/ticket/${widget.pedidoId}',
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+    context.push(uri.toString());
+  }
+
+  Future<void> _actualizarMesaTrasCancelacion({
+    required int mesaIdInt,
+    required String nuevoPedidoId,
+    String? clienteNombre,
+  }) async {
+    try {
+      final mesas = ref.read(mesasMeseroProvider);
+      MesaModel? mesaActual;
+      for (final mesa in mesas) {
+        if (mesa.id == mesaIdInt) {
+          mesaActual = mesa;
+          break;
+        }
+      }
+      if (mesaActual == null) {
+        return;
+      }
+      final mesaActualizada = mesaActual.copyWith(
+        estado: 'ocupada',
+        pedidoId: nuevoPedidoId,
+        cliente: clienteNombre ?? mesaActual.cliente,
+        horaOcupacion: mesaActual.horaOcupacion ?? DateTime.now(),
+      );
+      await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+    } catch (e) {
+      debugPrint('No se pudo actualizar la mesa tras cancelacion: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> _generarTicketFactura(
+      BuildContext context, {bool mostrarMensaje = true}) async {
+    try {
+      final pedidoRef = FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(widget.pedidoId);
+      final pedidoSnapshot = await pedidoRef.get();
+      if (!pedidoSnapshot.exists) {
+        if (mostrarMensaje) {
+          _mostrarError(context, 'Aun no hay un pedido para generar un ticket.');
+        }
+        return null;
+      }
+      final data = pedidoSnapshot.data() as Map<String, dynamic>;
+      final items = (data['items'] as List?) ?? [];
+      if (items.isEmpty) {
+        if (mostrarMensaje) {
+          _mostrarError(
+            context,
+            'Agrega productos al pedido antes de generar un ticket.',
+          );
+        }
+        return null;
+      }
+      final totalPedido = _asDouble(data['total'] ?? data['subtotal'] ?? 0);
+      final subtotalPedido = _asDouble(data['subtotal'] ?? totalPedido);
+      final pagado = data['pagado'] == true;
+      final estado = (data['status'] ?? 'pendiente').toString();
+      final numeroTicket =
+          '${widget.pedidoId}-${DateTime.now().millisecondsSinceEpoch}';
+      final ticketForFirestore = {
+        'numeroTicket': numeroTicket,
+        'pedidoId': widget.pedidoId,
+        'createdAt': FieldValue.serverTimestamp(),
+        'mesaId': data['mesaId'],
+        'mesaNombre': data['mesaNombre'],
+        'clienteNombre': data['clienteNombre'],
+        'subtotal': subtotalPedido,
+        'total': totalPedido,
+        'pagado': pagado,
+      'paymentStatus': pagado ? 'paid' : 'pending',
+        'estadoPedido': estado,
+        'items': items,
+      };
+      final ticketRef = await pedidoRef.collection('tickets').add(ticketForFirestore);
+      await pedidoRef.set({
+        'ultimoTicketGeneradoAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      if (mostrarMensaje && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ticket generado correctamente')),
+        );
+      }
+      return {
+        'ticketId': ticketRef.id,
+      };
+    } catch (e) {
+      if (mostrarMensaje) {
+        _mostrarError(context, 'Error al generar ticket: $e');
+      } else {
+        debugPrint('Error al generar ticket: $e');
+      }
+      return null;
+    }
+  }
+
+  void _modificarPedido(BuildContext sheetContext) {
+    Navigator.of(sheetContext).pop();
+    if (!mounted) return;
+    setState(() {
+      _agregandoExtras = false;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-          content: Text('Puedes agregar o quitar productos del pedido')),
+        content: Text('Puedes agregar o quitar productos del pedido'),
+      ),
     );
   }
 
-  void _cancelarPedido(BuildContext context) async {
+  Future<void> _cancelarPedido(BuildContext sheetContext) async {
     final shouldCancel = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Cancelar Pedido'),
-        content:
-            const Text('¿Estás seguro de que quieres cancelar este pedido?'),
+        content: const Text('Estas seguro de que quieres cancelar este pedido?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('No'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Sí, Cancelar'),
+            child: const Text('Si, cancelar'),
           ),
         ],
       ),
     );
-
     if (shouldCancel == true) {
       try {
-        await FirebaseFirestore.instance
+        final pedidoRef = FirebaseFirestore.instance
             .collection('pedido')
-            .doc(widget.pedidoId)
-            .update({
+            .doc(widget.pedidoId);
+        final pedidoSnapshot = await pedidoRef.get();
+        final pedidoData = pedidoSnapshot.data() as Map<String, dynamic>?;
+        UserModel? user;
+        try {
+          user = await ref.read(userModelProvider.future);
+        } catch (_) {
+          user = null;
+        }
+        final updateData = <String, dynamic>{
           'status': 'cancelado',
+          'pagado': false,
+          'paymentStatus': 'void',
           'updatedAt': FieldValue.serverTimestamp(),
-        });
-
-        // Limpiar carrito
+          'cancelledAt': FieldValue.serverTimestamp(),
+        };
+        if (user != null) {
+          updateData['cancelledBy'] = user.uid;
+          updateData['cancelledByName'] =
+              '${user.nombre} ${user.apellidos}'.trim();
+        }
+        updateData['payment'] = FieldValue.delete();
+        updateData['paidAt'] = FieldValue.delete();
+        await pedidoRef.update(updateData);
         ref.read(carritoProvider.notifier).limpiarCarrito();
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pedido cancelado')),
+        final mesaIdInt = widget.mesaId != null
+            ? int.tryParse(widget.mesaId!)
+            : pedidoData?['mesaId'] as int?;
+        final mesaNombre = _decodeIfNeeded(
+          widget.mesaNombre ?? pedidoData?['mesaNombre']?.toString(),
+        );
+        final clienteNombre = _decodeIfNeeded(
+          widget.clienteNombre ?? pedidoData?['clienteNombre']?.toString(),
+        );
+        if (mesaIdInt != null) {
+          final nuevoPedidoId = const Uuid().v4();
+          final nuevoTableUuid = const Uuid().v4();
+          final nuevoPedidoData = <String, dynamic>{
+            'id': nuevoPedidoId,
+            'items': const [],
+            'initialItems': const [],
+            'subtotal': 0,
+            'total': 0,
+            'status': 'nuevo',
+            'pagado': false,
+            'paymentStatus': 'pending',
+            'mode': pedidoData?['mode'] ?? 'mesa',
+            'tableNumber': nuevoTableUuid,
+            'meseroId': user?.uid ?? pedidoData?['meseroId'],
+            'meseroNombre': user != null
+                ? '${user.nombre} ${user.apellidos}'.trim()
+                : pedidoData?['meseroNombre'],
+            'mesaId': mesaIdInt,
+            'mesaNombre': mesaNombre,
+            'clienteNombre': clienteNombre,
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          };
+          await FirebaseFirestore.instance
+              .collection('pedido')
+              .doc(nuevoPedidoId)
+              .set(nuevoPedidoData);
+          await _actualizarMesaTrasCancelacion(
+            mesaIdInt: mesaIdInt,
+            nuevoPedidoId: nuevoPedidoId,
+            clienteNombre: clienteNombre,
           );
-          Navigator.pop(context);
-          context.pop(); // Volver a la pantalla anterior
+          Navigator.of(sheetContext).pop();
+          if (!mounted) return;
+          setState(() {
+            _agregandoExtras = false;
+            pedidoConfirmado = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Pedido cancelado. Se creo un nuevo pedido para la mesa.',
+              ),
+            ),
+          );
+          final queryParams = <String, String>{
+            'mesaId': mesaIdInt.toString(),
+          };
+          if (mesaNombre != null && mesaNombre.isNotEmpty) {
+            queryParams['mesaNombre'] = mesaNombre;
+          }
+          if (clienteNombre != null && clienteNombre.isNotEmpty) {
+            queryParams['clienteNombre'] = clienteNombre;
+          }
+          final uri = Uri(
+            path: '/mesero/pedidos/detalle/$mesaIdInt/$nuevoPedidoId',
+            queryParameters: queryParams,
+          );
+          context.go(uri.toString());
+        } else {
+          Navigator.of(sheetContext).pop();
+          if (!mounted) return;
+          setState(() {
+            _agregandoExtras = false;
+            pedidoConfirmado = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Pedido cancelado.')),
+          );
         }
       } catch (e) {
         _mostrarError(context, 'Error al cancelar pedido: $e');
@@ -734,27 +1014,21 @@ class _SeleccionProductosScreenState
     }
   }
 
-  Future<void> _crearActualizarPedido(
+   Future<void> _crearActualizarPedido(
       List<ItemCarrito> carrito, String status, bool pagado) async {
     final adicionalesAsync = await ref.read(additionalProvider.future);
-
-    // Obtener información del mesero
-
+    // Obtener informacion del mesero
     UserModel? user;
     try {
-      user = await ref.read(userModelProvider.future);
       user = await ref.read(userModelProvider.future);
     } catch (e) {
       user = null;
     }
-
-    // ... código de items y totales igual ...
-
+    // ... codigo de items y totales igual ...
     final items = carrito.map((item) {
       final adicionales = item.modificacionesSeleccionadas
           .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
           .toList();
-
       return {
         'productId': item.producto.id,
         'name': item.producto.name,
@@ -764,7 +1038,6 @@ class _SeleccionProductosScreenState
         'adicionales': adicionales.map((a) => a.toMap()).toList(),
       };
     }).toList();
-
     final subtotal = carrito.fold<double>(0, (sum, item) {
       final precioBase = item.precioUnitario * item.cantidad;
       final precioAdicionales = item.adicionales?.fold<double>(
@@ -774,17 +1047,14 @@ class _SeleccionProductosScreenState
           0;
       return sum + precioBase + precioAdicionales;
     });
-
-    // ✅ USAR LOS PARÁMETROS PASADOS DESDE LA URL:
+    // ✅ USAR LOS PARA�METROS PASADOS DESDE LA URL:
     final mesaIdInt =
         widget.mesaId != null ? int.tryParse(widget.mesaId!) : null;
-
     print("🔧 DATOS DE MESA RECIBIDOS:");
     print("   - Mesa ID: $mesaIdInt");
     print("   - Mesa Nombre: ${widget.mesaNombre}");
     print("   - Cliente: ${widget.clienteNombre}");
-
-    // Crear documento con toda la información
+    // Crear documento con toda la informacion
     // ✅ IMPORTANTE: Solo crear/actualizar cuando realmente se confirma
     await FirebaseFirestore.instance
         .collection('pedido')
@@ -794,7 +1064,9 @@ class _SeleccionProductosScreenState
       'items': items,
       'subtotal': subtotal,
       'total': subtotal,
-      'status': 'pendiente',
+      'status': status,
+      'pagado': pagado,
+      'paymentStatus': pagado ? 'paid' : 'pending',
       'mode': 'mesa',
       'tableNumber': widget.pedidoId,
       'meseroId': user?.uid,
@@ -808,16 +1080,187 @@ class _SeleccionProductosScreenState
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+    setState(() {
+      pedidoConfirmado = status != 'nuevo';
+    });
+  }
+  double _asDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  Future<void> _guardarPedido(
+    List<ItemCarrito> carrito, {
+    required bool pagado,
+    required String statusDestino,
+    Map<String, dynamic>? pedidoActual,
+    bool esExtra = false,
+  }) async {
+    final adicionalesAsync = await ref.read(additionalProvider.future);
+
+    UserModel? user;
+    try {
+      user = await ref.read(userModelProvider.future);
+    } catch (_) {
+      user = null;
+    }
+
+    Map<String, dynamic> _mapearItem(ItemCarrito item) {
+      final adicionalesSeleccionados = item.modificacionesSeleccionadas
+          .map(
+            (id) => adicionalesAsync.firstWhere(
+              (a) => a.id == id,
+            ),
+          )
+          .toList();
+
+      return {
+        'productId': item.producto.id,
+        'name': item.producto.name,
+        'price': item.precioUnitario,
+        'quantity': item.cantidad,
+        'notes': item.notas,
+        'adicionales': adicionalesSeleccionados.map((a) => a.toMap()).toList(),
+      };
+    }
+
+    final nuevoDetalle = carrito.map<Map<String, dynamic>>(_mapearItem).toList();
+
+    final subtotalCarrito = carrito.fold<double>(0, (sum, item) {
+      final precioBase = item.precioUnitario * item.cantidad;
+      final precioAdicionales = item.adicionales?.fold<double>(
+            0,
+            (acumulado, adicional) =>
+                acumulado + (adicional.price * item.cantidad),
+          ) ??
+          0;
+      return sum + precioBase + precioAdicionales;
+    });
+
+    final pedidoRef = FirebaseFirestore.instance
+        .collection('pedido')
+        .doc(widget.pedidoId);
+
+    final mesaIdInt = widget.mesaId != null
+        ? int.tryParse(widget.mesaId!)
+        : pedidoActual?['mesaId'] as int?;
+
+    if (esExtra && pedidoActual != null) {
+      final existentesRaw = (pedidoActual['items'] as List?) ?? [];
+      final existentes = existentesRaw
+          .whereType<Map<String, dynamic>>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+
+      final subtotalActual = (pedidoActual['subtotal'] as num?)?.toDouble() ?? 0.0;
+      final totalActual = (pedidoActual['total'] as num?)?.toDouble() ?? subtotalActual;
+
+      final initialItemsRaw = pedidoActual['initialItems'] as List?;
+      Map<String, dynamic>? initialItemsUpdate;
+      if (initialItemsRaw == null || initialItemsRaw.isEmpty) {
+        initialItemsUpdate = {
+          'initialItems': existentes
+              .map((item) => Map<String, dynamic>.from(item))
+              .toList(),
+        };
+      }
+
+      existentes.addAll(nuevoDetalle);
+
+      final pagoRegistrado =
+          (pedidoActual['pagado'] == true) || pagado;
+      final paymentStatusActual = pedidoActual['paymentStatus'];
+
+      final extrasEntry = {
+        'items': nuevoDetalle,
+        'createdAt': FieldValue.serverTimestamp(),
+        'meseroId': user?.uid,
+        'meseroNombre': user != null
+            ? '${user.nombre} ${user.apellidos}'.trim()
+            : null,
+      };
+
+      final extrasActualesRaw =
+          (pedidoActual['extrasHistory'] as List?) ?? const [];
+      final extrasActuales = extrasActualesRaw
+          .whereType<Map<String, dynamic>>()
+          .map((extra) => Map<String, dynamic>.from(extra))
+          .toList()
+        ..add(extrasEntry);
+
+      final updateData = <String, dynamic>{
+        'items': existentes,
+        'subtotal': subtotalActual + subtotalCarrito,
+        'total': totalActual + subtotalCarrito,
+        'pagado': pagoRegistrado,
+        'paymentStatus': paymentStatusActual is String
+            ? paymentStatusActual
+            : (pagoRegistrado ? 'paid' : 'pending'),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'extrasHistory': extrasActuales,
+      };
+
+      if (initialItemsUpdate != null) {
+        updateData.addAll(initialItemsUpdate);
+      }
+
+      await pedidoRef.update(updateData);
+      return;
+    }
+
+    final data = <String, dynamic>{
+      'id': widget.pedidoId,
+      'items': nuevoDetalle,
+      'initialItems': nuevoDetalle,
+      'subtotal': subtotalCarrito,
+      'total': subtotalCarrito,
+      'status': statusDestino,
+      'mode': (pedidoActual?['mode'] ?? 'mesa').toString(),
+      'tableNumber': pedidoActual?['tableNumber'] ?? widget.pedidoId,
+      'meseroId': user?.uid,
+      'meseroNombre': user != null
+          ? '${user.nombre} ${user.apellidos}'.trim()
+          : 'Mesero desconocido',
+      'mesaId': mesaIdInt,
+      'mesaNombre': widget.mesaNombre ?? pedidoActual?['mesaNombre'],
+      'clienteNombre': widget.clienteNombre ?? pedidoActual?['clienteNombre'],
+      'pagado': pagado,
+      'paymentStatus': pagado ? 'paid' : 'pending',
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+
+    if (pedidoActual == null || !pedidoActual.containsKey('createdAt')) {
+      data['createdAt'] = FieldValue.serverTimestamp();
+    }
+
+    await pedidoRef.set(data, SetOptions(merge: true));
+  }
+
+  void _onPedidoActualizado(BuildContext context, {required String mensaje}) {
+    if (!mounted) return;
 
     setState(() {
       pedidoConfirmado = true;
+      _agregandoExtras = false;
     });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido confirmado exitosamente')),
-      );
-      Navigator.pop(context);
+    ref.read(carritoProvider.notifier).limpiarCarrito();
+    _cargarCarritoDelPedido();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensaje)),
+    );
+
+    Navigator.pop(context);
+  }
+
+  String? _decodeIfNeeded(String? value) {
+    if (value == null) return null;
+    try {
+      return Uri.decodeComponent(value);
+    } catch (_) {
+      return value;
     }
   }
 
@@ -829,3 +1272,5 @@ class _SeleccionProductosScreenState
     }
   }
 }
+
+

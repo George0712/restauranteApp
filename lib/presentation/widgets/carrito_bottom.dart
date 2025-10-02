@@ -1,134 +1,178 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:restaurante_app/data/models/additonal_model.dart';
+import 'package:restaurante_app/data/models/item_carrito_model.dart';
+import 'package:restaurante_app/presentation/controllers/mesero/carrito_controller.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
-import 'package:restaurante_app/presentation/controllers/mesero/carrito_controller.dart';
 import 'package:restaurante_app/presentation/widgets/carrito_item.dart';
 
 class CarritoBottomSheet extends ConsumerWidget {
   final VoidCallback onConfirmarSinPagar;
   final VoidCallback onConfirmarYPagar;
-  final VoidCallback onProcederPago;
+  final VoidCallback onRegistrarPago;
   final VoidCallback onModificarPedido;
   final VoidCallback onCancelarPedido;
+  final VoidCallback onActualizarPedido;
+  final VoidCallback onGenerarTicket;
   final String? pedidoId;
-
   const CarritoBottomSheet({
     super.key,
     required this.onConfirmarSinPagar,
     required this.onConfirmarYPagar,
-    required this.onProcederPago,
+    required this.onRegistrarPago,
     required this.onModificarPedido,
     required this.onCancelarPedido,
+    required this.onActualizarPedido,
+    required this.onGenerarTicket,
     this.pedidoId,
   });
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final carrito = ref.watch(carritoProvider);
     final adicionalesAsync = ref.watch(additionalProvider);
     final carritoController = ref.watch(carritoControllerProvider);
-
-    // Usar el provider de admin
     final isAdminAsync = ref.watch(isCurrentUserAdminStreamProvider);
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // Título dinámico basado en el estado real del pedido
-          _buildTitulo(context, ref),
-
-          const SizedBox(height: 16),
-          Expanded(
-            child: carrito.isEmpty
-                ? const Center(child: Text('Tu carrito está vacío.'))
-                : ListView.builder(
-                    itemCount: carrito.length,
-                    itemBuilder: (context, index) {
-                      final item = carrito[index];
-                      return adicionalesAsync.when(
-                        data: (adicionales) {
-                          final nombresAdicionales = item
-                              .modificacionesSeleccionadas
-                              .map((id) => adicionales
-                                  .firstWhere((a) => a.id == id)
-                                  .name)
-                              .toList();
-                          return CarritoItem(
-                            item: item,
-                            nombresAdicionales: nombresAdicionales,
-                          );
-                        },
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (error, stack) => Text('Error: $error'),
-                      );
-                    },
+    final totalItems = carrito.fold<int>(0, (sum, item) => sum + item.cantidad);
+    final heightFactor = totalItems >= 4 ? 0.96 : 0.82;
+    return FractionallySizedBox(
+      heightFactor: heightFactor,
+      child: Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Total:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                '\$${carritoController.calcularTotal().toStringAsFixed(0).replaceAllMapped(
-                      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                      (Match m) => '${m[1]}.',
-                    )}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
                 ),
+              ),
+              const SizedBox(height: 20),
+              _buildTitulo(context),
+              const SizedBox(height: 12),
+              Expanded(
+                child: adicionalesAsync.when(
+                  data: (adicionales) {
+                    return ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        _ResumenCarritoCard(
+                          total: carritoController.calcularTotal(),
+                          cantidadTotal: carrito.fold<int>(
+                              0, (sum, item) => sum + item.cantidad),
+                        ),
+                        const SizedBox(height: 16),
+                        if (carrito.isEmpty)
+                          _buildCarritoVacio(context)
+                        else
+                          ...carrito.map((item) {
+                            final nombresAdicionales =
+                                item.modificacionesSeleccionadas.map((id) {
+                              final adicional = adicionales.firstWhere(
+                                (a) => a.id == id,
+                                orElse: () =>
+                                    AdditionalModel(id: id, name: id, price: 0),
+                              );
+                              return adicional.name;
+                            }).toList();
+                            return CarritoItem(
+                              item: item,
+                              nombresAdicionales: nombresAdicionales,
+                            );
+                          }).toList(),
+                      ],
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, _) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Text('Error al cargar adicionales: $error'),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              isAdminAsync.when(
+                data: (isAdmin) =>
+                    _buildAcciones(context, ref, carrito, isAdmin),
+                loading: () => _buildAcciones(context, ref, carrito, false),
+                error: (_, __) => _buildAcciones(context, ref, carrito, false),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Botones basados en el estado real del pedido en Firestore
-          isAdminAsync.when(
-            data: (isAdmin) =>
-                _buildBotonesConEstadoReal(context, ref, carrito, isAdmin),
-            loading: () =>
-                _buildBotonesConEstadoReal(context, ref, carrito, false),
-            error: (_, __) =>
-                _buildBotonesConEstadoReal(context, ref, carrito, false),
-          ),
-        ],
+        ),
+      ),
       ),
     );
   }
 
-  Widget _buildTitulo(BuildContext context, WidgetRef ref) {
+  Widget _buildTitulo(BuildContext context) {
+    const titleStyle = TextStyle(fontSize: 22, fontWeight: FontWeight.w700);
     if (pedidoId == null) {
       return const Text(
-        'Tu carrito',
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        'Carrito del pedido',
+        style: titleStyle,
       );
     }
+    final shortId = pedidoId!.length > 8 ? pedidoId!.substring(0, 8) : pedidoId!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Resumen del pedido', style: titleStyle),
+        const SizedBox(height: 4),
+        Text(
+          'ID: $shortId',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.black54,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
 
-    // Stream del pedido específico para obtener su estado en tiempo real
+  Widget _buildAcciones(BuildContext context, WidgetRef ref,
+      List<ItemCarrito> carrito, bool isAdmin) {
+    if (pedidoId == null) {
+      if (carrito.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PrimaryButton(
+            icon: Icons.local_fire_department,
+            label: 'Enviar pedido a cocina',
+            onPressed: onConfirmarSinPagar,
+            backgroundColor: Theme.of(context).primaryColor,
+          ),
+          const SizedBox(height: 12),
+          _PrimaryButton(
+            icon: Icons.receipt_long,
+            label: 'Enviar y generar ticket',
+            onPressed: onConfirmarYPagar,
+            backgroundColor: Colors.green,
+          ),
+        ],
+      );
+    }
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('pedido')
@@ -136,330 +180,426 @@ class CarritoBottomSheet extends ConsumerWidget {
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || !snapshot.data!.exists) {
-          return const Text(
-            'Tu carrito',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          if (carrito.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _PrimaryButton(
+                icon: Icons.local_fire_department,
+                label: 'Enviar pedido a cocina',
+                onPressed: onConfirmarSinPagar,
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+              const SizedBox(height: 12),
+              _PrimaryButton(
+                icon: Icons.receipt_long,
+                label: 'Enviar y generar ticket',
+                onPressed: onConfirmarYPagar,
+                backgroundColor: Colors.green,
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Generar el ticket no marca el pedido como pagado.',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
           );
         }
-
         final pedidoData = snapshot.data!.data() as Map<String, dynamic>;
-        final estado = pedidoData['status'] ?? 'nuevo';
-        final pagado = pedidoData['pagado'] ?? false;
-
-        String titulo = _obtenerTituloSegunEstado(estado, pagado);
-
-        return Text(
-          titulo,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        final estado =
+            (pedidoData['status'] ?? 'pendiente').toString().toLowerCase();
+        final pagado = pedidoData['pagado'] == true;
+        final pedidoItems = (pedidoData['items'] as List?) ?? [];
+        final hayCambios = _tieneCambiosEnCarrito(carrito, pedidoItems);
+        final acciones = <Widget>[];
+        if (hayCambios) {
+          acciones.add(
+            _PrimaryButton(
+              icon: Icons.local_fire_department,
+              label: 'Enviar actualizacion a cocina',
+              onPressed: onActualizarPedido,
+              backgroundColor: Theme.of(context).primaryColor,
+            ),
+          );
+          acciones.add(const SizedBox(height: 12));
+        }
+        acciones.add(
+          const _SectionTitle(
+            icon: Icons.attach_money,
+            title: 'Cobro y comprobantes',
+          ),
+        );
+        acciones.add(const SizedBox(height: 8));
+        acciones.add(
+          _SecondaryButton(
+            icon: Icons.receipt_long,
+            label: pagado
+                ? 'Generar nuevamente ticket'
+                : 'Generar ticket / factura',
+            onPressed: onGenerarTicket,
+          ),
+        );
+        acciones.add(const SizedBox(height: 6));
+        acciones.add(const Text(
+          'Generar el ticket no marca el pedido como pagado.',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ));
+        acciones.add(const SizedBox(height: 16));
+        if (!pagado) {
+          acciones.add(
+            _PrimaryButton(
+              icon: Icons.payments,
+              label: 'Registrar pago del pedido',
+              onPressed: onRegistrarPago,
+              backgroundColor: Colors.green,
+            ),
+          );
+          acciones.add(const SizedBox(height: 16));
+        } else {
+          acciones.add(
+            _InfoBox(
+              icon: Icons.verified_outlined,
+              message:
+                  'El pedido ya esta pagado. Puedes volver a generar el ticket si lo necesitas.',
+              color: Colors.green,
+            ),
+          );
+          acciones.add(const SizedBox(height: 16));
+        }
+        if (!pagado &&
+            (estado == 'pendiente' ||
+                estado == 'preparacion' ||
+                estado == 'en_preparacion')) {
+          acciones.add(
+            _SecondaryButton(
+              icon: Icons.edit_outlined,
+              label: 'Seguir modificando el pedido',
+              onPressed: onModificarPedido,
+            ),
+          );
+          acciones.add(const SizedBox(height: 12));
+        }
+        if (isAdmin && !pagado) {
+          acciones.add(
+            _DangerButton(
+              icon: Icons.cancel_outlined,
+              label: 'Cancelar pedido',
+              onPressed: onCancelarPedido,
+            ),
+          );
+        }
+        if (acciones.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: acciones,
         );
       },
     );
   }
 
-  Widget _buildBotonesConEstadoReal(
-      BuildContext context, WidgetRef ref, List carrito, bool isAdmin) {
-    if (carrito.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    if (pedidoId == null) {
-      return _buildBotonesIniciales(context);
-    }
-
-    // Stream del pedido para obtener el estado real
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('pedido')
-          .doc(pedidoId)
-          .snapshots(),
-      builder: (context, snapshot) {
-        // Si no hay conexión o está cargando, mostrar botones iniciales
-        if (!snapshot.hasData) {
-          return _buildBotonesIniciales(context);
-        }
-
-        // ✅ CLAVE: Si el documento no existe O no tiene items, mostrar botones iniciales
-        if (!snapshot.data!.exists) {
-          return _buildBotonesIniciales(context);
-        }
-
-        final pedidoData = snapshot.data!.data() as Map<String, dynamic>?;
-
-        // ✅ NUEVA VALIDACIÓN: Si no tiene items o está vacío, es un pedido nuevo
-        if (pedidoData == null ||
-            !pedidoData.containsKey('items') ||
-            pedidoData['items'] == null ||
-            (pedidoData['items'] as List).isEmpty) {
-          return _buildBotonesIniciales(context);
-        }
-
-        final estado = pedidoData['status'] ?? 'nuevo';
-        final pagado = pedidoData['pagado'] ?? false;
-
-        // ✅ NUEVA VALIDACIÓN: Solo mostrar botones avanzados si el estado indica que fue confirmado
-        if (estado == 'nuevo' || estado.isEmpty) {
-          return _buildBotonesIniciales(context);
-        }
-
-        // Determinar qué botones mostrar según el estado real
-        return _buildBotonesSegunEstado(context, estado, pagado, isAdmin);
-      },
+  Widget _buildCarritoVacio(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade50,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: const [
+          Icon(Icons.shopping_bag_outlined, size: 48, color: Colors.blueGrey),
+          SizedBox(height: 12),
+          Text(
+            'Aun no has agregado productos',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Selecciona articulos para poder enviar el pedido a cocina o generar un ticket.',
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildBotonesIniciales(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: onConfirmarSinPagar,
-            icon: const Icon(Icons.check_circle_outline),
-            label: const Text('Confirmar sin Pagar'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+  bool _tieneCambiosEnCarrito(
+      List<ItemCarrito> carrito, List<dynamic> pedidoItems) {
+    if (pedidoItems.isEmpty) {
+      return carrito.isNotEmpty;
+    }
+    final carritoCanonico = carrito.map((item) {
+      final adicionales = [...item.modificacionesSeleccionadas]..sort();
+      final nota = item.notas ?? '';
+      return '${item.producto.id}|${item.cantidad}|${item.precioUnitario.toStringAsFixed(2)}|$nota|${adicionales.join(',')}';
+    }).toList()
+      ..sort();
+    final pedidoCanonico = pedidoItems.map((item) {
+      final data = item as Map<String, dynamic>;
+      final adicionales = (data['adicionales'] as List?)
+              ?.map((a) => (a['id'] ?? '').toString())
+              .toList() ??
+          [];
+      adicionales.sort();
+      final nota = (data['notes'] ?? '').toString();
+      final price = data['price'] ?? 0;
+      return '${data['productId']}|${data['quantity']}|${price.toString()}|$nota|${adicionales.join(',')}';
+    }).toList()
+      ..sort();
+    if (carritoCanonico.length != pedidoCanonico.length) {
+      return true;
+    }
+    for (var i = 0; i < carritoCanonico.length; i++) {
+      if (carritoCanonico[i] != pedidoCanonico[i]) {
+        return true;
+      }
+    }
+    return false;
+  }
+}
+
+class _ResumenCarritoCard extends StatelessWidget {
+  final double total;
+  final int cantidadTotal;
+  const _ResumenCarritoCard({
+    required this.total,
+    required this.cantidadTotal,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1F2A44),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.shopping_cart,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$cantidadTotal ${cantidadTotal == 1 ? 'articulo' : 'articulos'}',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _formatCurrency(total),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrimaryButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final Color backgroundColor;
+  const _PrimaryButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    required this.backgroundColor,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14.0),
+          child: Text(label),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SecondaryButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  const _SecondaryButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: Theme.of(context).primaryColor),
+        label: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14.0),
+          child: Text(label),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Theme.of(context).primaryColor, width: 1.4),
+          foregroundColor: Theme.of(context).primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DangerButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  const _DangerButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14.0),
+          child: Text(label),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red.shade50,
+          foregroundColor: Colors.red.shade700,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoBox extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final MaterialColor color;
+  const _InfoBox({
+    required this.icon,
+    required this.message,
+    required this.color,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: color.shade700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: onConfirmarYPagar,
-            icon: const Icon(Icons.payment),
-            label: const Text('Confirmar y Pagar'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  const _SectionTitle({
+    required this.icon,
+    required this.title,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: Theme.of(context).primaryColor),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
           ),
         ),
       ],
     );
   }
+}
 
-  Widget _buildBotonesSegunEstado(
-      BuildContext context, String estado, bool pagado, bool isAdmin) {
-    List<Widget> botones = [];
-
-    switch (estado.toLowerCase()) {
-      case 'pendiente':
-        if (!pagado) {
-          // Pedido confirmado pero no pagado
-          botones.add(
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: onProcederPago,
-                icon: const Icon(Icons.payment),
-                label: const Text('Proceder al Pago'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          );
-          botones.add(const SizedBox(height: 12));
-        }
-
-        // Botón modificar (solo si está pendiente)
-        botones.add(
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: onModificarPedido,
-              icon: const Icon(Icons.edit),
-              label: const Text('Modificar Pedido'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        );
-        botones.add(const SizedBox(height: 12));
-
-        // Botón cancelar
-        botones.add(
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: onCancelarPedido,
-              icon: const Icon(Icons.cancel),
-              label: const Text('Cancelar Pedido'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        );
-        break;
-
-      case 'preparacion':
-      case 'en_preparacion':
-        // Solo admin puede cancelar en preparación
-        if (isAdmin) {
-          botones.add(
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: onCancelarPedido,
-                icon: const Icon(Icons.cancel),
-                label: const Text('Cancelar Pedido (Admin)'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          );
-        } else {
-          // Mostrar mensaje informativo
-          botones.add(
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: const Text(
-                'El pedido está en preparación',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          );
-        }
-        break;
-
-      case 'listo':
-        botones.add(
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: const Text(
-              'Pedido listo para entregar',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        );
-        break;
-
-      case 'pagado':
-      case 'entregado':
-      case 'terminado':
-        botones.add(
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
-            ),
-            child: Text(
-              estado == 'pagado'
-                  ? 'Pedido pagado exitosamente'
-                  : 'Pedido completado',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        );
-        break;
-
-      case 'cancelado':
-        botones.add(
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.red.shade200),
-            ),
-            child: const Text(
-              'Pedido cancelado',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        );
-        break;
-
-      default:
-        // Estado desconocido o nuevo, mostrar botones iniciales
-        return _buildBotonesIniciales(context);
-    }
-
-    return Column(children: botones);
-  }
-
-  String _obtenerTituloSegunEstado(String estado, bool pagado) {
-    switch (estado.toLowerCase()) {
-      case 'pendiente':
-        return pagado ? 'Pedido Pagado' : 'Pedido Pendiente de Pago';
-      case 'preparacion':
-      case 'en_preparacion':
-        return 'Pedido en Preparación';
-      case 'listo':
-        return 'Pedido Listo';
-      case 'pagado':
-        return 'Pedido Pagado';
-      case 'entregado':
-      case 'terminado':
-        return 'Pedido Entregado';
-      case 'cancelado':
-        return 'Pedido Cancelado';
-      default:
-        return 'Tu carrito';
-    }
-  }
+String _formatCurrency(double value) {
+  final formatted = value.toStringAsFixed(0);
+  return '\$${formatted.replaceAllMapped(
+    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+    (match) => '${match[1]}.',
+  )}';
 }

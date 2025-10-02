@@ -168,7 +168,12 @@ class PedidoCard extends ConsumerWidget {
 
 
   Widget _buildItemsList(Color statusColor) {
-    return Container(
+    final baseItems =
+        pedido.initialItems.isNotEmpty ? pedido.initialItems : pedido.items;
+    final extras = pedido.extras;
+    final hasExtras = extras.isNotEmpty;
+
+    final baseContainer = Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.02),
         borderRadius: BorderRadius.circular(16),
@@ -184,7 +189,9 @@ class PedidoCard extends ConsumerWidget {
                     size: 18, color: statusColor.withOpacity(0.9)),
                 const SizedBox(width: 8),
                 Text(
-                  'Productos (${pedido.items.length})',
+                  hasExtras
+                      ? 'Pedido inicial (${baseItems.length})'
+                      : 'Productos (${baseItems.length})',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -206,15 +213,31 @@ class PedidoCard extends ConsumerWidget {
               ],
             ),
           ),
-          ...pedido.items
+          ...baseItems
               .map((item) => _buildItemRow(item, statusColor))
               .toList(),
         ],
       ),
     );
+
+    if (!hasExtras) {
+      return baseContainer;
+    }
+
+    return Column(
+      children: [
+        baseContainer,
+        ...List.generate(
+          extras.length,
+          (index) => _buildExtraSection(extras[index], index),
+        ),
+      ],
+    );
   }
 
-  Widget _buildItemRow(ItemPedido item, Color statusColor) {
+  Widget _buildItemRow(ItemPedido item, Color statusColor,
+      {bool isExtra = false}) {
+    final accent = isExtra ? const Color(0xFF2563EB) : statusColor;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -229,14 +252,14 @@ class PedidoCard extends ConsumerWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.18),
+              color: accent.withOpacity(0.18),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
               child: Text(
                 '${item.cantidad}x',
                 style: TextStyle(
-                  color: statusColor,
+                  color: accent,
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -273,14 +296,13 @@ class PedidoCard extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Icon(Icons.add_circle_outline,
-                                      size: 13,
-                                      color: statusColor.withOpacity(0.9)),
+                                      size: 13, color: accent.withOpacity(0.9)),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       nombre,
                                       style: TextStyle(
-                                        color: statusColor.withOpacity(0.9),
+                                        color: accent.withOpacity(0.9),
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -300,12 +322,12 @@ class PedidoCard extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(Icons.timer,
-                            size: 13, color: statusColor.withOpacity(0.8)),
+                            size: 13, color: accent.withOpacity(0.8)),
                         const SizedBox(width: 4),
                         Text(
                           '${item.tiempoPreparacion} min',
                           style: TextStyle(
-                            color: statusColor.withOpacity(0.85),
+                            color: accent.withOpacity(0.85),
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
                           ),
@@ -320,13 +342,18 @@ class PedidoCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Icon(Icons.sticky_note_2_outlined,
-                            size: 13, color: Colors.white.withOpacity(0.6)),
+                            size: 13,
+                            color: isExtra
+                                ? const Color(0xFFBFDBFE)
+                                : Colors.white.withOpacity(0.6)),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             item.notas!,
-                            style: const TextStyle(
-                              color: Color(0xFFE2E8F0),
+                            style: TextStyle(
+                              color: isExtra
+                                  ? const Color(0xFFDBEAFE)
+                                  : const Color(0xFFE2E8F0),
                               fontSize: 12,
                               fontStyle: FontStyle.italic,
                             ),
@@ -341,6 +368,89 @@ class PedidoCard extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildExtraSection(PedidoAdicion extra, int index) {
+    final accent = const Color(0xFF2563EB);
+    final titulo = 'Agregado ${index + 1} (${extra.items.length})';
+    final momento = _formatExtraTime(extra.createdAt);
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      decoration: BoxDecoration(
+        color: accent.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withOpacity(0.25)),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(Icons.add_circle_outline,
+                    size: 18, color: accent.withOpacity(0.9)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        titulo,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (extra.meseroNombre != null &&
+                          extra.meseroNombre!.trim().isNotEmpty)
+                        Text(
+                          extra.meseroNombre!,
+                          style: const TextStyle(
+                            color: Color(0xFFBFDBFE),
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.timer_outlined,
+                    size: 16, color: Colors.white.withOpacity(0.55)),
+                const SizedBox(width: 4),
+                Text(
+                  momento,
+                  style: const TextStyle(
+                    color: Color(0xFFBFDBFE),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ...extra.items
+              .map((item) => _buildItemRow(item, accent, isExtra: true))
+              .toList(),
+        ],
+      ),
+    );
+  }
+
+  String _formatExtraTime(DateTime? createdAt) {
+    if (createdAt == null) return 'Hace instantes';
+
+    final diff = DateTime.now().difference(createdAt);
+    if (diff.inMinutes < 1) {
+      return 'Hace instantes';
+    } else if (diff.inMinutes < 60) {
+      return 'Hace ${diff.inMinutes} min';
+    } else if (diff.inHours < 24) {
+      final minutes = diff.inMinutes % 60;
+      return 'Hace ${diff.inHours}h ${minutes}m';
+    }
+
+    return DateFormat('dd MMM, HH:mm', 'es').format(createdAt);
   }
 
 

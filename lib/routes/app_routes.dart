@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
@@ -38,6 +38,7 @@ import 'package:restaurante_app/presentation/screens/settings/not_found_screen.d
 import 'package:restaurante_app/presentation/screens/settings/settings_user_screen.dart';
 import 'package:restaurante_app/presentation/screens/splash/splash_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/pedido_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/pedidos/ticket_preview_screen.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/login',
@@ -159,7 +160,7 @@ final GoRouter router = GoRouter(
         //final mesaId = state.pathParameters['mesaId']!;
         final pedidoId = state.pathParameters['pedidoId']!;
         
-        // ✅ OBTENER QUERY PARAMETERS:
+        // âœ… OBTENER QUERY PARAMETERS:
         final queryParams = state.uri.queryParameters;
         
         return SeleccionProductosScreen(
@@ -167,6 +168,21 @@ final GoRouter router = GoRouter(
           mesaId: queryParams['mesaId'],
           mesaNombre: queryParams['mesaNombre'],
           clienteNombre: queryParams['clienteNombre'],
+        );
+      },
+    ),
+
+    GoRoute(
+      path: '/mesero/pedidos/ticket/:pedidoId',
+      builder: (context, state) {
+        final pedidoId = state.pathParameters['pedidoId']!;
+        final query = state.uri.queryParameters;
+        return TicketPreviewScreen(
+          pedidoId: pedidoId,
+          ticketId: query['ticketId'],
+          mesaId: query['mesaId'],
+          mesaNombre: query['mesaNombre'],
+          clienteNombre: query['clienteNombre'],
         );
       },
     ),
@@ -234,3 +250,4 @@ final GoRouter router = GoRouter(
   ],
   errorBuilder: (context, state) => const NotFoundScreen(),
 );
+

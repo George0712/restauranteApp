@@ -81,6 +81,8 @@ class Pedido {
   final DateTime? updatedAt;
   final DateTime? createdAt;
   final List<ItemPedido> items;
+  final List<ItemPedido> initialItems;
+  final List<PedidoAdicion> extras;
   final String? cliente;
   final String? notas;
   final String? meseroId;
@@ -101,6 +103,8 @@ class Pedido {
     this.updatedAt,
     this.createdAt,
     required this.items,
+    this.initialItems = const [],
+    this.extras = const [],
     this.cliente,
     this.notas,
     this.meseroId,
@@ -132,13 +136,16 @@ class Pedido {
       subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
       total: (json['total'] as num?)?.toDouble() ?? 0.0,
       tableNumber: json['tableNumber'],
-      updatedAt: json['updatedAt'] != null 
-          ? (json['updatedAt'] as Timestamp).toDate() 
+      updatedAt: json['updatedAt'] != null
+          ? (json['updatedAt'] as Timestamp).toDate()
           : null,
-      createdAt: json['createdAt'] != null 
-          ? (json['createdAt'] as Timestamp).toDate() 
+      createdAt: json['createdAt'] != null
+          ? (json['createdAt'] as Timestamp).toDate()
           : null,
-      items: _parseItems(json['items']),
+      items: _parsePedidoItems(json['items']),
+      initialItems:
+          _parsePedidoItems(json['initialItems'] ?? json['items']),
+      extras: _parseExtras(json['extrasHistory']),
       cliente: json['cliente'],
       notas: json['notas'],
       meseroId: json['meseroId'],
@@ -161,6 +168,9 @@ class Pedido {
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : null,
       'items': items.map((item) => item.toJson()).toList(),
+      'initialItems': initialItems.map((item) => item.toJson()).toList(),
+      if (extras.isNotEmpty)
+        'extrasHistory': extras.map((extra) => extra.toJson()).toList(),
       'cliente': cliente,
       'notas': notas,
       'meseroId': meseroId,
@@ -173,9 +183,9 @@ class Pedido {
   }
 
   // Función helper para parsing seguro de items
-  static List<ItemPedido> _parseItems(dynamic itemsData) {
+  static List<ItemPedido> _parsePedidoItems(dynamic itemsData) {
     if (itemsData == null) return [];
-    
+
     try {
       if (itemsData is List) {
         return itemsData
@@ -186,8 +196,64 @@ class Pedido {
     } catch (e) {
       print("🚨 Error parseando items: $e");
     }
-    
+
     return [];
+  }
+
+  static List<PedidoAdicion> _parseExtras(dynamic extrasData) {
+    if (extrasData == null) return const [];
+
+    try {
+      if (extrasData is List) {
+        return extrasData
+            .where((extra) => extra != null && extra is Map<String, dynamic>)
+            .map(
+              (extra) =>
+                  PedidoAdicion.fromJson(extra as Map<String, dynamic>),
+            )
+            .toList();
+      }
+    } catch (e) {
+      print('🚨 Error parseando historial de extras: $e');
+    }
+
+    return const [];
+  }
+}
+
+class PedidoAdicion {
+  final List<ItemPedido> items;
+  final DateTime? createdAt;
+  final String? meseroNombre;
+
+  const PedidoAdicion({
+    required this.items,
+    this.createdAt,
+    this.meseroNombre,
+  });
+
+  factory PedidoAdicion.fromJson(Map<String, dynamic> json) {
+    DateTime? fecha;
+    final createdRaw = json['createdAt'];
+    if (createdRaw is Timestamp) {
+      fecha = createdRaw.toDate();
+    } else if (createdRaw is DateTime) {
+      fecha = createdRaw;
+    }
+
+    return PedidoAdicion(
+      items: Pedido._parsePedidoItems(json['items']),
+      createdAt: fecha,
+      meseroNombre: json['meseroNombre'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'items': items.map((item) => item.toJson()).toList(),
+      if (createdAt != null) 'createdAt': Timestamp.fromDate(createdAt!),
+      if (meseroNombre != null) 'meseroNombre': meseroNombre,
+    };
   }
 }
 
