@@ -498,7 +498,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$estadoTexto Â· ${mesa.capacidad} personas',
+                      '$estadoTexto · ${mesa.capacidad} personas',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
@@ -567,18 +567,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
           ),
           const SizedBox(height: 24),
           ..._accionesRapidasPorEstado(mesa),
-          const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => _mostrarOpcionesMesa(mesa),
-              icon: const Icon(Icons.more_horiz, color: Colors.white70),
-              label: const Text(
-                'Mas opciones',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
