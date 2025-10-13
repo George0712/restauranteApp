@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,7 +15,6 @@ import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.d
     as pedidos;
 import 'package:restaurante_app/data/models/mesa_model.dart';
 import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
-import 'package:restaurante_app/presentation/widgets/build_stadistics_mesas.dart';
 import 'package:restaurante_app/presentation/providers/notification/notification_provider.dart';
 
 class MesasScreen extends ConsumerStatefulWidget {
@@ -31,7 +30,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
 
   int? mesaSeleccionadaId;
   String filtro = 'Todas';
-  String searchTerm = '';
   final ScrollController _scrollController = ScrollController();
   Timer? _tiempoTicker;
   DateTime _relojActual = DateTime.now();
@@ -63,10 +61,18 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     });
   }
 
+  Future<void> _onRefresh() async {
+    try {
+      ref.invalidate(mesasStreamProvider);
+      await ref.read(mesasStreamProvider.future);
+    } catch (_) {
+      // Silenciamos errores de refresh para no interrumpir la animación.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mesasAsync = ref.watch(mesasStreamProvider);
-    final notifier = ref.read(mesasMeseroProvider.notifier);
 
     return mesasAsync.when(
       data: (mesas) {
@@ -82,7 +88,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         });
 
         return Scaffold(
-          appBar: _buildAppBar(notifier),
+          appBar: _buildAppBar(),
           extendBodyBehindAppBar: true,
           body: Stack(
             children: [
@@ -99,16 +105,17 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 90),
-                    _buildEstadisticas(notifier, mesas),
-                    _buildFiltros(),
-                    _buildBuscador(),
-                    Expanded(
-                      child: _buildGridMesas(mesasFiltradas),
-                    ),
-                  ],
+                child: SafeArea(
+                  bottom: false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildResumenMesas(mesas),
+                      Expanded(
+                        child: _buildGridMesas(mesasFiltradas),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -122,7 +129,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                       });
                     },
                     child: Container(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -239,208 +246,199 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(MesasNotifier notifier) {
+  PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
       leading: IconButton(
-        icon:
-            const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
         onPressed: () => context.pop(),
+        tooltip: 'Volver',
       ),
-      title: const Text(
-        'Gestión de Mesas',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          fontSize: 24,
-        ),
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh_outlined, color: Colors.white70),
-          onPressed: () => ref.refresh(mesasStreamProvider),
-        ),
-      ],
     );
   }
 
-  Widget _buildEstadisticas(MesasNotifier notifier, List<MesaModel> mesas) {
+  Widget _buildResumenMesas(List<MesaModel> mesas) {
+    final total = mesas.length;
     final disponibles = mesas.where((m) => m.estado == 'disponible').length;
     final ocupadas = mesas.where((m) => m.estado == 'ocupada').length;
     final reservadas = mesas.where((m) => m.estado == 'reservada').length;
 
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            children: [
-              Icon(Icons.dashboard_outlined, color: Colors.white70, size: 24),
-              SizedBox(width: 8),
-              Text(
-                'Estadísticas de Mesas',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           Row(
             children: [
-              buildEstadisticaItem(
-                'Disponibles',
-                disponibles.toString(),
-                Colors.green,
-                Icons.check_circle_outline,
+              const Text(
+                'Mesas',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              buildEstadisticaItem(
-                'Ocupadas',
-                ocupadas.toString(),
-                Colors.orange,
-                Icons.people_outline,
-              ),
-              buildEstadisticaItem(
-                'Reservadas',
-                reservadas.toString(),
-                Colors.blue,
-                Icons.event_outlined,
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.16),
+                  ),
+                ),
+                child: Text(
+                  '$total en sala',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ],
           ),
+          const SizedBox(height: 6),
+          Text(
+            'Controla el estado del salón en tiempo real.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.65),
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildStatChip(
+                  label: 'Todas',
+                  value: total,
+                  color: const Color(0xFF8B5CF6),
+                  icon: Icons.table_restaurant,
+                  selected: filtro == 'Todas',
+                  onTap: () => setState(() => filtro = 'Todas'),
+                ),
+                const SizedBox(width: 10),
+                _buildStatChip(
+                  label: 'Disponibles',
+                  value: disponibles,
+                  color: const Color(0xFF34D399),
+                  icon: Icons.event_available,
+                  selected: filtro == 'disponible',
+                  onTap: () => setState(() => filtro = 'disponible'),
+                ),
+                const SizedBox(width: 10),
+                _buildStatChip(
+                  label: 'Ocupadas',
+                  value: ocupadas,
+                  color: const Color(0xFFF59E0B),
+                  icon: Icons.groups_outlined,
+                  selected: filtro == 'ocupada',
+                  onTap: () => setState(() => filtro = 'ocupada'),
+                ),
+                const SizedBox(width: 10),
+                _buildStatChip(
+                  label: 'Reservadas',
+                  value: reservadas,
+                  color: const Color(0xFF60A5FA),
+                  icon: Icons.event_note_outlined,
+                  selected: filtro == 'reservada',
+                  onTap: () => setState(() => filtro = 'reservada'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
 
-  Widget _buildFiltros() {
-    final filtros = ['Todas', 'disponible', 'ocupada', 'reservada'];
+  Widget _buildStatChip({
+    required String label,
+    required int value,
+    required Color color,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final backgroundColor =
+        selected ? color.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.08);
+    final borderColor =
+        selected ? color.withValues(alpha: 0.65) : Colors.white.withValues(alpha: 0.14);
+    final valueColor = selected ? Colors.white : color;
+    final iconColor = selected ? Colors.white : color;
 
-    return Container(
-      height: 45,
-      margin: const EdgeInsets.all(16),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: filtros.length,
-        itemBuilder: (context, index) {
-          final filtroActual = filtros[index];
-          final isSelected = filtro == filtroActual;
-
-          return GestureDetector(
-            onTap: () => setState(() => filtro = filtroActual),
-            child: Container(
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF8B5CF6)
-                    : Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFF8B5CF6)
-                      : Colors.white.withOpacity(0.3),
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Text(
-                filtroActual,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.white70,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildBuscador() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: TextField(
-        onChanged: (value) => setState(() => searchTerm = value.trim()),
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: 'Buscar por mesa, cliente o capacidad',
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-          prefixIcon: const Icon(Icons.search, color: Colors.white70),
-          suffixIcon: searchTerm.isNotEmpty
-              ? IconButton(
-                  onPressed: () => setState(() => searchTerm = ''),
-                  icon: const Icon(Icons.clear, color: Colors.white54),
-                )
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: borderColor),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.28),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
               : null,
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.08),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide(color: Colors.white.withOpacity(0.15)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
-          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: selected ? color.withValues(alpha: 0.4) : color.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value.toString(),
+                  style: TextStyle(
+                    color: valueColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: selected ? 0.9 : 0.65),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
   List<MesaModel> _filtrarMesas(List<MesaModel> mesas) {
-    final filtradasPorEstado = filtro == 'Todas'
-        ? mesas
-        : mesas.where((m) => m.estado == filtro).toList();
-
-    if (searchTerm.isEmpty) {
-      return filtradasPorEstado;
+    if (filtro == 'Todas') {
+      return mesas;
     }
-
-    final termino = searchTerm.toLowerCase();
-    return filtradasPorEstado.where((mesa) {
-      final numeroMesa = 'mesa ${mesa.id}'.toLowerCase();
-      final cliente = (mesa.cliente ?? '').toLowerCase();
-      final capacidad = mesa.capacidad.toString();
-
-      return numeroMesa.contains(termino) ||
-          mesa.id.toString().contains(termino) ||
-          cliente.contains(termino) ||
-          capacidad.contains(termino);
-    }).toList();
+    return mesas.where((m) => m.estado == filtro).toList();
   }
 
   MesaModel? _obtenerMesaSeleccionada(List<MesaModel> mesas, int? seleccionId) {
@@ -482,7 +480,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             children: [
               CircleAvatar(
                 radius: 24,
-                backgroundColor: colorEstado.withOpacity(0.18),
+                backgroundColor: colorEstado.withValues(alpha: 0.18),
                 child: Icon(iconoEstado, color: colorEstado),
               ),
               const SizedBox(width: 16),
@@ -500,7 +498,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$estadoTexto · ${mesa.capacidad} personas',
+                      '$estadoTexto Â· ${mesa.capacidad} personas',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
@@ -832,7 +830,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          side: BorderSide(color: borderColor.withOpacity(0.8), width: 1.5),
+          side: BorderSide(color: borderColor.withValues(alpha: 0.8), width: 1.5),
           foregroundColor: Colors.white,
         ),
       ),
@@ -887,54 +885,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
   }
 
   Widget _buildGridMesas(List<MesaModel> mesas) {
-    if (mesas.isEmpty) {
-      final buscando = searchTerm.isNotEmpty;
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.table_restaurant_outlined,
-              size: 64,
-              color: Colors.white.withOpacity(0.4),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              buscando
-                  ? 'No encontramos resultados para "$searchTerm"'
-                  : 'No hay mesas ${filtro == 'Todas' ? '' : filtro.toLowerCase()}',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.white.withOpacity(0.6),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            if (buscando) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Verifica el número de mesa o el nombre del cliente',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withOpacity(0.5),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ] else if (filtro == 'Todas') ...[
-              const SizedBox(height: 8),
-              Text(
-                'Contacta al administrador para crear mesas',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withOpacity(0.5),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ],
-        ),
-      );
-    }
-
+    final sinFiltro = filtro == 'Todas';
     final width = MediaQuery.of(context).size.width;
     final crossAxisCount = _gridColumnCount(width);
     final childAspectRatio = width >= 1100
@@ -943,20 +894,76 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             ? 0.95
             : 0.8;
 
-    return GridView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: mesas.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: childAspectRatio,
-        mainAxisSpacing: 14,
-        crossAxisSpacing: 14,
-      ),
-      itemBuilder: (context, index) {
-        final mesa = mesas[index];
-        return _buildMesaCard(mesa);
-      },
+    return RefreshIndicator(
+      color: const Color(0xFF8B5CF6),
+      backgroundColor: Colors.transparent,
+      onRefresh: _onRefresh,
+      child: mesas.isEmpty
+          ? ListView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 120,
+              ),
+              children: [
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.table_restaurant_outlined,
+                        size: 64,
+                        color: Colors.white.withValues(alpha: 0.4),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        sinFiltro
+                            ? 'No hay mesas registradas'
+                            : 'No hay mesas ${filtro.toLowerCase()}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        sinFiltro
+                            ? 'Contacta al administrador para crear mesas.'
+                            : 'Desliza hacia abajo para actualizar.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          : GridView.builder(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
+              itemCount: mesas.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: childAspectRatio,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+              ),
+              itemBuilder: (context, index) {
+                final mesa = mesas[index];
+                return _buildMesaCard(mesa);
+              },
+            ),
     );
   }
 
@@ -986,17 +993,17 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(isSelected ? 0.2 : 0.12),
+          color: Colors.white.withValues(alpha: isSelected ? 0.2 : 0.12),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isSelected
                 ? const Color(0xFF8B5CF6)
-                : Colors.white.withOpacity(0.18),
+                : Colors.white.withValues(alpha: 0.18),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isSelected ? 0.28 : 0.18),
+              color: Colors.black.withValues(alpha: isSelected ? 0.28 : 0.18),
               blurRadius: isSelected ? 16 : 12,
               offset: const Offset(0, 6),
             ),
@@ -1011,9 +1018,9 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: colorEstado.withOpacity(0.16),
+                    color: colorEstado.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: colorEstado.withOpacity(0.35)),
+                    border: Border.all(color: colorEstado.withValues(alpha: 0.35)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1047,7 +1054,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             Text(
               '${mesa.capacidad} personas',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.65),
+                color: Colors.white.withValues(alpha: 0.65),
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -1076,18 +1083,18 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               Text(
                 'Disponible para asignar',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.6),
+                  color: Colors.white.withValues(alpha: 0.6),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
             const Spacer(),
-            Divider(color: Colors.white.withOpacity(0.12)),
+            Divider(color: Colors.white.withValues(alpha: 0.12)),
             Text(
               isSelected ? 'Acciones rápidas' : 'Toca para gestionar',
               style: TextStyle(
-                color: Colors.white70.withOpacity(0.4),
+                color: Colors.white70.withValues(alpha: 0.4),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -1450,7 +1457,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -1467,7 +1474,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             '${mesa.capacidad} personas',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
             ),
           ),
           if (mesa.cliente != null) ...[
