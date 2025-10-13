@@ -16,7 +16,11 @@ class CantidadSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        color: Colors.grey.shade800.withValues(alpha: 0.5),
+        border: Border.all(
+          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -26,22 +30,31 @@ class CantidadSelector extends StatelessWidget {
             onPressed: enabled && cantidad > 1 
                 ? () => onCantidadChanged(cantidad - 1)
                 : null,
-            icon: const Icon(Icons.remove),
+            icon: Icon(
+              Icons.remove,
+              color: enabled && cantidad > 1 
+                  ? Colors.white
+                  : Colors.white38,
+            ),
           ),
           SizedBox(
             width: 40,
             child: Text(
               cantidad.toString(),
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: enabled ? Colors.white : Colors.white54,
               ),
             ),
           ),
           IconButton(
             onPressed: enabled ? () => onCantidadChanged(cantidad + 1) : null,
-            icon: const Icon(Icons.add),
+            icon: Icon(
+              Icons.add,
+              color: enabled ? Colors.white : Colors.white38,
+            ),
           ),
         ],
       ),

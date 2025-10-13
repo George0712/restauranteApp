@@ -73,22 +73,37 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
   @override
   Widget build(BuildContext context) {
     final adicionalesAsync = ref.watch(additionalProvider);
-    final precioTotal = widget.producto.price * cantidad;
+    final precioTotal = _calcularPrecioTotal();
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1A1B23),
+            Color(0xFF2D2E37),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 15,
+            offset: const Offset(0, -3),
+          ),
+        ],
       ),
       child: Column(
         children: [
+          // HANDLE BAR
           Container(
             width: 40,
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: Colors.white.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -98,244 +113,466 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: widget.producto.photo != null &&
-                                widget.producto.photo!.isNotEmpty
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  widget.producto.photo!,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder:
-                                      (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        value: loadingProgress
-                                                    .expectedTotalBytes !=
-                                                null
-                                            ? loadingProgress
-                                                    .cumulativeBytesLoaded /
-                                                loadingProgress
-                                                    .expectedTotalBytes!
-                                            : null,
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Center(
-                                      child: Icon(
-                                        Icons.fastfood,
-                                        size: 32,
-                                        color: Colors.grey,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            : const Center(
-                                child: Icon(
-                                  Icons.fastfood,
-                                  size: 32,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.producto.name,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '\$${widget.producto.price.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  // HEADER COMPACTO DEL PRODUCTO
+                  _buildProductHeader(),
                   const SizedBox(height: 24),
+                  
+                  // INGREDIENTES
                   if (widget.producto.ingredientes.isNotEmpty) ...[
-                    const Text(
-                      'Ingredientes',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.producto.ingredientes,
-                      style: const TextStyle(fontSize: 14),
-                    ),
+                    _buildIngredientesSection(),
+                    const SizedBox(height: 20),
                   ],
-                  const SizedBox(height: 24),
+                  
+                  // ADICIONALES
                   adicionalesAsync.when(
-                    data: (adicionales) {
-                      final disponibles = adicionales
-                          .where((adicional) => adicional.disponible)
-                          .toList()
-                        ..sort(
-                          (a, b) => a.name
-                              .toLowerCase()
-                              .compareTo(b.name.toLowerCase()),
-                        );
-                      if (disponibles.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'No hay adicionales disponibles en este momento.',
-                            style: TextStyle(color: Colors.black54),
-                          ),
-                        );
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Adicionales',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          ...disponibles.map(
-                            (adicional) => CheckboxListTile(
-                              title: Text(adicional.name),
-                              subtitle: Text(
-                                '+\$${adicional.price.toStringAsFixed(0).replaceAllMapped(
-                                      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                      (Match m) => '${m[1]}.',
-                                    )}',
-                              ),
-                              value: adicionalesSeleccionados
-                                  .contains(adicional.id),
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  if (value == true) {
-                                    adicionalesSeleccionados.add(adicional.id);
-                                  } else {
-                                    adicionalesSeleccionados
-                                        .remove(adicional.id);
-                                  }
-                                });
-                              },
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) => Text('Error: $error'),
+                    data: (adicionales) => _buildAdicionalesSection(adicionales),
+                    loading: () => _buildLoadingSection(),
+                    error: (error, stack) => _buildErrorSection(error.toString()),
                   ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Notas especiales',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _notasController,
-                    decoration: InputDecoration(
-                      hintText: 'Instrucciones especiales para la cocina...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Cantidad',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      CantidadSelector(
-                        cantidad: cantidad,
-                        onCantidadChanged: (value) =>
-                            setState(() => cantidad = value),
-                        enabled: widget.producto.disponible,
-                      ),
-                      const Spacer(),
-                      Text(
-                        'Total: \$${precioTotal.toStringAsFixed(0).replaceAllMapped(
-                              RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                              (Match m) => '${m[1]}.',
-                            )}',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 20),
+                  
+                  // NOTAS
+                  _buildNotasSection(),
+                  const SizedBox(height: 20),
+                  
+                  // CANTIDAD Y TOTAL
+                  _buildCantidadSection(precioTotal),
                 ],
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(24),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed:
-                    widget.producto.disponible ? _agregarAlCarrito : null,
-                icon: const Icon(Icons.add_shopping_cart),
-                label: const Text('Agregar al carrito'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+          // BOTÓN DE AGREGAR
+          _buildBottomButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductHeader() {
+    return Row(
+      children: [
+        // IMAGEN DEL PRODUCTO
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: widget.producto.photo != null && widget.producto.photo!.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    widget.producto.photo!,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                          strokeWidth: 2,
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(
+                          Icons.fastfood,
+                          size: 32,
+                          color: Colors.grey,
+                        ),
+                      );
+                    },
+                  ),
+                )
+              : const Center(
+                  child: Icon(
+                    Icons.fastfood,
+                    size: 32,
+                    color: Colors.grey,
                   ),
                 ),
+        ),
+        const SizedBox(width: 16),
+        // INFORMACIÓN DEL PRODUCTO
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.producto.name,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text(
+                    '\$${widget.producto.price.toStringAsFixed(0).replaceAllMapped(
+                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                          (Match m) => '${m[1]}.',
+                        )}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      color: Color(0xFF6366F1),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: widget.producto.disponible
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFFEF4444),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      widget.producto.disponible ? 'Disponible' : 'No disponible',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIngredientesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Ingredientes',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            widget.producto.ingredientes,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.white70,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdicionalesSection(List<AdditionalModel> adicionales) {
+    final disponibles = adicionales
+        .where((adicional) => adicional.disponible)
+        .toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    
+    if (disponibles.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Adicionales',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade800.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Text(
+              'No hay adicionales disponibles en este momento.',
+              style: TextStyle(
+                color: Colors.white54,
+                fontSize: 14,
               ),
             ),
           ),
         ],
+      );
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Adicionales',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...disponibles.map((adicional) => _buildAdicionalTile(adicional)).toList(),
+      ],
+    );
+  }
+
+  Widget _buildAdicionalTile(AdditionalModel adicional) {
+    final isSelected = adicionalesSeleccionados.contains(adicional.id);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: CheckboxListTile(
+        title: Text(
+          adicional.name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+          ),
+        ),
+        subtitle: Text(
+          '+\$${adicional.price.toStringAsFixed(0).replaceAllMapped(
+                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                (Match m) => '${m[1]}.',
+              )}',
+          style: TextStyle(
+            color: Theme.of(context).primaryColor,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+        value: isSelected,
+        onChanged: (bool? value) {
+          setState(() {
+            if (value == true) {
+              adicionalesSeleccionados.add(adicional.id);
+            } else {
+              adicionalesSeleccionados.remove(adicional.id);
+            }
+          });
+        },
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        controlAffinity: ListTileControlAffinity.trailing,
       ),
     );
+  }
+
+  Widget _buildNotasSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Notas especiales',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _notasController,
+          style: const TextStyle(color: Colors.white, fontSize: 15),
+          decoration: InputDecoration(
+            hintText: 'Instrucciones especiales para la cocina...',
+            hintStyle: TextStyle(
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade800.withValues(alpha: 0.3),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.all(16),
+          ),
+          maxLines: 3,
+          textCapitalization: TextCapitalization.sentences,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCantidadSection(double precioTotal) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Cantidad',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            CantidadSelector(
+              cantidad: cantidad,
+              onCantidadChanged: (value) => setState(() => cantidad = value),
+              enabled: widget.producto.disponible,
+            ),
+            const Spacer(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text(
+                  'Total',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '\$${precioTotal.toStringAsFixed(0).replaceAllMapped(
+                        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                        (Match m) => '${m[1]}.',
+                      )}',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomButton() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: widget.producto.disponible ? _agregarAlCarrito : null,
+          icon: const Icon(Icons.add_shopping_cart),
+          label: const Text('Agregar al carrito'),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            backgroundColor: widget.producto.disponible
+                ? Theme.of(context).primaryColor
+                : Colors.grey.shade600,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Adicionales',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorSection(String error) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Adicionales',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade800.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            'Error: $error',
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  double _calcularPrecioTotal() {
+    double total = widget.producto.price * cantidad;
+    
+    // Agregar precio de adicionales
+    final adicionalesAsync = ref.read(additionalProvider);
+    adicionalesAsync.whenData((adicionales) {
+      for (final adicionalId in adicionalesSeleccionados) {
+        final adicional = adicionales.firstWhere(
+          (a) => a.id == adicionalId,
+          orElse: () => AdditionalModel(
+            id: '',
+            name: '',
+            price: 0,
+            disponible: false,
+          ),
+        );
+        total += adicional.price * cantidad;
+      }
+    });
+    
+    return total;
   }
 }

@@ -100,10 +100,37 @@ class CarritoBottomSheet extends ConsumerWidget {
                               );
                               return adicional.name;
                             }).toList();
-                            return CarritoItemSlide(
-                              item: item,
-                              nombresAdicionales: nombresAdicionales,
-                              index: index,
+                            return StreamBuilder<DocumentSnapshot>(
+                              stream: pedidoId != null
+                                  ? FirebaseFirestore.instance
+                                      .collection('pedido')
+                                      .doc(pedidoId)
+                                      .snapshots()
+                                  : null,
+                              builder: (context, snapshot) {
+                                bool isReadOnly = false;
+                                if (pedidoId != null && snapshot.hasData && snapshot.data!.exists) {
+                                  final pedidoData = snapshot.data!.data() as Map<String, dynamic>;
+                                  final estado = (pedidoData['status'] ?? 'pendiente').toString().toLowerCase();
+                                  final estadoNormalizado = estado.replaceAll(' ', '_');
+                                  const estadosFinalizados = {
+                                    'terminado',
+                                    'entregado',
+                                    'completado',
+                                    'pagado',
+                                    'finalizado',
+                                    'cerrado',
+                                    'listo_para_pago',
+                                  };
+                                  isReadOnly = estadosFinalizados.contains(estadoNormalizado);
+                                }
+                                return CarritoItemSlide(
+                                  item: item,
+                                  nombresAdicionales: nombresAdicionales,
+                                  index: index,
+                                  isReadOnly: isReadOnly,
+                                );
+                              },
                             );
                           }).toList(),
                       ],

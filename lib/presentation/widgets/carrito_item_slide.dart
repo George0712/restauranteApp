@@ -8,12 +8,14 @@ class CarritoItemSlide extends ConsumerWidget {
   final ItemCarrito item;
   final List<String> nombresAdicionales;
   final int index;
+  final bool isReadOnly;
 
   const CarritoItemSlide({
     super.key,
     required this.item,
     required this.nombresAdicionales,
     required this.index,
+    this.isReadOnly = false,
   });
 
   @override
@@ -26,6 +28,101 @@ class CarritoItemSlide extends ConsumerWidget {
         0;
     final totalItem = (item.precioUnitario + modsPrecio) * item.cantidad;
 
+    final cardContent = Card(
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      color: Colors.white.withValues(alpha: 0.05),
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Imagen del producto
+            _buildProductImage(),
+            const SizedBox(width: 12),
+            
+            // Información del producto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.producto.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  
+                  if (nombresAdicionales.isNotEmpty) ...[
+                    Text(
+                      'Adicionales: ${nombresAdicionales.join(", ")}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  
+                  if (item.notas?.isNotEmpty ?? false) ...[
+                    Text(
+                      'Nota: ${item.notas}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: Colors.white.withValues(alpha: 0.7),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                  ] else 
+                    const SizedBox(height: 8),
+                  
+                  // Precio y controles de cantidad
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '\$${totalItem.toStringAsFixed(0).replaceAllMapped(
+                              RegExp(r'(\\d)(?=(\\d{3})+(?!\\d))'),
+                              (Match m) => '${m[1]}.',
+                            )}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF8B5CF6),
+                        ),
+                      ),
+                      isReadOnly
+                          ? _buildReadOnlyQuantity()
+                          : _buildCantidadControls(ref, carritoController),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Si es solo lectura, mostrar solo la card sin Dismissible
+    if (isReadOnly) {
+      return cardContent;
+    }
+
+    // Si no es solo lectura, envolver con Dismissible
     return Dismissible(
       key: Key('${item.producto.id}_$index'),
       direction: DismissDirection.endToStart,
@@ -83,92 +180,7 @@ class CarritoItemSlide extends ConsumerWidget {
           ),
         );
       },
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        color: Colors.white.withValues(alpha: 0.05),
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Imagen del producto
-              _buildProductImage(),
-              const SizedBox(width: 12),
-              
-              // Información del producto
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.producto.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    
-                    if (nombresAdicionales.isNotEmpty) ...[
-                      Text(
-                        'Adicionales: ${nombresAdicionales.join(", ")}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                    ],
-                    
-                    if (item.notas?.isNotEmpty ?? false) ...[
-                      Text(
-                        'Nota: ${item.notas}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.white.withValues(alpha: 0.7),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                    ] else 
-                      const SizedBox(height: 8),
-                    
-                    // Precio y controles de cantidad
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '\$${totalItem.toStringAsFixed(0).replaceAllMapped(
-                                RegExp(r'(\\d)(?=(\\d{3})+(?!\\d))'),
-                                (Match m) => '${m[1]}.',
-                              )}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Color(0xFF8B5CF6),
-                          ),
-                        ),
-                        _buildCantidadControls(ref, carritoController),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: cardContent,
     );
   }
 
@@ -199,6 +211,36 @@ class CarritoItemSlide extends ConsumerWidget {
                 color: Colors.grey,
                 size: 30,
               ),
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyQuantity() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.shopping_bag_outlined,
+            size: 14,
+            color: Colors.white.withValues(alpha: 0.6),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '${item.cantidad}',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
       ),
     );
   }

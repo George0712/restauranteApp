@@ -46,6 +46,7 @@ class _SeleccionProductosScreenState
   final TextEditingController _searchController = TextEditingController();
   bool pedidoConfirmado = false;
   bool _agregandoExtras = false;
+  bool _isScrolled = false;
 
   @override
   void initState() {
@@ -67,6 +68,7 @@ class _SeleccionProductosScreenState
           TabController(length: nombresCategorias.length, vsync: this);
     });
   }
+
 
   // ✅ NUEVO: Metodo para cargar el carrito desde Firestore
   Future<void> _cargarCarritoDelPedido() async {
@@ -97,7 +99,7 @@ class _SeleccionProductosScreenState
     final carrito = ref.watch(carritoProvider);
 
     return Scaffold(
-      appBar: _buildAppBar(context, carrito),
+      appBar: _buildAnimatedAppBar(context, carrito),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
@@ -112,7 +114,6 @@ class _SeleccionProductosScreenState
           ),
         ),
         child: SafeArea(
-          bottom: false,
           child: productosAsync.when(
             data: (productos) {
               final categorias = [
@@ -121,12 +122,33 @@ class _SeleccionProductosScreenState
               ];
               return Column(
                 children: [
-                  _buildHeader(),
-                  _buildSearchBar(),
-                  _buildCategorias(categorias),
+                  // Header normal solo cuando NO está scrolled
+                  if (!_isScrolled) ...[
+                    _buildHeader(),
+                    _buildSearchBar(),
+                    _buildCategorias(categorias),
+                  ],
                   if (_agregandoExtras) _buildExtrasBanner(),
                   Expanded(
-                    child: _buildProductosGrid(productos),
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (ScrollNotification scrollInfo) {
+                        if (scrollInfo is ScrollUpdateNotification) {
+                          final pixels = scrollInfo.metrics.pixels;
+                          // Usar histéresis para evitar rebotes
+                          final shouldBeScrolled = _isScrolled 
+                              ? pixels > 20  // threshold más bajo para volver
+                              : pixels > 40; // threshold más alto para activar
+                          
+                          if (shouldBeScrolled != _isScrolled) {
+                            setState(() {
+                              _isScrolled = shouldBeScrolled;
+                            });
+                          }
+                        }
+                        return false;
+                      },
+                      child: _buildProductosGrid(productos),
+                    ),
                   ),
                 ],
               );
@@ -170,60 +192,340 @@ class _SeleccionProductosScreenState
     );
   }
 
-  PreferredSizeWidget _buildAppBar(
-      BuildContext context, List<ItemCarrito> carrito) {
-    return AppBar(
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_outlined,
-            color: Colors.white),
-        onPressed: () => context.pop(),
-        tooltip: 'Volver',
-      ),
-      actions: [
-        Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.shopping_cart_outlined,
-                  color: Colors.white),
-              onPressed: () => _mostrarCarrito(context),
-              tooltip: 'Ver carrito',
+  PreferredSizeWidget _buildAnimatedAppBar(BuildContext context, List<ItemCarrito> carrito) {
+    return PreferredSize(
+      preferredSize: Size.fromHeight(_isScrolled ? 100 : 56),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOutCubic,
+        decoration: BoxDecoration(
+          gradient: _isScrolled 
+              ? LinearGradient(
+                  colors: [
+                    const Color(0xFF0F0F23).withValues(alpha: 0.96),
+                    const Color(0xFF1A1A2E).withValues(alpha: 0.96),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          border: _isScrolled ? Border(
+            bottom: BorderSide(
+              color: Colors.white.withValues(alpha: 0.15),
+              width: 1,
             ),
-            if (carrito.isNotEmpty)
-              Positioned(
-                right: 6,
-                top: 6,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+          ) : null,
+          boxShadow: _isScrolled ? [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ] : null,
+        ),
+        child: SafeArea(
+          child: ClipRect(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, -0.1),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeInOutCubic,
+                    )),
+                    child: child,
                   ),
-                  child: Text(
-                    carrito
-                        .fold(0, (total, item) => total + item.cantidad)
-                        .toString(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                );
+              },
+              child: _isScrolled 
+                  ? _buildCompactAppBarContent(context, carrito) 
+                  : _buildNormalAppBarContent(context, carrito),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNormalAppBarContent(BuildContext context, List<ItemCarrito> carrito) {
+    return Padding(
+      key: const ValueKey('normal'),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_outlined, 
+              color: Colors.white,
+            ),
+            onPressed: () => context.pop(),
+          ),
+          const Spacer(),
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.shopping_cart_outlined, 
+                  color: Colors.white,
+                ),
+                onPressed: () => _mostrarCarrito(context),
+                tooltip: 'Ver carrito',
+              ),
+              if (carrito.isNotEmpty)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF8B5CF6),
+                          Color(0xFF7C3AED),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      carrito.fold(0, (total, item) => total + item.cantidad).toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactAppBarContent(BuildContext context, List<ItemCarrito> carrito) {
+    final categoriasAsync = ref.watch(categoryDisponibleProvider);
+    
+    return categoriasAsync.when(
+      data: (categoriasList) {
+        final nombresCategorias = [
+          'Todas',
+          ...categoriasList.map((c) => c.name).toList()
+        ];
+        
+        return Padding(
+          key: const ValueKey('compact'),
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // PRIMERA FILA: Back button + Buscador
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_outlined, 
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    onPressed: () => context.pop(),
+                  ),
+                  const SizedBox(width: 2),
+                  Expanded(
+                    child: SizedBox(
+                      height: 34,
+                      child: TextField(
+                        controller: _searchController,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        decoration: InputDecoration(
+                          hintText: 'Buscar productos...',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6), 
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search, 
+                            color: Colors.white.withValues(alpha: 0.7), 
+                            size: 20,
+                          ),
+                          suffixIcon: filtroTexto.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.clear, 
+                                    color: Colors.white.withValues(alpha: 0.7), 
+                                    size: 18,
+                                  ),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => filtroTexto = '');
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF8B5CF6), 
+                              width: 1.5,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withValues(alpha: 0.08),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, 
+                            vertical: 8,
+                          ),
+                        ),
+                        onChanged: (value) => setState(() => filtroTexto = value),
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 4),
+              // SEGUNDA FILA: Filtros de categorías
+              SizedBox(
+                height: 30,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  itemCount: nombresCategorias.length,
+                  itemBuilder: (context, index) {
+                    final categoria = nombresCategorias[index];
+                    final isSelected = categoriaSeleccionada == categoria;
+                    
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          categoriaSeleccionada = categoria;
+                          if (index == 0) {
+                            categoriaIdSeleccionada = '';
+                          } else {
+                            categoriaIdSeleccionada = categoriasList[index - 1].id;
+                          }
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeInOut,
+                        margin: EdgeInsets.only(
+                          left: index == 0 ? 0 : 6,
+                          right: index == nombresCategorias.length - 1 ? 0 : 6,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16, 
+                          vertical: 6,
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: index == 0 ? 60 : 50, // "Todas" más ancho
+                          maxWidth: 120,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: isSelected 
+                              ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFF8B5CF6),
+                                    Color(0xFF7C3AED),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
+                          color: isSelected 
+                              ? null 
+                              : Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected 
+                                ? Colors.transparent
+                                : Colors.white.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                          boxShadow: isSelected ? [
+                            BoxShadow(
+                              color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ] : null,
+                        ),
+                        child: Center(
+                          child: Text(
+                            categoria.length > 9 
+                                ? '${categoria.substring(0, 8)}...' 
+                                : categoria,
+                            style: TextStyle(
+                              color: isSelected 
+                                  ? Colors.white 
+                                  : Colors.white.withValues(alpha: 0.9),
+                              fontWeight: isSelected 
+                                  ? FontWeight.w700 
+                                  : FontWeight.w500,
+                              fontSize: 11,
+                              letterSpacing: 0.2,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => Padding(
+        key: const ValueKey('loading'),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Row(
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios_new_outlined, 
+                color: Colors.white,
+              ),
+              onPressed: () => context.pop(),
+            ),
+            const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
+                ),
+              ),
+            ),
           ],
         ),
-        const SizedBox(width: 8),
-      ],
+      ),
+      error: (error, stack) => _buildNormalAppBarContent(context, carrito),
     );
   }
 
@@ -320,6 +622,7 @@ class _SeleccionProductosScreenState
       ),
     );
   }
+
 
   Widget _buildExtrasBanner() {
     return Padding(
@@ -442,6 +745,7 @@ class _SeleccionProductosScreenState
     );
   }
 
+
   Widget _buildProductosGrid(List<ProductModel> productos) {
     final productosFiltrados = productos.where((producto) {
       final matchesCategoria = categoriaIdSeleccionada.isEmpty ||
@@ -481,7 +785,7 @@ class _SeleccionProductosScreenState
         itemCount: productosFiltrados.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-          childAspectRatio: 0.9,
+          childAspectRatio: 0.8,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
         ),
@@ -493,45 +797,56 @@ class _SeleccionProductosScreenState
     );
   }
 
+
   Widget _buildProductoCard(ProductModel producto) {
     return GestureDetector(
       onTap: () => _mostrarDetalleProducto(producto),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             colors: [
-              Color(0xFF2D2E37),
-              Color(0xFF1A1B23),
+              Colors.grey.shade800.withValues(alpha: 0.95),
+              Colors.grey.shade900.withValues(alpha: 0.98),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: producto.disponible
-                ? const Color(0xFF6366F1).withValues(alpha: 0.4)
+                ? const Color(0xFF6366F1).withValues(alpha: 0.5)
                 : const Color(0xFFEF4444).withValues(alpha: 0.4),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 8,
-              offset: const Offset(0, 2),
+              offset: const Offset(0, 3),
+            ),
+            BoxShadow(
+              color: producto.disponible 
+                  ? const Color(0xFF6366F1).withValues(alpha: 0.05)
+                  : Colors.transparent,
+              blurRadius: 15,
+              spreadRadius: 1,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // SECCIÓN DE IMAGEN - 60% del espacio
             Expanded(
-              flex: 3,
+              flex: 6,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade800,
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
                   ),
                 ),
                 child: Stack(
@@ -539,8 +854,8 @@ class _SeleccionProductosScreenState
                     if (producto.photo != null && producto.photo!.isNotEmpty)
                       ClipRRect(
                         borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
+                          topLeft: Radius.circular(18),
+                          topRight: Radius.circular(18),
                         ),
                         child: Image.network(
                           producto.photo!,
@@ -551,51 +866,126 @@ class _SeleccionProductosScreenState
                             if (loadingProgress == null) return child;
                             return Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes !=
-                                        null
+                                value: loadingProgress.expectedTotalBytes != null
                                     ? loadingProgress.cumulativeBytesLoaded /
                                         loadingProgress.expectedTotalBytes!
                                     : null,
                                 valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                                strokeWidth: 3,
                               ),
                             );
                           },
                           errorBuilder: (context, error, stackTrace) {
-                            return Center(
-                              child: Icon(
-                                Icons.fastfood,
-                                size: 48,
-                                color: const Color(0xFF6366F1).withValues(alpha: 0.8),
+                          return Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFF6366F1).withValues(alpha: 0.15),
+                                  const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                            );
+                            ),
+                            child: const Center(
+                              child: Icon(
+                                Icons.fastfood_rounded,
+                                size: 52,
+                                color: Color(0xFF6366F1),
+                              ),
+                            ),
+                          );
                           },
                         ),
                       )
                     else
-                      Center(
-                        child: Icon(
-                          Icons.fastfood,
-                          size: 48,
-                          color: const Color(0xFF6366F1).withValues(alpha: 0.8),
-                        ),
-                      ),
-                    if (!producto.disponible)
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.8),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(16),
-                            topRight: Radius.circular(16),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF6366F1).withValues(alpha: 0.15),
+                              const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
                         ),
                         child: const Center(
-                          child: Text(
-                            'No Disponible',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                          child: Icon(
+                            Icons.fastfood_rounded,
+                            size: 52,
+                            color: Color(0xFF6366F1),
+                          ),
+                        ),
+                      ),
+                    // Overlay de estado no disponible
+                    if (!producto.disponible)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.85),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(18),
+                            topRight: Radius.circular(18),
+                          ),
+                        ),
+                        child: const Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.cancel_outlined,
+                                color: Color(0xFFEF4444),
+                                size: 32,
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'No Disponible',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // Badge de estado disponible en la esquina
+                    if (producto.disponible)
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF059669),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.white,
+                                size: 12,
+                              ),
+                              SizedBox(width: 2),
+                              Text(
+                                'Disponible',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -603,70 +993,129 @@ class _SeleccionProductosScreenState
                 ),
               ),
             ),
+            // SECCIÓN DE INFORMACIÓN - 40% del espacio
             Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+              flex: 4,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(18),
+                    bottomRight: Radius.circular(18),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(
+                    // NOMBRE DEL PRODUCTO
+                    Expanded(
+                      flex: 3,
                       child: Text(
                         _capitalizeFirstLetter(producto.name),
                         style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
                           color: Colors.white,
                           height: 1.2,
+                          letterSpacing: 0.3,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(height: 8),
+                    // FILA DE PRECIO Y BOTÓN
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        // PRECIO - Más grande y llamativo
                         Expanded(
-                          child: Text(
-                            '\$${producto.price.toStringAsFixed(0).replaceAllMapped(
-                                  RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                  (Match m) => '${m[1]}.',
-                                )}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 16,
-                              letterSpacing: 0.5,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF6366F1),
+                                  Color(0xFF8B5CF6),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.attach_money_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                Flexible(
+                                  child: Text(
+                                    producto.price.toStringAsFixed(0).replaceAllMapped(
+                                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                          (Match m) => '${m[1]}.',
+                                        ),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 18,
+                                      letterSpacing: 0.5,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black26,
+                                          offset: Offset(0, 1),
+                                          blurRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
+                        // BOTÓN DE AGREGAR
                         Container(
-                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             color: producto.disponible
-                                ? const Color(0xFF6366F1)
+                                ? const Color(0xFF059669)
                                 : Colors.grey.shade600,
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
                                 color: producto.disponible
-                                    ? const Color(0xFF6366F1).withValues(alpha: 0.3)
+                                    ? const Color(0xFF059669).withValues(alpha: 0.3)
                                     : Colors.grey.withValues(alpha: 0.2),
-                                blurRadius: 4,
+                                blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.add_rounded,
-                            color: Colors.white,
-                            size: 16,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: producto.disponible ? () => _mostrarDetalleProducto(producto) : null,
+                              child: const Padding(
+                                padding: EdgeInsets.all(10),
+                                child: Icon(
+                                  Icons.add_shopping_cart_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
