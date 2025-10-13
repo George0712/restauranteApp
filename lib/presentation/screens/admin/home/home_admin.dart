@@ -66,9 +66,9 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             child: Container(
               margin: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               ),
               child: TabBar(
                 indicator: BoxDecoration(
@@ -136,9 +136,9 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             ),
             child: CircleAvatar(
               backgroundColor: Color.fromRGBO(
-                theme.primaryColor.red,
-                theme.primaryColor.green,
-                theme.primaryColor.blue,
+                theme.primaryColor.r.toInt(),
+                theme.primaryColor.g.toInt(),
+                theme.primaryColor.b.toInt(),
                 0.8,
               ),
               child: const Icon(
@@ -517,7 +517,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 13,
                       ),
                     ),
@@ -527,7 +527,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.18),
+                  color: color.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: Colors.white, size: 22),
@@ -581,7 +581,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 13,
                       ),
                     ),
@@ -591,7 +591,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.18),
+                  color: color.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, color: Colors.white, size: 22),
@@ -610,7 +610,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
       return Center(
         child: Text(
           'Sin ventas registradas en la última semana',
-          style: TextStyle(color: Colors.white.withOpacity(0.7)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
         ),
       );
     }
@@ -638,7 +638,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           drawVerticalLine: false,
           horizontalInterval: interval,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             strokeWidth: 1,
           ),
         ),
@@ -703,8 +703,8 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF6366F1).withOpacity(0.35),
-                  const Color(0xFF6366F1).withOpacity(0.05),
+                  const Color(0xFF6366F1).withValues(alpha: 0.35),
+                  const Color(0xFF6366F1).withValues(alpha: 0.05),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -725,7 +725,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
       return Center(
         child: Text(
           'No hay órdenes registradas actualmente',
-          style: TextStyle(color: Colors.white.withOpacity(0.7)),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
         ),
       );
     }
@@ -760,7 +760,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           drawHorizontalLine: true,
           horizontalInterval: interval,
           getDrawingHorizontalLine: (value) => FlLine(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             strokeWidth: 1,
           ),
           drawVerticalLine: false,
@@ -837,7 +837,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                     Text(
                       'Top de unidades vendidas',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 13,
                       ),
                     ),
@@ -847,7 +847,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFACC15).withOpacity(0.18),
+                  color: const Color(0xFFFACC15).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.local_fire_department,
@@ -859,7 +859,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           if (products.isEmpty)
             Text(
               'Aún no hay datos suficientes para mostrar productos destacados.',
-              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
             )
           else
             ListView.separated(
@@ -867,7 +867,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: products.length,
               separatorBuilder: (_, __) => Divider(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 height: 18,
               ),
               itemBuilder: (context, index) {
@@ -878,7 +878,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFACC15).withOpacity(0.18),
+                        color: const Color(0xFFFACC15).withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       alignment: Alignment.center,
@@ -907,7 +907,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                           Text(
                             '${product.quantity} unidades',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.65),
+                              color: Colors.white.withValues(alpha: 0.65),
                               fontSize: 12,
                             ),
                           ),
@@ -929,7 +929,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                         Text(
                           'Ingreso',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.65),
+                            color: Colors.white.withValues(alpha: 0.65),
                             fontSize: 12,
                           ),
                         ),
@@ -974,7 +974,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
       color: const Color(0xFF0D1117),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
-        color: Color.fromRGBO(accent.red, accent.green, accent.blue, 0.28),
+        color: Color.fromRGBO(accent.r.toInt(), accent.g.toInt(), accent.b.toInt(), 0.28),
         width: 1,
       ),
     );

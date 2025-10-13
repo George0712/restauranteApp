@@ -76,9 +76,9 @@ class EnhancedOptionCardState extends ConsumerState<EnhancedOptionCard> with Sin
                 boxShadow: [
                   BoxShadow(
                     color: Color.fromRGBO(
-                      widget.color.red,
-                      widget.color.green,
-                      widget.color.blue,
+                      widget.color.r.toInt(),
+                      widget.color.g.toInt(),
+                      widget.color.b.toInt(),
                       _isPressed ? 0.2 : 0.3,
                     ),
                     blurRadius: _isPressed ? 4 : 6,
@@ -91,20 +91,20 @@ class EnhancedOptionCardState extends ConsumerState<EnhancedOptionCard> with Sin
                   end: Alignment.bottomRight,
                   colors: [
                     _isPressed ? Color.fromRGBO(
-                      widget.color.red,
-                      widget.color.green,
-                      widget.color.blue,
+                      widget.color.r.toInt(),
+                      widget.color.g.toInt(),
+                      widget.color.b.toInt(),
                       0.8,
                     ) : widget.color,
                     _isPressed ? Color.fromRGBO(
-                      widget.color.red,
-                      widget.color.green,
-                      widget.color.blue,
+                      widget.color.r.toInt(),
+                      widget.color.g.toInt(),
+                      widget.color.b.toInt(),
                       0.6,
                     ) : Color.fromRGBO(
-                      widget.color.red,
-                      widget.color.green,
-                      widget.color.blue,
+                      widget.color.r.toInt(),
+                      widget.color.g.toInt(),
+                      widget.color.b.toInt(),
                       0.8,
                     ),
                   ],

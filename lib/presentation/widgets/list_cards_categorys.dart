@@ -37,7 +37,7 @@ class ListCardsCategories extends ConsumerWidget {
                   gradient: LinearGradient(
                     colors: [
                       Colors.white,
-                      Colors.white.withOpacity(0.6),
+                      Colors.white.withValues(alpha: 0.6),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -45,8 +45,8 @@ class ListCardsCategories extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: categoria.disponible
-                        ? Colors.green.withOpacity(0.2)
-                        : Colors.red.withOpacity(0.2),
+                        ? Colors.green.withValues(alpha: 0.2)
+                        : Colors.red.withValues(alpha: 0.2),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -79,8 +79,8 @@ class ListCardsCategories extends ConsumerWidget {
                         ),
                         decoration: BoxDecoration(
                           color: categoria.disponible
-                              ? Colors.green.withOpacity(0.7)
-                              : Colors.red.withOpacity(0.7),
+                              ? Colors.green.withValues(alpha: 0.7)
+                              : Colors.red.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -151,7 +151,7 @@ class _CategoryOptionsBottomSheetState
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 24),
@@ -183,8 +183,8 @@ class _CategoryOptionsBottomSheetState
                               const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: widget.categoria.disponible
-                                ? Colors.green.withOpacity(0.2)
-                                : Colors.red.withOpacity(0.2),
+                                ? Colors.green.withValues(alpha: 0.2)
+                                : Colors.red.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -277,16 +277,16 @@ class _CategoryOptionsBottomSheetState
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
+          color: Colors.white.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.18),
+                color: color.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -308,7 +308,7 @@ class _CategoryOptionsBottomSheetState
                 subtitle,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
                 ],
@@ -316,7 +316,7 @@ class _CategoryOptionsBottomSheetState
             ),
             
             Icon(Icons.arrow_forward_ios,
-                color: Colors.white.withOpacity(0.5), size: 16),
+                color: Colors.white.withValues(alpha: 0.5), size: 16),
           ],
         ),
       ),
@@ -335,7 +335,9 @@ class _CategoryOptionsBottomSheetState
       foto: categoria.photo,
     );
     setState(() => _isLoading = false);
-    Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
     if (result == null) {
       SnackbarHelper.showSnackBar(categoria.disponible
           ? 'Categoría desactivada'

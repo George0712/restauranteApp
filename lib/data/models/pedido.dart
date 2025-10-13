@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ItemPedido {
@@ -48,7 +49,7 @@ static List<Map<String, dynamic>>? _parseAdicionales(dynamic adicionalesData) {
           .toList();
     }
   } catch (e) {
-    print("🚨 Error parseando adicionales: $e");
+    developer.log("Error parseando adicionales: $e", error: e);
   }
   
   return null;
@@ -194,7 +195,7 @@ class Pedido {
             .toList();
       }
     } catch (e) {
-      print("🚨 Error parseando items: $e");
+      developer.log("Error parseando items: $e", error: e);
     }
 
     return [];
@@ -214,7 +215,7 @@ class Pedido {
             .toList();
       }
     } catch (e) {
-      print('🚨 Error parseando historial de extras: $e');
+      developer.log('Error parseando historial de extras: $e', error: e);
     }
 
     return const [];

@@ -45,7 +45,7 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                   gradient: LinearGradient(
                     colors: [
                       Colors.white,
-                      Colors.white.withOpacity(0.6),
+                      Colors.white.withValues(alpha: 0.6),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -53,8 +53,8 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: additional.disponible
-                        ? Colors.green.withOpacity(0.2)
-                        : Colors.red.withOpacity(0.2),
+                        ? Colors.green.withValues(alpha: 0.2)
+                        : Colors.red.withValues(alpha: 0.2),
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -85,8 +85,8 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: additional.disponible
-                                ? Colors.green.withOpacity(0.7)
-                                : Colors.red.withOpacity(0.7),
+                                ? Colors.green.withValues(alpha: 0.7)
+                                : Colors.red.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -154,7 +154,7 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -184,7 +184,7 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: additional.disponible ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+                          color: additional.disponible ? Colors.green.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -270,16 +270,16 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.07),
+          color: Colors.white.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.18),
+                color: color.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -295,7 +295,7 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.7)),
+                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7)),
                   ),
                 ],
               ),

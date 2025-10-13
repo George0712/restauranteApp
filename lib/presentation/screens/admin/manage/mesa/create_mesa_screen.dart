@@ -161,6 +161,7 @@ class _CreateMesaScreenState extends ConsumerState<CreateMesaScreen> {
                                   capacidad: capacidad,
                                 );
                                 
+                                if (!mounted) return;
                                 if (error == null) {
                                   mesaController.limpiarFormulario();
                                   context.pop();

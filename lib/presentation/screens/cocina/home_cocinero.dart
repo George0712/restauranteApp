@@ -141,7 +141,7 @@ class HomeCocineroScreen extends ConsumerWidget {
               ),
               child: CircleAvatar(
                 backgroundColor:
-                    Theme.of(context).primaryColor.withOpacity(0.85),
+                    Theme.of(context).primaryColor.withValues(alpha: 0.85),
                 child: const Icon(Icons.person, size: 26, color: Colors.white),
               ),
             ),
@@ -199,20 +199,20 @@ class _KitchenTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unselectedColor = Colors.white.withOpacity(0.65);
+    final unselectedColor = Colors.white.withValues(alpha: 0.65);
     final theme = Theme.of(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(0.07)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: TabBar(
         indicator: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: theme.primaryColor.withOpacity(0.12),
+          color: theme.primaryColor.withValues(alpha: 0.12),
         ),
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
@@ -270,7 +270,7 @@ class _TabLabel extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
+                color: color.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Text(
@@ -465,7 +465,7 @@ class _EmptyState extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 54, color: color),
@@ -510,7 +510,7 @@ class _ErrorState extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.12),
+              color: Colors.red.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.error_outline,

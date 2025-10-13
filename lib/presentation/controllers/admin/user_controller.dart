@@ -22,9 +22,7 @@ class UserController {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  bool _isUpdating = false;
-  bool get isUpdating => _isUpdating;
-  set isUpdating(bool val) => _isUpdating = val;
+  bool isUpdating = false;
 
   String adminEmail = FirebaseAuth.instance.currentUser!.email!;
   String adminPassword = 'Admin123'; 

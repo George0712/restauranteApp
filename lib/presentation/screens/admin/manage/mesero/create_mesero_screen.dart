@@ -225,6 +225,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                                       direccion: registerUserController.direccionController.text.trim(),
                                     ),
                                   );
+                                  if (!mounted) return;
                                   if (res == null) {
                                     SnackbarHelper.showSuccess('Mesero actualizado exitosamente');
                                     context.pop();
@@ -244,6 +245,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                                     rol: rol,
                                   );
                                   ref.read(userTempProvider.notifier).state = partialUser;
+                                  if (!mounted) return;
                                   context.push('/admin/manage/mesero/create-credentials');
                                 }
                               }

@@ -34,10 +34,10 @@ class PedidoCard extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: statusColor.withOpacity(0.25), width: 1.4),
+        border: Border.all(color: statusColor.withValues(alpha: 0.25), width: 1.4),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.18),
+            color: statusColor.withValues(alpha: 0.18),
             blurRadius: 20,
             offset: const Offset(0, 14),
           ),
@@ -51,7 +51,7 @@ class PedidoCard extends ConsumerWidget {
             vertical: isCompact ? 16 : 22,
           ),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.18),
+            color: Colors.black.withValues(alpha: 0.18),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,24 +95,24 @@ class PedidoCard extends ConsumerWidget {
               Row(
                 children: [
                   Icon(Icons.access_time_rounded,
-                      size: 14, color: Colors.white.withOpacity(0.6)),
+                      size: 14, color: Colors.white.withValues(alpha: 0.6)),
                   const SizedBox(width: 4),
                   Text(
                     _getTimeDisplay(),
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.75),
+                      color: Colors.white.withValues(alpha: 0.75),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Icon(Icons.calendar_today_outlined,
-                      size: 13, color: Colors.white.withOpacity(0.45)),
+                      size: 13, color: Colors.white.withValues(alpha: 0.45)),
                   const SizedBox(width: 4),
                   Text(
                     _getCreatedDisplay(),
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.55),
+                      color: Colors.white.withValues(alpha: 0.55),
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,
                     ),
@@ -175,9 +175,9 @@ class PedidoCard extends ConsumerWidget {
 
     final baseContainer = Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
@@ -186,7 +186,7 @@ class PedidoCard extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(Icons.restaurant_menu,
-                    size: 18, color: statusColor.withOpacity(0.9)),
+                    size: 18, color: statusColor.withValues(alpha: 0.9)),
                 const SizedBox(width: 8),
                 Text(
                   hasExtras
@@ -200,7 +200,7 @@ class PedidoCard extends ConsumerWidget {
                 ),
                 const Spacer(),
                 Icon(Icons.timer_outlined,
-                    size: 16, color: Colors.white.withOpacity(0.55)),
+                    size: 16, color: Colors.white.withValues(alpha: 0.55)),
                 const SizedBox(width: 4),
                 Text(
                   '${_getTotalPreparationTime()} min',
@@ -242,7 +242,7 @@ class PedidoCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.05)),
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
         ),
       ),
       child: Row(
@@ -252,7 +252,7 @@ class PedidoCard extends ConsumerWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: accent.withOpacity(0.18),
+              color: accent.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
@@ -296,13 +296,13 @@ class PedidoCard extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Icon(Icons.add_circle_outline,
-                                      size: 13, color: accent.withOpacity(0.9)),
+                                      size: 13, color: accent.withValues(alpha: 0.9)),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       nombre,
                                       style: TextStyle(
-                                        color: accent.withOpacity(0.9),
+                                        color: accent.withValues(alpha: 0.9),
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -322,12 +322,12 @@ class PedidoCard extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(Icons.timer,
-                            size: 13, color: accent.withOpacity(0.8)),
+                            size: 13, color: accent.withValues(alpha: 0.8)),
                         const SizedBox(width: 4),
                         Text(
                           '${item.tiempoPreparacion} min',
                           style: TextStyle(
-                            color: accent.withOpacity(0.85),
+                            color: accent.withValues(alpha: 0.85),
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
                           ),
@@ -345,7 +345,7 @@ class PedidoCard extends ConsumerWidget {
                             size: 13,
                             color: isExtra
                                 ? const Color(0xFFBFDBFE)
-                                : Colors.white.withOpacity(0.6)),
+                                : Colors.white.withValues(alpha: 0.6)),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
@@ -378,9 +378,9 @@ class PedidoCard extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(top: 12),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.06),
+        color: accent.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accent.withOpacity(0.25)),
+        border: Border.all(color: accent.withValues(alpha: 0.25)),
       ),
       child: Column(
         children: [
@@ -389,7 +389,7 @@ class PedidoCard extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(Icons.add_circle_outline,
-                    size: 18, color: accent.withOpacity(0.9)),
+                    size: 18, color: accent.withValues(alpha: 0.9)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -416,7 +416,7 @@ class PedidoCard extends ConsumerWidget {
                   ),
                 ),
                 Icon(Icons.timer_outlined,
-                    size: 16, color: Colors.white.withOpacity(0.55)),
+                    size: 16, color: Colors.white.withValues(alpha: 0.55)),
                 const SizedBox(width: 4),
                 Text(
                   momento,
@@ -458,9 +458,9 @@ class PedidoCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF97316).withOpacity(0.12),
+        color: const Color(0xFFF97316).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFF97316).withOpacity(0.35)),
+        border: Border.all(color: const Color(0xFFF97316).withValues(alpha: 0.35)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -605,9 +605,9 @@ class PedidoCard extends ConsumerWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF10B981).withOpacity(0.16),
+            color: const Color(0xFF10B981).withValues(alpha: 0.16),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF10B981).withOpacity(0.45)),
+            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.45)),
           ),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -811,9 +811,9 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: Colors.white.withValues(alpha: 0.04),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -849,9 +849,9 @@ class _StatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.18),
+        color: color.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Text(
         label,

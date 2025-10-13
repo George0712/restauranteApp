@@ -240,12 +240,12 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
           ),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -278,7 +278,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
                   Text(
                     'Gestión de capacidad',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.75),
+                      color: Colors.white.withValues(alpha: 0.75),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -343,7 +343,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
           height: 34,
           width: 34,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: Colors.white70, size: 18),
@@ -356,7 +356,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.65),
+                  color: Colors.white.withValues(alpha: 0.65),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -443,7 +443,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.18),
+                  color: accentColor.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -622,9 +622,9 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -738,7 +738,7 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF8B5CF6).withOpacity(0.2),
+              color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -773,11 +773,11 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                     color: Color(0xFF8B5CF6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -785,7 +785,7 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                       const BorderSide(color: Color(0xFF8B5CF6), width: 2),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.1),
+                fillColor: Colors.white.withValues(alpha: 0.1),
               ),
               style: const TextStyle(color: Colors.white),
               keyboardType: TextInputType.number,
@@ -809,11 +809,11 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                 prefixIcon: const Icon(Icons.people, color: Color(0xFF8B5CF6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -821,7 +821,7 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                       const BorderSide(color: Color(0xFF8B5CF6), width: 2),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.1),
+                fillColor: Colors.white.withValues(alpha: 0.1),
               ),
               style: const TextStyle(color: Colors.white),
               keyboardType: TextInputType.number,

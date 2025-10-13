@@ -87,7 +87,7 @@ class KitchenStats extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 22),
@@ -107,7 +107,7 @@ class KitchenStats extends ConsumerWidget {
             label,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               letterSpacing: 0.2,
             ),
             textAlign: TextAlign.center,
@@ -123,7 +123,7 @@ class KitchenStats extends ConsumerWidget {
       width: 1,
       margin: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -143,7 +143,7 @@ class KitchenStats extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: const [
           BoxShadow(
             color: Color.fromRGBO(15, 23, 42, 0.45),

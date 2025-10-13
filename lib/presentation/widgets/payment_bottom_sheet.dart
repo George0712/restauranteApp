@@ -30,7 +30,14 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF1A1B23),
+            Color(0xFF2D2E37),
+          ],
+        ),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.only(
@@ -47,7 +54,11 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
             if (!snapshot.hasData) {
               return const SizedBox(
                 height: 260,
-                child: Center(child: CircularProgressIndicator()),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                  ),
+                ),
               );
             }
 
@@ -55,7 +66,12 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
             if (!pedidoSnapshot.exists) {
               return const SizedBox(
                 height: 200,
-                child: Center(child: Text('No encontramos este pedido.')),
+                child: Center(
+                  child: Text(
+                    'No encontramos este pedido.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
               );
             }
 
@@ -76,18 +92,25 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: Colors.grey.shade600,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   const Text(
                     'Registrar pago',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 20, 
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Confirma el cobro para completar el pedido.',
-                    style: TextStyle(fontSize: 14, color: Colors.black54),
+                    style: TextStyle(
+                      fontSize: 14, 
+                      color: Colors.grey.shade400,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   _buildResumenCard(
@@ -105,13 +128,13 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade50,
+                        color: Colors.red.shade900.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.red.shade200),
+                        border: Border.all(color: Colors.red.shade700),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.red),
+                        style: TextStyle(color: Colors.red.shade300),
                       ),
                     ),
                   ],
@@ -125,6 +148,8 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                               : () => Navigator.of(context).pop(false),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
+                            foregroundColor: Colors.white,
+                            side: BorderSide(color: Colors.grey.shade600),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -140,7 +165,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                               : () => _registrarPago(total),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Colors.green,
+                            backgroundColor: const Color(0xFF6366F1),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -183,16 +208,20 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: const Color(0xFF363740).withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Colors.grey.shade700),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Detalle del cobro',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 16, 
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 12),
           _buildResumenRow('Subtotal', _formatCurrency(subtotal)),
@@ -201,7 +230,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
             _buildResumenRow('Extras agregados', _formatCurrency(extras)),
           ],
           const SizedBox(height: 12),
-          const Divider(height: 1),
+          Divider(height: 1, color: Colors.grey.shade600),
           const SizedBox(height: 12),
           _buildResumenRow(
             pagado ? 'Total cobrado' : 'Total a cobrar',
@@ -214,29 +243,29 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
+                color: Colors.green.shade900.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade200),
+                border: Border.all(color: Colors.green.shade700),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Este pedido ya fue pagado.',
                     style: TextStyle(
-                      color: Colors.green,
+                      color: Colors.green.shade300,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (metodo.isNotEmpty)
                     Text(
-                      'Metodo: $metodo',
-                      style: const TextStyle(color: Colors.green),
+                      'Método: $metodo',
+                      style: TextStyle(color: Colors.green.shade300),
                     ),
                   if (procesadoPor.isNotEmpty)
                     Text(
                       'Registrado por: $procesadoPor',
-                      style: const TextStyle(color: Colors.green),
+                      style: TextStyle(color: Colors.green.shade300),
                     ),
                 ],
               ),
@@ -256,7 +285,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           style: TextStyle(
             fontSize: highlight ? 16 : 14,
             fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
-            color: highlight ? Colors.black87 : Colors.black54,
+            color: highlight ? Colors.white : Colors.grey.shade400,
           ),
         ),
         Text(
@@ -264,7 +293,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           style: TextStyle(
             fontSize: highlight ? 18 : 14,
             fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
-            color: highlight ? Colors.black : Colors.black87,
+            color: highlight ? Colors.white : Colors.grey.shade300,
           ),
         ),
       ],
@@ -279,49 +308,76 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           alignment: Alignment.centerLeft,
           child: Text(
             'Metodo de pago',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 16, 
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
           ),
         ),
         const SizedBox(height: 12),
-        RadioListTile<String>(
-          value: 'cash',
-          groupValue: _selectedMethod,
-          onChanged: pagado || _processing
-              ? null
-              : (value) {
-                  setState(() {
-                    _selectedMethod = value ?? 'cash';
-                    _errorMessage = null;
-                  });
-                },
-          title: const Text('Efectivo'),
-          subtitle: const Text('Registrar pago en efectivo'),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          activeColor: Colors.green,
+        Theme(
+          data: ThemeData(
+            unselectedWidgetColor: Colors.grey.shade600,
+          ),
+          child: RadioListTile<String>(
+            value: 'cash',
+            groupValue: _selectedMethod,
+            onChanged: pagado || _processing
+                ? null
+                : (value) {
+                    setState(() {
+                      _selectedMethod = value ?? 'cash';
+                      _errorMessage = null;
+                    });
+                  },
+            title: const Text(
+              'Efectivo',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'Registrar pago en efectivo',
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            activeColor: const Color(0xFF6366F1),
+          ),
         ),
         const SizedBox(height: 8),
-        RadioListTile<String>(
-          value: 'card',
-          groupValue: _selectedMethod,
-          onChanged: null,
-          title: const Text('Tarjeta'),
-          subtitle: const Text('Disponible proximamente'),
-          secondary: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade100,
-              borderRadius: BorderRadius.circular(12),
+        Theme(
+          data: ThemeData(
+            unselectedWidgetColor: Colors.grey.shade600,
+          ),
+          child: RadioListTile<String>(
+            value: 'card',
+            groupValue: _selectedMethod,
+            onChanged: null,
+            title: Text(
+              'Tarjeta',
+              style: TextStyle(color: Colors.grey.shade500),
             ),
-            child: const Text(
-              'Pronto',
-              style: TextStyle(
-                color: Colors.orange,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+            subtitle: Text(
+              'Disponible próximamente',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            secondary: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade900.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade700),
+              ),
+              child: const Text(
+                'Pronto',
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
               ),
             ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ],
     );

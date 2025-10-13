@@ -13,7 +13,6 @@ class ListCardsProducts extends ConsumerWidget {
     final productsAsync = ref.watch(productsProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-    final theme = Theme.of(context);
 
     return productsAsync.when(
       data: (productos) {
@@ -24,15 +23,15 @@ class ListCardsProducts extends ConsumerWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.grey.withOpacity(0.1),
-                    Colors.grey.withOpacity(0.05),
+                    const Color(0xFF2D2E37).withValues(alpha: 0.5),
+                    const Color(0xFF1A1B23).withValues(alpha: 0.3),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.shade700,
                   width: 1,
                 ),
               ),
@@ -42,15 +41,15 @@ class ListCardsProducts extends ConsumerWidget {
                   Icon(
                     Icons.inventory_2_outlined,
                     size: 48,
-                    color: Colors.grey.withOpacity(0.6),
+                    color: Colors.grey.shade400,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'No hay Productos registrados',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey,
+                      color: Colors.grey.shade300,
                     ),
                   ),
                 ],
@@ -79,7 +78,7 @@ class ListCardsProducts extends ConsumerWidget {
                 duration: const Duration(milliseconds: 200),
                 child: Card(
                   elevation: 8,
-                  shadowColor: Colors.black.withOpacity(0.3),
+                  shadowColor: Colors.black.withValues(alpha: 0.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -87,18 +86,18 @@ class ListCardsProducts extends ConsumerWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
-                          Colors.white,
-                          Colors.white.withOpacity(0.6),
+                          Color(0xFF2D2E37),
+                          Color(0xFF1A1B23),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       border: Border.all(
                         color: producto.disponible
-                            ? const Color(0xFF10B981).withOpacity(0.3)
-                            : const Color(0xFFEF4444).withOpacity(0.3),
+                            ? const Color(0xFF6366F1).withValues(alpha: 0.4)
+                            : const Color(0xFFEF4444).withValues(alpha: 0.4),
                         width: 1.5,
                       ),
                     ),
@@ -123,8 +122,8 @@ class ListCardsProducts extends ConsumerWidget {
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                                            Colors.grey.shade200,
-                                            Colors.grey.shade100,
+                                            Colors.grey.shade800,
+                                            Colors.grey.shade700,
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -133,6 +132,7 @@ class ListCardsProducts extends ConsumerWidget {
                                       child: const Center(
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
                                         ),
                                       ),
                                     ),
@@ -142,9 +142,8 @@ class ListCardsProducts extends ConsumerWidget {
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                                            theme.primaryColor.withOpacity(0.1),
-                                            theme.primaryColor
-                                                .withOpacity(0.05),
+                            const Color(0xFF6366F1).withValues(alpha: 0.2),
+                            const Color(0xFF6366F1).withValues(alpha: 0.1),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -153,8 +152,7 @@ class ListCardsProducts extends ConsumerWidget {
                                       child: Icon(
                                         Icons.fastfood_rounded,
                                         size: 80,
-                                        color:
-                                            theme.primaryColor.withOpacity(0.7),
+                        color: const Color(0xFF6366F1).withValues(alpha: 0.8),
                                       ),
                                     ),
                                   ),
@@ -173,7 +171,7 @@ class ListCardsProducts extends ConsumerWidget {
                                           end: Alignment.bottomCenter,
                                           colors: [
                                             Colors.transparent,
-                                            Colors.black.withOpacity(0.1),
+                            Colors.black.withValues(alpha: 0.3),
                                           ],
                                         ),
                                       ),
@@ -196,7 +194,7 @@ class ListCardsProducts extends ConsumerWidget {
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 15,
-                                          color: Color(0xFF1F2937),
+                                          color: Colors.white,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -211,8 +209,8 @@ class ListCardsProducts extends ConsumerWidget {
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                                            theme.primaryColor,
-                                            theme.primaryColor.withOpacity(0.8),
+                                            const Color(0xFF6366F1),
+                            const Color(0xFF6366F1).withValues(alpha: 0.8),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -220,8 +218,8 @@ class ListCardsProducts extends ConsumerWidget {
                                         borderRadius: BorderRadius.circular(8),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: theme.primaryColor
-                                                .withOpacity(0.3),
+                                            color: const Color(0xFF6366F1)
+                                .withValues(alpha: 0.3),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),
@@ -274,7 +272,7 @@ class ListCardsProducts extends ConsumerWidget {
                                   color: (producto.disponible
                                           ? const Color(0xFF10B981)
                                           : const Color(0xFFEF4444))
-                                      .withOpacity(0.4),
+                                      .withValues(alpha: 0.4),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -312,7 +310,7 @@ class ListCardsProducts extends ConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
+                              color: Colors.black.withValues(alpha: 0.6),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(
@@ -337,15 +335,18 @@ class ListCardsProducts extends ConsumerWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.grey.withOpacity(0.1),
-                Colors.grey.withOpacity(0.05),
+                const Color(0xFF2D2E37).withValues(alpha: 0.5),
+                const Color(0xFF1A1B23).withValues(alpha: 0.3),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const CircularProgressIndicator(strokeWidth: 3),
+          child: const CircularProgressIndicator(
+            strokeWidth: 3,
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+          ),
         ),
       ),
       error: (error, stackTrace) => Center(
@@ -354,15 +355,15 @@ class ListCardsProducts extends ConsumerWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.red.withOpacity(0.1),
-                Colors.red.withOpacity(0.05),
+                Colors.red.shade900.withValues(alpha: 0.2),
+                Colors.red.shade900.withValues(alpha: 0.1),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.red.withOpacity(0.3),
+              color: Colors.red.shade700,
               width: 1,
             ),
           ),
@@ -371,14 +372,14 @@ class ListCardsProducts extends ConsumerWidget {
             children: [
               Icon(
                 Icons.error_outline,
-                color: Colors.red.withOpacity(0.7),
+                color: Colors.red.shade400,
                 size: 48,
               ),
               const SizedBox(height: 16),
               Text(
                 'Error al cargar productos',
                 style: TextStyle(
-                  color: Colors.red.withOpacity(0.8),
+                  color: Colors.red.shade300,
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                 ),
@@ -387,7 +388,7 @@ class ListCardsProducts extends ConsumerWidget {
               Text(
                 '$error',
                 style: TextStyle(
-                  color: Colors.red.withOpacity(0.6),
+                  color: Colors.red.shade400,
                   fontSize: 12,
                 ),
                 textAlign: TextAlign.center,
@@ -457,7 +458,7 @@ class _ProductOptionsBottomSheetState
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -479,7 +480,7 @@ class _ProductOptionsBottomSheetState
                         width: 60,
                         height: 60,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -524,8 +525,8 @@ class _ProductOptionsBottomSheetState
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: widget.producto.disponible
-                                    ? Colors.green.withOpacity(0.2)
-                                    : Colors.red.withOpacity(0.2),
+                                    ? Colors.green.withValues(alpha: 0.2)
+                                    : Colors.red.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -638,10 +639,10 @@ class _ProductOptionsBottomSheetState
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -650,7 +651,7 @@ class _ProductOptionsBottomSheetState
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -676,7 +677,7 @@ class _ProductOptionsBottomSheetState
                     subtitle,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -684,7 +685,7 @@ class _ProductOptionsBottomSheetState
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
               size: 16,
             ),
           ],
@@ -708,7 +709,9 @@ class _ProductOptionsBottomSheetState
 
       if (result == null) {
         // Éxito
-        Navigator.pop(context);
+        if (mounted) {
+          Navigator.pop(context);
+        }
 
         final message = widget.producto.disponible
             ? 'Producto desactivado correctamente'
@@ -747,7 +750,7 @@ class _ProductOptionsBottomSheetState
           children: [
             Icon(
               Icons.warning_amber_rounded,
-              color: Colors.red.withOpacity(0.8),
+              color: Colors.red.withValues(alpha: 0.8),
               size: 28,
             ),
             const SizedBox(width: 12),
@@ -770,7 +773,7 @@ class _ProductOptionsBottomSheetState
             Text(
               '¿Estás seguro de que deseas eliminar "${widget.producto.name}"?',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 16,
               ),
             ),
@@ -778,7 +781,7 @@ class _ProductOptionsBottomSheetState
             Text(
               'Esta acción no se puede deshacer y se eliminará permanentemente de la base de datos.',
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -789,7 +792,7 @@ class _ProductOptionsBottomSheetState
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(
               'Cancelar',
-              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
             ),
           ),
           ElevatedButton(

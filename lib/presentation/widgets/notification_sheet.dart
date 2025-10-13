@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/data/models/notification_model.dart';
@@ -78,11 +78,11 @@ class NotificationSheet extends ConsumerWidget {
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: notification.isRead
-                                    ? Colors.white.withOpacity(0.04)
-                                    : Colors.white.withOpacity(0.08),
+                                    ? Colors.white.withValues(alpha: 0.04)
+                                    : Colors.white.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
-                                  color: color.withOpacity(0.65),
+                                  color: color.withValues(alpha: 0.65),
                                   width: 1,
                                 ),
                               ),
@@ -126,7 +126,7 @@ class NotificationSheet extends ConsumerWidget {
                                   Text(
                                     notification.message,
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                       height: 1.3,
                                     ),
                                   ),
@@ -137,7 +137,7 @@ class NotificationSheet extends ConsumerWidget {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
-                                          color: color.withOpacity(0.18),
+                                          color: color.withValues(alpha: 0.18),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
@@ -173,7 +173,7 @@ class NotificationSheet extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.notifications_off,
-              color: Colors.white.withOpacity(0.25), size: 54),
+              color: Colors.white.withValues(alpha: 0.25), size: 54),
           const SizedBox(height: 12),
           Text(
             'Sin notificaciones pendientes',

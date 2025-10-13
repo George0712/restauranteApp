@@ -33,8 +33,8 @@ class CloudinaryImageWidget extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.primaryColor.withOpacity(0.1),
-            theme.primaryColor.withOpacity(0.05),
+            theme.primaryColor.withValues(alpha: 0.1),
+            theme.primaryColor.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,

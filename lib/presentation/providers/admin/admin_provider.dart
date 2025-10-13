@@ -676,7 +676,10 @@ final isMesaFieldsValidProvider = StateProvider<bool>((ref) => false);
 final mesasProvider = StreamProvider<List<MesaModel>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore.collection('mesa').snapshots().map((snapshot) {
-    return snapshot.docs.map((doc) => MesaModel.fromMap(doc.data(), doc.id)).toList();
+    final mesas = snapshot.docs.map((doc) => MesaModel.fromMap(doc.data(), doc.id)).toList();
+    // Ordenar las mesas por ID numérico ascendente
+    mesas.sort((a, b) => a.id.compareTo(b.id));
+    return mesas;
   });
 });
 
@@ -687,9 +690,12 @@ final mesasDisponiblesProvider = StreamProvider<List<MesaModel>>((ref) {
       .where('estado', isEqualTo: 'disponible')
       .snapshots()
       .map((snapshot) {
-    return snapshot.docs.map((doc) {
+    final mesas = snapshot.docs.map((doc) {
       return MesaModel.fromMap(doc.data(), doc.id);
     }).toList();
+    // Ordenar las mesas por ID numérico ascendente
+    mesas.sort((a, b) => a.id.compareTo(b.id));
+    return mesas;
   });
 });
 
@@ -700,8 +706,11 @@ final mesasOcupadasProvider = StreamProvider<List<MesaModel>>((ref) {
       .where('estado', isEqualTo: 'ocupada')
       .snapshots()
       .map((snapshot) {
-    return snapshot.docs.map((doc) {
+    final mesas = snapshot.docs.map((doc) {
       return MesaModel.fromMap(doc.data(), doc.id);
     }).toList();
+    // Ordenar las mesas por ID numérico ascendente
+    mesas.sort((a, b) => a.id.compareTo(b.id));
+    return mesas;
   });
 });

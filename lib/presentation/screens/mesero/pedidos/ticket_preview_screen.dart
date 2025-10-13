@@ -155,10 +155,12 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => PaymentBottomSheet(pedidoId: widget.pedidoId),
     );
-    if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pago registrado correctamente.')),
-      );
+    if (result == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pago registrado correctamente.')),
+        );
+      }
     }
   }
 }
@@ -404,7 +406,7 @@ class _TicketItemsList extends StatelessWidget {
     final adicionales = (item['adicionales'] as List?) ?? const [];
     final adicionalesTotal = adicionales.fold<double>(
       0,
-      (sum, adicional) => sum + _toDouble((adicional as Map<String, dynamic>)['price']),
+      (total, adicional) => total + _toDouble((adicional as Map<String, dynamic>)['price']),
     );
     return (price + adicionalesTotal) * quantity;
   }
@@ -492,7 +494,7 @@ class _TicketTotals extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(highlight ? 1 : 0.8),
+            color: Colors.white.withValues(alpha: highlight ? 1 : 0.8),
             fontSize: highlight ? 18 : 14,
             fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
           ),

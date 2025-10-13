@@ -47,7 +47,7 @@ class ListCardsUsers extends ConsumerWidget {
                   gradient: LinearGradient(
                     colors: [
                       Colors.white,
-                      Colors.white.withOpacity(0.6),
+                      Colors.white.withValues(alpha: 0.6),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -70,7 +70,7 @@ class ListCardsUsers extends ConsumerWidget {
                       child: Icon(
                         Icons.person,
                         size: 60,
-                        color: theme.primaryColor.withOpacity(0.9),
+                        color: theme.primaryColor.withValues(alpha: 0.9),
                       ),
                     ),
                     const Spacer(),
@@ -157,7 +157,7 @@ class _UserOptionsBottomSheetState
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -167,7 +167,7 @@ class _UserOptionsBottomSheetState
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.person, color: Colors.white, size: 24),
@@ -250,16 +250,16 @@ class _UserOptionsBottomSheetState
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: color.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 24),
@@ -276,7 +276,7 @@ class _UserOptionsBottomSheetState
                         color: Colors.white)),
                 Text(subtitle,
                     style: TextStyle(
-                        fontSize: 14, color: Colors.white.withOpacity(0.7))),
+                        fontSize: 14, color: Colors.white.withValues(alpha: 0.7))),
               ],
             )),
             const Icon(Icons.arrow_forward_ios,

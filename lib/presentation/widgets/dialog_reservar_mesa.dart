@@ -60,10 +60,10 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.35),
+              color: Colors.black.withValues(alpha: 0.35),
               blurRadius: 24,
               offset: const Offset(0, 18),
             ),
@@ -116,7 +116,7 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: highlight.withOpacity(0.14),
+            color: highlight.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Row(
@@ -193,7 +193,7 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
       onPressed: onTap,
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.white,
-        side: BorderSide(color: highlight.withOpacity(0.5)),
+        side: BorderSide(color: highlight.withValues(alpha: 0.5)),
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
@@ -227,9 +227,9 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.06)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
           child: Row(
             children: [
@@ -319,7 +319,7 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
             onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white70,
-              side: BorderSide(color: Colors.white.withOpacity(0.2)),
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
@@ -360,7 +360,7 @@ class _ReservarMesaDialogState extends State<ReservarMesaDialog> {
       labelStyle: const TextStyle(color: Colors.white60),
       prefixIcon: Icon(icon, color: Colors.white54),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.08),
+      fillColor: Colors.white.withValues(alpha: 0.08),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,

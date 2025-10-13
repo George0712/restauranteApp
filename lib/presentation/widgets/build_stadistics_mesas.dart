@@ -8,9 +8,9 @@ Widget buildEstadisticaItem(String label, String valor, Color color, IconData ic
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Color.fromRGBO(
-                color.red,
-                color.green,
-                color.blue,
+                color.r.toInt(),
+                color.g.toInt(),
+                color.b.toInt(),
                 0.1,
               ),
               borderRadius: BorderRadius.circular(12),

@@ -50,9 +50,9 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: Color.fromRGBO(
-              widget.color.red,
-              widget.color.green,
-              widget.color.blue,
+              widget.color.r.toInt(),
+              widget.color.g.toInt(),
+              widget.color.b.toInt(),
               0.3,
             ),
             width: 1,
@@ -69,9 +69,9 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
                 height: 100,
                 decoration: BoxDecoration(
                   color: Color.fromRGBO(
-                    widget.color.red,
-                    widget.color.green,
-                    widget.color.blue,
+                    widget.color.r.toInt(),
+                    widget.color.g.toInt(),
+                    widget.color.b.toInt(),
                     0.1,
                   ),
                   shape: BoxShape.circle,
@@ -90,9 +90,9 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
                       gradient: LinearGradient(
                         colors: [
                          Color.fromRGBO(
-                           widget.color.red,
-                           widget.color.green,
-                           widget.color.blue,
+                           widget.color.r.toInt(),
+                           widget.color.g.toInt(),
+                           widget.color.b.toInt(),
                            0.8,
                          ),
                           widget.color,
@@ -104,9 +104,9 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
                       boxShadow: [
                         BoxShadow(
                           color: Color.fromRGBO(
-                            widget.color.red,
-                            widget.color.green,
-                            widget.color.blue,
+                            widget.color.r.toInt(),
+                            widget.color.g.toInt(),
+                            widget.color.b.toInt(),
                             0.3,
                           ),
                           blurRadius: 10,

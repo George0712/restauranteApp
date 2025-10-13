@@ -38,7 +38,7 @@ class PermissionService {
     
     // Si está permanentemente denegado, mostrar diálogo y abrir configuración
     if (status.isPermanentlyDenied) {
-      return await _handlePermanentlyDenied(context);
+      return context != null && context.mounted ? await _handlePermanentlyDenied(context) : false;
     }
     
     // Si está restringido (por controles parentales)
@@ -50,7 +50,7 @@ class PermissionService {
     }
     
     // Explicar por qué necesitamos el permiso antes de solicitarlo
-    if (context != null) {
+    if (context != null && context.mounted) {
       final shouldRequest = await _showPermissionRationale(context);
       if (!shouldRequest) {
         return false;
@@ -64,7 +64,7 @@ class PermissionService {
     if (status.isGranted || status.isLimited) {
       return true;
     } else if (status.isPermanentlyDenied) {
-      return await _handlePermanentlyDenied(context);
+      return context != null && context.mounted ? await _handlePermanentlyDenied(context) : false;
     } else {
       if (context != null) {
         SnackbarHelper.showSnackBar('Permiso de galería denegado');
@@ -83,7 +83,7 @@ class PermissionService {
     }
     
     if (status.isPermanentlyDenied) {
-      return await _handlePermanentlyDenied(context, isCamera: true);
+      return context != null && context.mounted ? await _handlePermanentlyDenied(context, isCamera: true) : false;
     }
     
     if (status.isRestricted) {
@@ -94,7 +94,7 @@ class PermissionService {
     }
     
     // Explicar por qué necesitamos el permiso
-    if (context != null) {
+    if (context != null && context.mounted) {
       final shouldRequest = await _showCameraPermissionRationale(context);
       if (!shouldRequest) {
         return false;
@@ -106,7 +106,7 @@ class PermissionService {
     if (status.isGranted) {
       return true;
     } else if (status.isPermanentlyDenied) {
-      return await _handlePermanentlyDenied(context, isCamera: true);
+      return context != null && context.mounted ? await _handlePermanentlyDenied(context, isCamera: true) : false;
     } else {
       if (context != null) {
         SnackbarHelper.showSnackBar('Permiso de cámara denegado');
@@ -116,7 +116,7 @@ class PermissionService {
   }
   
   static Future<bool> _handlePermanentlyDenied(BuildContext? context, {bool isCamera = false}) async {
-    if (context == null) return false;
+    if (context == null || !context.mounted) return false;
     
     final permissionName = isCamera ? 'cámara' : 'galería';
     

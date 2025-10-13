@@ -55,9 +55,9 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                   ),
                   child: CircleAvatar(
                     backgroundColor: Color.fromRGBO(
-                      theme.primaryColor.red,
-                      theme.primaryColor.green,
-                      theme.primaryColor.blue,
+                      theme.primaryColor.r.toInt(),
+                      theme.primaryColor.g.toInt(),
+                      theme.primaryColor.b.toInt(),
                       0.8,
                     ),
                     child: const Icon(
@@ -229,10 +229,10 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF22C55E).withOpacity(0.18),
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: const Color(0xFF22C55E).withOpacity(0.4),
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.4),
                   ),
                 ),
                 child: const Row(
@@ -267,7 +267,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
               Text(
                 '10:00 - 18:00',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontWeight: FontWeight.w500,
                   fontSize: isTablet ? 16 : 14,
                 ),
@@ -489,9 +489,9 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF6366F1).withOpacity(0.2),
+              color: const Color(0xFF6366F1).withValues(alpha: 0.2),
               border: Border.all(
-                color: const Color(0xFF6366F1).withOpacity(0.5),
+                color: const Color(0xFF6366F1).withValues(alpha: 0.5),
               ),
             ),
             child: const Icon(
@@ -604,7 +604,7 @@ class _ShiftOverviewItem extends StatelessWidget {
                 width: circleSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: stat.color.withOpacity(0.18),
+                  color: stat.color.withValues(alpha: 0.18),
                 ),
                 child: Icon(stat.icon, color: stat.color, size: iconSize),
               ),
@@ -685,14 +685,14 @@ class _QuickActionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
             colors: [
-              action.color.withOpacity(0.95),
-              action.color.withOpacity(0.75),
+              action.color.withValues(alpha: 0.95),
+              action.color.withValues(alpha: 0.75),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-            color: Colors.white.withOpacity(0.18),
+            color: Colors.white.withValues(alpha: 0.18),
             width: 1.1,
           ),
         ),
@@ -715,7 +715,7 @@ class _QuickActionCard extends StatelessWidget {
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               size: isCompact ? 16 : 18,
             ),
           ],
@@ -763,10 +763,10 @@ class _WorkflowCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           color: const Color.fromRGBO(17, 25, 40, 0.8),
-          border: Border.all(color: workflow.color.withOpacity(0.4)),
+          border: Border.all(color: workflow.color.withValues(alpha: 0.4)),
           boxShadow: [
             BoxShadow(
-              color: workflow.color.withOpacity(0.25),
+              color: workflow.color.withValues(alpha: 0.25),
               blurRadius: 12,
               offset: const Offset(0, 8),
             ),
@@ -779,7 +779,7 @@ class _WorkflowCard extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: workflow.color.withOpacity(0.2),
+                color: workflow.color.withValues(alpha: 0.2),
               ),
               child: Icon(workflow.icon, color: workflow.color, size: 26),
             ),
@@ -810,7 +810,7 @@ class _WorkflowCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Icon(Icons.chevron_right_rounded,
-                color: Colors.white.withOpacity(0.7)),
+                color: Colors.white.withValues(alpha: 0.7)),
           ],
         ),
       ),

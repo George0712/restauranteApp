@@ -265,7 +265,7 @@ class Order {
   }
 
   int get itemsCount {
-    return items.fold(0, (sum, item) => sum + item.quantity);
+    return items.fold(0, (total, item) => total + item.quantity);
   }
 
   @override

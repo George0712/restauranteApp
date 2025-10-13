@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
@@ -104,15 +105,15 @@ class CarritoNotifier extends StateNotifier<List<ItemCarrito>> {
 
           carritoItems.add(carritoItem);
         } catch (e) {
-          print('Error cargando item del carrito: $e');
+          developer.log('Error cargando item del carrito: $e', error: e);
           // Continuar con los demás items
         }
       }
 
       state = carritoItems;
-      print('✅ Carrito cargado desde Firestore: ${carritoItems.length} items');
+      developer.log('Carrito cargado desde Firestore: ${carritoItems.length} items');
     } catch (e) {
-      print('Error cargando carrito desde Firestore: $e');
+      developer.log('Error cargando carrito desde Firestore: $e', error: e);
       state = [];
     }
   }
@@ -150,8 +151,8 @@ class CarritoNotifier extends StateNotifier<List<ItemCarrito>> {
     state = [];
   }
 
-  double get total => state.fold(0.0, (sum, item) => sum + item.subtotal);
-  int get cantidadTotal => state.fold(0, (sum, item) => sum + item.cantidad);
+  double get total => state.fold(0.0, (accumulator, item) => accumulator + item.subtotal);
+  int get cantidadTotal => state.fold(0, (total, item) => total + item.cantidad);
 
   bool _listasIguales(List<String> lista1, List<String> lista2) {
     if (lista1.length != lista2.length) return false;

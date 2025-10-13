@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -24,7 +24,7 @@ Widget buildNeonStatCard(
         color: const Color(0xFF0D1117),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Color.fromRGBO(color.red, color.green, color.blue, 0.28),
+          color: color.withValues(alpha: 0.28),
           width: 1,
         ),
       ),
@@ -35,9 +35,9 @@ Widget buildNeonStatCard(
     error: (e, _) => Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.7),
+        color: Colors.red.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.7), width: 1),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.7), width: 1),
       ),
       constraints: const BoxConstraints(minHeight: 150),
       alignment: Alignment.center,
@@ -77,12 +77,7 @@ Widget buildNeonStatCardWithValue(
       color: const Color(0xFF0D1117),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
-        color: Color.fromRGBO(
-          color.red,
-          color.green,
-          color.blue,
-          0.28,
-        ),
+        color: color.withValues(alpha: 0.28),
         width: 1,
       ),
     ),
@@ -108,7 +103,7 @@ Widget buildNeonStatCardWithValue(
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 12,
                     ),
                   ),
@@ -118,7 +113,7 @@ Widget buildNeonStatCardWithValue(
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.18),
+                color: color.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(

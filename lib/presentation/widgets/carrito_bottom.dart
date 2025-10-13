@@ -7,7 +7,7 @@ import 'package:restaurante_app/presentation/controllers/mesero/carrito_controll
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
-import 'package:restaurante_app/presentation/widgets/carrito_item.dart';
+import 'package:restaurante_app/presentation/widgets/carrito_item_slide.dart';
 
 class CarritoBottomSheet extends ConsumerWidget {
   final VoidCallback onConfirmarSinPagar;
@@ -37,13 +37,20 @@ class CarritoBottomSheet extends ConsumerWidget {
     final adicionalesAsync = ref.watch(additionalProvider);
     final carritoController = ref.watch(carritoControllerProvider);
     final isAdminAsync = ref.watch(isCurrentUserAdminStreamProvider);
-    final totalItems = carrito.fold<int>(0, (sum, item) => sum + item.cantidad);
+    final totalItems = carrito.fold<int>(0, (total, item) => total + item.cantidad);
     final heightFactor = totalItems >= 4 ? 0.96 : 0.82;
     return FractionallySizedBox(
       heightFactor: heightFactor,
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF1A1A2E),
+              Color(0xFF14162B),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
@@ -58,7 +65,7 @@ class CarritoBottomSheet extends ConsumerWidget {
                   width: 40,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: Colors.white.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
@@ -75,13 +82,15 @@ class CarritoBottomSheet extends ConsumerWidget {
                         _ResumenCarritoCard(
                           total: carritoController.calcularTotal(),
                           cantidadTotal: carrito.fold<int>(
-                              0, (sum, item) => sum + item.cantidad),
+                              0, (total, item) => total + item.cantidad),
                         ),
                         const SizedBox(height: 16),
                         if (carrito.isEmpty)
                           _buildCarritoVacio(context)
                         else
-                          ...carrito.map((item) {
+                          ...carrito.asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
                             final nombresAdicionales =
                                 item.modificacionesSeleccionadas.map((id) {
                               final adicional = adicionales.firstWhere(
@@ -91,9 +100,10 @@ class CarritoBottomSheet extends ConsumerWidget {
                               );
                               return adicional.name;
                             }).toList();
-                            return CarritoItem(
+                            return CarritoItemSlide(
                               item: item,
                               nombresAdicionales: nombresAdicionales,
+                              index: index,
                             );
                           }).toList(),
                       ],
@@ -125,7 +135,11 @@ class CarritoBottomSheet extends ConsumerWidget {
   }
 
   Widget _buildTitulo(BuildContext context) {
-    const titleStyle = TextStyle(fontSize: 22, fontWeight: FontWeight.w700);
+    const titleStyle = TextStyle(
+      fontSize: 22, 
+      fontWeight: FontWeight.w700,
+      color: Colors.white,
+    );
     if (pedidoId == null) {
       return const Text(
         'Carrito del pedido',
@@ -140,9 +154,9 @@ class CarritoBottomSheet extends ConsumerWidget {
         const SizedBox(height: 4),
         Text(
           'ID: $shortId',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: Colors.black54,
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -202,9 +216,12 @@ class CarritoBottomSheet extends ConsumerWidget {
                 backgroundColor: Colors.green,
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Generar el ticket no marca el pedido como pagado.',
-                style: TextStyle(fontSize: 12, color: Colors.black54),
+                style: TextStyle(
+                  fontSize: 12, 
+                  color: Colors.white.withValues(alpha: 0.6),
+                ),
               ),
             ],
           );
@@ -237,9 +254,12 @@ class CarritoBottomSheet extends ConsumerWidget {
                 backgroundColor: Colors.green,
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Generar el ticket no marca el pedido como pagado.',
-                style: TextStyle(fontSize: 12, color: Colors.black54),
+                style: TextStyle(
+                  fontSize: 12, 
+                  color: Colors.white.withValues(alpha: 0.6),
+                ),
               ),
             ],
           );
@@ -298,9 +318,12 @@ class CarritoBottomSheet extends ConsumerWidget {
           ),
         );
         acciones.add(const SizedBox(height: 6));
-        acciones.add(const Text(
+        acciones.add(Text(
           'Generar el ticket no marca el pedido como pagado.',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
+          style: TextStyle(
+            fontSize: 12, 
+            color: Colors.white.withValues(alpha: 0.6),
+          ),
         ));
         acciones.add(const SizedBox(height: 16));
         if (!pagado && estadoFinalizado) {
@@ -369,24 +392,32 @@ class CarritoBottomSheet extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.blueGrey.shade50,
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.shopping_bag_outlined, size: 48, color: Colors.blueGrey),
-          SizedBox(height: 12),
+          Icon(Icons.shopping_bag_outlined, 
+               size: 48, 
+               color: Colors.white.withValues(alpha: 0.6)),
+          const SizedBox(height: 12),
           Text(
-            'Aun no has agregado productos',
+            'Aún no has agregado productos',
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 16,
+              color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
-            'Selecciona articulos para poder enviar el pedido a cocina o generar un ticket.',
+            'Selecciona artículos para poder enviar el pedido a cocina o generar un ticket.',
             textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontSize: 14,
+            ),
           ),
         ],
       ),
@@ -453,7 +484,7 @@ class _ResumenCarritoCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -544,14 +575,15 @@ class _SecondaryButton extends StatelessWidget {
       width: double.infinity,
       child: OutlinedButton.icon(
         onPressed: onPressed,
-        icon: Icon(icon, color: Theme.of(context).primaryColor),
+        icon: Icon(icon, color: Colors.white),
         label: Padding(
           padding: const EdgeInsets.symmetric(vertical: 14.0),
           child: Text(label),
         ),
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Theme.of(context).primaryColor, width: 1.4),
-          foregroundColor: Theme.of(context).primaryColor,
+          side: const BorderSide(color: Color(0xFF8B5CF6), width: 1.4),
+          foregroundColor: Colors.white,
+          backgroundColor: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -586,9 +618,10 @@ class _DangerButton extends StatelessWidget {
           child: Text(label),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red.shade50,
-          foregroundColor: Colors.red.shade700,
+          backgroundColor: Colors.red.withValues(alpha: 0.15),
+          foregroundColor: Colors.red.shade300,
           elevation: 0,
+          side: BorderSide(color: Colors.red.withValues(alpha: 0.3)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -616,9 +649,9 @@ class _InfoBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -629,7 +662,7 @@ class _InfoBox extends StatelessWidget {
             child: Text(
               message,
               style: TextStyle(
-                color: color.shade700,
+                color: Colors.white.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -651,13 +684,14 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: Theme.of(context).primaryColor),
+        Icon(icon, color: const Color(0xFF8B5CF6)),
         const SizedBox(width: 8),
         Text(
           title,
           style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 16,
+            color: Colors.white,
           ),
         ),
       ],

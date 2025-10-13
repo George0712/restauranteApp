@@ -58,7 +58,9 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
         adicionales: adicionales.isEmpty ? null : adicionales,
       );
       ref.read(carritoControllerProvider).agregarItem(item);
-      Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(context);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

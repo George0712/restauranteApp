@@ -1,4 +1,5 @@
 ﻿import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -748,10 +749,20 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       horaOcupacion: DateTime.now(),
     );
 
-    ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
-    await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
-
+    // Primero cerramos cualquier overlay/sheet y navegamos
+    if (mesaSeleccionadaId == mesa.id) {
+      setState(() => mesaSeleccionadaId = null);
+    }
+    
+    // Navegamos inmediatamente para evitar ver cambios de UI
     _irADetallePedido(mesaActualizada, pedidoId, clienteVisible);
+    
+    // Luego actualizamos el estado en segundo plano
+    // Usamos addPostFrameCallback para asegurar que la navegación ya inició
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      ref.read(pedidos.pedidosProvider.notifier).agregarPedido(nuevoPedido);
+      await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+    });
   }
 
   void _irADetallePedido(
@@ -1679,6 +1690,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         return;
       }
 
+      if (!mounted) return;
       final cobroCompletado = await showModalBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
@@ -1718,7 +1730,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         });
       }
     } catch (e) {
-      print('Error al cancelar pedido $pedidoId: $e');
+      developer.log('Error al cancelar pedido $pedidoId: $e');
     } finally {
       ref.read(pedidos.pedidosProvider.notifier).eliminarPedido(pedidoId);
     }
@@ -1795,7 +1807,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
 
       SnackbarHelper.showSuccess('Mesa liberada y pedido cancelado.');
     } catch (e) {
-      print('Error liberando mesa ${mesa.id}: $e');
+      developer.log('Error liberando mesa ${mesa.id}: $e');
       if (!mounted) {
         return;
       }

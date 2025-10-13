@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/data/models/mesa_model.dart';
@@ -22,7 +23,7 @@ class MesasNotifier extends StateNotifier<List<MesaModel>> {
       
       state = mesas;
     } catch (e) {
-      print('Error al cargar mesas: $e');
+      developer.log('Error al cargar mesas: $e', error: e);
       state = [];
     }
   }
@@ -54,7 +55,7 @@ class MesasNotifier extends StateNotifier<List<MesaModel>> {
         ];
       }
     } catch (e) {
-      print('Error al editar mesa: $e');
+      developer.log('Error al editar mesa: $e', error: e);
     }
   }
 
@@ -74,7 +75,7 @@ class MesasNotifier extends StateNotifier<List<MesaModel>> {
         state = state.where((m) => m.id != id).toList();
       }
     } catch (e) {
-      print('Error al eliminar mesa: $e');
+      developer.log('Error al eliminar mesa: $e', error: e);
     }
   }
 
@@ -98,8 +99,12 @@ final mesasMeseroProvider = StateNotifierProvider<MesasNotifier, List<MesaModel>
 final mesasStreamProvider = StreamProvider<List<MesaModel>>((ref) {
   final firestore = FirebaseFirestore.instance;
   return firestore.collection('mesa').snapshots().map((snapshot) {
-    return snapshot.docs.map((doc) {
+    final mesas = snapshot.docs.map((doc) {
       return MesaModel.fromMap(doc.data(), doc.id);
     }).toList();
+    
+    // Ordenar las mesas por ID numérico ascendente
+    mesas.sort((a, b) => a.id.compareTo(b.id));
+    return mesas;
   });
 });

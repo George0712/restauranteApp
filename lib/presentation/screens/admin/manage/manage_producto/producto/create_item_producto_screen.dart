@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -421,12 +422,12 @@ class _CreateItemProductScreenState
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: theme.primaryColor.withOpacity(0.3),
+                            color: theme.primaryColor.withValues(alpha: 0.3),
                             width: 2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 10,
                               offset: const Offset(0, 5),
                             ),
@@ -476,7 +477,7 @@ class _CreateItemProductScreenState
                               color: theme.primaryColor,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 5,
                                   offset: const Offset(0, 2),
                                 ),
@@ -513,7 +514,7 @@ class _CreateItemProductScreenState
                       : 'Toca para cambiar la imagen',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                 ),
               ),
@@ -550,12 +551,12 @@ class _CreateItemProductScreenState
                     categoryAsync.when(
                       data: (categories) {
                         // Debug mejorado
-                        print(
+                        developer.log(
                             '📋 Categorías disponibles: ${categories.length}');
                         for (var cat in categories) {
-                          print('  - ID: "${cat.id}", Nombre: ${cat.name}');
+                          developer.log('  - ID: "${cat.id}", Nombre: ${cat.name}');
                         }
-                        print(
+                        developer.log(
                             '🔍 Categoría seleccionada: "$selectedCategory" (${selectedCategory.runtimeType})');
 
                         // ✅ LIMPIAR VALOR VACÍO O INVÁLIDO
@@ -564,18 +565,18 @@ class _CreateItemProductScreenState
                         if (validatedCategory != null) {
                           // Si está vacío o solo espacios
                           if (validatedCategory.trim().isEmpty) {
-                            print(
+                            developer.log(
                                 '🔧 Categoría vacía detectada en dropdown, limpiando...');
                             validatedCategory = null;
                           } else {
                             // Verificar que existe en la lista
                             final categoryExists = categories
                                 .any((cat) => cat.id == validatedCategory);
-                            print(
+                            developer.log(
                                 '✅ Categoría existe en lista: $categoryExists');
 
                             if (!categoryExists) {
-                              print(
+                              developer.log(
                                   '⚠️ PROBLEMA: Categoría "$validatedCategory" no existe en la lista');
                               validatedCategory = null;
                             }
@@ -583,7 +584,7 @@ class _CreateItemProductScreenState
 
                           // Si cambió el valor, actualizar el estado
                           if (validatedCategory != selectedCategory) {
-                            print(
+                            developer.log(
                                 '🔧 Actualizando categoría de "$selectedCategory" a "$validatedCategory"');
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (mounted) {
@@ -629,7 +630,7 @@ class _CreateItemProductScreenState
                             );
                           }).toList(),
                           onChanged: (value) {
-                            print(
+                            developer.log(
                                 '📝 Categoría cambiada de "$selectedCategory" a "$value"');
                             setState(() {
                               selectedCategory = value;

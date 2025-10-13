@@ -30,6 +30,14 @@ class CarritoController {
       return sum + precioBase + precioAdicionales;
     });
   }
+
+  void eliminarItem(int index) {
+    ref.read(carritoProvider.notifier).eliminarItem(index);
+  }
+
+  void actualizarCantidad(int index, int nuevaCantidad) {
+    ref.read(carritoProvider.notifier).actualizarCantidad(index, nuevaCantidad);
+  }
 }
 
 final carritoControllerProvider = Provider((ref) => CarritoController(ref)); 
