@@ -127,7 +127,7 @@ class HomeCocineroScreen extends ConsumerWidget {
         child: Hero(
           tag: 'profile_avatar',
           child: GestureDetector(
-            onTap: () => context.push('/admin/settings'),
+            onTap: () => context.push('/settings'),
             child: Container(
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,

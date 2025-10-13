@@ -371,7 +371,7 @@ class PedidoCard extends ConsumerWidget {
   }
 
   Widget _buildExtraSection(PedidoAdicion extra, int index) {
-    final accent = const Color(0xFF2563EB);
+    const accent = Color(0xFF2563EB);
     final titulo = 'Agregado ${index + 1} (${extra.items.length})';
     final momento = _formatExtraTime(extra.createdAt);
 

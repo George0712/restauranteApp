@@ -66,6 +66,21 @@ class _CreateItemProductScreenState
     ref.read(isValidFieldsProvider.notifier).state = isValid;
   }
 
+  @override
+  void dispose() {
+    final registerProductController =
+        ref.read(registerProductoControllerProvider);
+    registerProductController.nombreController
+        .removeListener(_validateFields);
+    registerProductController.precioController
+        .removeListener(_validateFields);
+    registerProductController.tiempoPreparacionController
+        .removeListener(_validateFields);
+    registerProductController.ingredientesController
+        .removeListener(_validateFields);
+    super.dispose();
+  }
+
   // Método para limpiar todos los campos
   void _clearAllFields() {
     final registerProductController =
@@ -77,7 +92,7 @@ class _CreateItemProductScreenState
     // Limpiar imagen
     ref.read(profileImageProvider.notifier).clearImage();
 
-    // ✅ LIMPIAR ESTADO LOCAL CORRECTAMENTE
+    // LIMPIAR ESTADO LOCAL CORRECTAMENTE
     setState(() {
       selectedCategory = null;
       isAvailable = true;

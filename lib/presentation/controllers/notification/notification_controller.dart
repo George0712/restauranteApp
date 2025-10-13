@@ -395,6 +395,78 @@ class NotificationController extends StateNotifier<NotificationState> {
     }
   }
 
+  void notifyMesaAutoRelease({
+    required int mesaId,
+    String? cliente,
+    Duration? tiempoOcupacion,
+    String? motivo,
+    String? pedidoId,
+    String? estadoPedido,
+    bool notifyAdmin = false,
+  }) {
+    final now = DateTime.now();
+    final mensajeBase = StringBuffer('Mesa $mesaId se libero automaticamente');
+    final clienteTrim = cliente?.trim() ?? '';
+
+    if (clienteTrim.isNotEmpty) {
+      mensajeBase.write(' (cliente $clienteTrim)');
+    }
+
+    mensajeBase.write('.');
+
+    final motivoTrim = motivo?.trim() ?? '';
+    if (motivoTrim.isNotEmpty) {
+      mensajeBase.write(' Motivo: $motivoTrim.');
+    }
+
+    final duracionLabel =
+        tiempoOcupacion != null ? _humanizeDuration(tiempoOcupacion) : null;
+    if (duracionLabel != null) {
+      mensajeBase.write(' Tiempo ocupada: $duracionLabel.');
+    }
+
+    final metadata = <String, dynamic>{
+      'mesaId': mesaId,
+      if (clienteTrim.isNotEmpty) 'cliente': clienteTrim,
+      if (pedidoId != null && pedidoId.isNotEmpty) 'pedidoId': pedidoId,
+      if (estadoPedido != null && estadoPedido.isNotEmpty)
+        'estadoPedido': estadoPedido,
+      if (tiempoOcupacion != null)
+        'tiempoOcupacionSegundos': tiempoOcupacion.inSeconds,
+    };
+
+    final notifications = <AppNotification>[
+      _buildNotification(
+        id: 'waiter-mesa-$mesaId-liberada-${now.millisecondsSinceEpoch}',
+        role: NotificationRole.waiter,
+        title: 'Mesa liberada automaticamente',
+        message: mensajeBase.toString(),
+        severity: NotificationSeverity.info,
+        timestamp: now,
+        navigationRoute: '/mesero/pedidos/mesas',
+        metadata: metadata,
+      ),
+    ];
+
+    if (notifyAdmin) {
+      notifications.add(
+        _buildNotification(
+          id: 'admin-mesa-$mesaId-liberada-${now.millisecondsSinceEpoch}',
+          role: NotificationRole.admin,
+          title: 'Mesa liberada automaticamente',
+          message: mensajeBase.toString(),
+          severity: NotificationSeverity.info,
+          timestamp: now,
+          navigationRoute: '/admin/mesas',
+          metadata: metadata,
+        ),
+      );
+    }
+
+    _addNotifications(notifications);
+    _playAlert(notifications);
+  }
+
   void _playAlert(List<AppNotification> notifications) {
     final now = DateTime.now();
     final shouldPlay = notifications.any(
@@ -415,6 +487,26 @@ class NotificationController extends StateNotifier<NotificationState> {
     SystemSound.play(SystemSoundType.alert);
   }
 
+  String _humanizeDuration(Duration duration) {
+    if (duration.inMinutes <= 0) {
+      return '${duration.inSeconds}s';
+    }
+
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    final parts = <String>[];
+
+    if (hours > 0) {
+      parts.add('${hours}h');
+    }
+
+    if (minutes > 0 || hours == 0) {
+      parts.add('${minutes}m');
+    }
+
+    return parts.join(' ');
+  }
+
   AppNotification _buildNotification({
     required String id,
     required NotificationRole role,
@@ -424,6 +516,7 @@ class NotificationController extends StateNotifier<NotificationState> {
     required DateTime timestamp,
     String? actionLabel,
     String? navigationRoute,
+    Map<String, dynamic>? metadata,
   }) {
     return AppNotification(
       id: id,
@@ -434,6 +527,7 @@ class NotificationController extends StateNotifier<NotificationState> {
       timestamp: timestamp,
       actionLabel: actionLabel,
       navigationRoute: navigationRoute,
+      metadata: metadata,
     );
   }
 

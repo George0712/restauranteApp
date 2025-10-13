@@ -40,7 +40,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
               tag: 'profile_avatar',
               child: GestureDetector(
                 onTap: () {
-                  context.push('/admin/settings');
+                  context.push('/settings');
                 },
                 child: Container(
                   decoration: const BoxDecoration(

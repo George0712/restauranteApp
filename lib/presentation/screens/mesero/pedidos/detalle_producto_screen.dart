@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
+import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
 import 'package:restaurante_app/presentation/controllers/mesero/carrito_controller.dart';
@@ -33,17 +34,28 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
   void _agregarAlCarrito() async {
     try {
       final adicionalesAsync = await ref.read(additionalProvider.future);
-      final adicionales = adicionalesSeleccionados
-          .map((id) => adicionalesAsync.firstWhere((a) => a.id == id))
-          .toList();
+      final adicionalesDisponibles = {
+        for (final adicional in adicionalesAsync.where((a) => a.disponible))
+          adicional.id: adicional,
+      };
+      final idsValidos = <String>[];
+      final adicionales = <AdditionalModel>[];
+
+      for (final id in adicionalesSeleccionados) {
+        final adicional = adicionalesDisponibles[id];
+        if (adicional != null) {
+          idsValidos.add(id);
+          adicionales.add(adicional);
+        }
+      }
 
       final item = ItemCarrito(
         producto: widget.producto,
         cantidad: cantidad,
-        modificacionesSeleccionadas: adicionalesSeleccionados,
+        modificacionesSeleccionadas: idsValidos,
         notas: _notasController.text,
         precioUnitario: widget.producto.price,
-        adicionales: adicionales,
+        adicionales: adicionales.isEmpty ? null : adicionales,
       );
       ref.read(carritoControllerProvider).agregarItem(item);
       Navigator.pop(context);
@@ -181,7 +193,28 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
                   const SizedBox(height: 24),
                   adicionalesAsync.when(
                     data: (adicionales) {
-                      if (adicionales.isEmpty) return const SizedBox.shrink();
+                      final disponibles = adicionales
+                          .where((adicional) => adicional.disponible)
+                          .toList()
+                        ..sort(
+                          (a, b) => a.name
+                              .toLowerCase()
+                              .compareTo(b.name.toLowerCase()),
+                        );
+                      if (disponibles.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'No hay adicionales disponibles en este momento.',
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                        );
+                      }
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -193,7 +226,7 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          ...adicionales.map(
+                          ...disponibles.map(
                             (adicional) => CheckboxListTile(
                               title: Text(adicional.name),
                               subtitle: Text(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
@@ -10,7 +11,7 @@ import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/detalle_producto_screen.dart';
 import 'package:restaurante_app/presentation/widgets/carrito_bottom.dart';
-import 'package:restaurante_app/presentation/widgets/payment/payment_bottom_sheet.dart';
+import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:restaurante_app/data/models/mesa_model.dart';
 import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -37,7 +38,7 @@ class SeleccionProductosScreen extends ConsumerStatefulWidget {
 class _SeleccionProductosScreenState
     extends ConsumerState<SeleccionProductosScreen>
     with TickerProviderStateMixin {
-  late TabController _tabController;
+  TabController? _tabController;
   String categoriaSeleccionada = 'Todas';
   String categoriaIdSeleccionada = '';
   String filtroTexto = '';
@@ -60,6 +61,7 @@ class _SeleccionProductosScreenState
         'Todas',
         ...categorias.map((c) => c.name).toList()
       ];
+      _tabController?.dispose();
       _tabController =
           TabController(length: nombresCategorias.length, vsync: this);
     });
@@ -83,7 +85,7 @@ class _SeleccionProductosScreenState
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -227,16 +229,16 @@ class _SeleccionProductosScreenState
           border: Border.all(color: const Color(0xFFBFDBFE)),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
+        child: const Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.add_circle_outline,
+            Icon(Icons.add_circle_outline,
                 color: Color(0xFF2563EB), size: 20),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Agregando productos al pedido en preparacion',
                     style: TextStyle(
@@ -643,6 +645,7 @@ class _SeleccionProductosScreenState
         onModificarPedido: () => _modificarPedido(context),
         onCancelarPedido: () => _cancelarPedido(context),
         onActualizarPedido: () { _actualizarPedidoExistente(context); },
+        onReportIssue: () => _reportarProblema(context),
         onGenerarTicket: () => _mostrarTicketDesdeCarrito(context),
       ),
     );
@@ -697,7 +700,7 @@ class _SeleccionProductosScreenState
           .collection('pedido')
           .doc(widget.pedidoId)
           .get();
-      final data = pedidoDoc.data() as Map<String, dynamic>?;
+      final data = pedidoDoc.data();
       final estadoActual = (data?['status'] ?? 'pendiente').toString();
       final pagadoActual = data?['pagado'] == true;
       await _crearActualizarPedido(carrito, estadoActual, pagadoActual);
@@ -712,6 +715,39 @@ class _SeleccionProductosScreenState
     }
   }
   Future<void> _registrarPago(BuildContext sheetContext) async {
+    Map<String, dynamic>? pedidoData;
+    try {
+      final pedidoSnapshot = await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(widget.pedidoId)
+          .get();
+      if (!pedidoSnapshot.exists) {
+        _mostrarError(context, 'No encontramos informacion del pedido.');
+        return;
+      }
+      pedidoData = pedidoSnapshot.data() as Map<String, dynamic>;
+      final estado =
+          (pedidoData['status'] ?? 'pendiente').toString().toLowerCase();
+      final estadoNormalizado = estado.replaceAll(' ', '_');
+      final pagado = pedidoData['pagado'] == true;
+      final esEstadoTerminado = estadoNormalizado == 'terminado' ||
+          estadoNormalizado == 'entregado' ||
+          estadoNormalizado == 'completado';
+      if (!pagado && !esEstadoTerminado) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Debes marcar el pedido como terminado antes de registrar el pago.',
+            ),
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      _mostrarError(context, 'No se pudo preparar el pago: $e');
+      return;
+    }
     Navigator.of(sheetContext).pop();
     try {
       final pagoCompletado = await showModalBottomSheet<bool>(
@@ -727,14 +763,89 @@ class _SeleccionProductosScreenState
         await _cargarCarritoDelPedido();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago enviado a la pasarela.')),
+          const SnackBar(content: Text('Pago registrado correctamente.')),
         );
         final ticketInfo =
             await _generarTicketFactura(context, mostrarMensaje: false);
         await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
+        final mesaLiberada =
+            await _liberarMesaTrasPago(pedidoData: pedidoData);
+        if (mesaLiberada && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'La mesa se liberó automaticamente después del pago.',
+              ),
+            ),
+          );
+          _volverAPantallaDeMesas();
+        }
       }
     } catch (e) {
       _mostrarError(context, 'Error al registrar el pago: $e');
+    }
+  }
+
+  Future<bool> _liberarMesaTrasPago({Map<String, dynamic>? pedidoData}) async {
+    try {
+      Map<String, dynamic>? data = pedidoData;
+      if (data == null) {
+        final pedidoSnapshot = await FirebaseFirestore.instance
+            .collection('pedido')
+            .doc(widget.pedidoId)
+            .get();
+        data = pedidoSnapshot.data();
+      }
+      final mesaIdRaw = widget.mesaId ?? data?['mesaId']?.toString();
+      final mesaIdInt = mesaIdRaw is String
+          ? int.tryParse(mesaIdRaw)
+          : (mesaIdRaw is int ? mesaIdRaw : null);
+      if (mesaIdInt == null) {
+        return false;
+      }
+      MesaModel? mesaActual;
+      final mesas = ref.read(mesasMeseroProvider);
+      for (final mesa in mesas) {
+        if (mesa.id == mesaIdInt) {
+          mesaActual = mesa;
+          break;
+        }
+      }
+      mesaActual ??= await _obtenerMesaDesdeFirestore(mesaIdInt);
+      if (mesaActual == null) {
+        return false;
+      }
+      final mesaActualizada = mesaActual.copyWith(
+        estado: 'disponible',
+        cliente: null,
+        tiempo: null,
+        total: null,
+        pedidoId: null,
+        horaOcupacion: null,
+        fechaReserva: null,
+      );
+      await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+      return true;
+    } catch (e) {
+      debugPrint('No se pudo liberar la mesa tras el pago: $e');
+      return false;
+    }
+  }
+  Future<MesaModel?> _obtenerMesaDesdeFirestore(int mesaId) async {
+    try {
+      final query = await FirebaseFirestore.instance
+          .collection('mesa')
+          .where('id', isEqualTo: mesaId)
+          .limit(1)
+          .get();
+      if (query.docs.isEmpty) {
+        return null;
+      }
+      final doc = query.docs.first;
+      return MesaModel.fromMap(doc.data(), doc.id);
+    } catch (e) {
+      debugPrint('No se encontro la mesa $mesaId para liberar: $e');
+      return null;
     }
   }
 
@@ -798,6 +909,18 @@ class _SeleccionProductosScreenState
       await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
     } catch (e) {
       debugPrint('No se pudo actualizar la mesa tras cancelacion: $e');
+    }
+  }
+
+  void _volverAPantallaDeMesas() {
+    if (!mounted) {
+      return;
+    }
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go('/mesero/pedidos/mesas');
     }
   }
 
@@ -905,7 +1028,7 @@ class _SeleccionProductosScreenState
             .collection('pedido')
             .doc(widget.pedidoId);
         final pedidoSnapshot = await pedidoRef.get();
-        final pedidoData = pedidoSnapshot.data() as Map<String, dynamic>?;
+        final pedidoData = pedidoSnapshot.data();
         UserModel? user;
         try {
           user = await ref.read(userModelProvider.future);
@@ -939,7 +1062,9 @@ class _SeleccionProductosScreenState
         );
         if (mesaIdInt != null) {
           final nuevoPedidoId = const Uuid().v4();
-          final nuevoTableUuid = const Uuid().v4();
+          final etiquetaMesa = (mesaNombre != null && mesaNombre.trim().isNotEmpty)
+              ? mesaNombre
+              : 'Mesa $mesaIdInt';
           final nuevoPedidoData = <String, dynamic>{
             'id': nuevoPedidoId,
             'items': const [],
@@ -950,13 +1075,13 @@ class _SeleccionProductosScreenState
             'pagado': false,
             'paymentStatus': 'pending',
             'mode': pedidoData?['mode'] ?? 'mesa',
-            'tableNumber': nuevoTableUuid,
+            'tableNumber': etiquetaMesa,
             'meseroId': user?.uid ?? pedidoData?['meseroId'],
             'meseroNombre': user != null
                 ? '${user.nombre} ${user.apellidos}'.trim()
                 : pedidoData?['meseroNombre'],
             'mesaId': mesaIdInt,
-            'mesaNombre': mesaNombre,
+            'mesaNombre': etiquetaMesa,
             'clienteNombre': clienteNombre,
             'createdAt': FieldValue.serverTimestamp(),
             'updatedAt': FieldValue.serverTimestamp(),
@@ -983,20 +1108,6 @@ class _SeleccionProductosScreenState
               ),
             ),
           );
-          final queryParams = <String, String>{
-            'mesaId': mesaIdInt.toString(),
-          };
-          if (mesaNombre != null && mesaNombre.isNotEmpty) {
-            queryParams['mesaNombre'] = mesaNombre;
-          }
-          if (clienteNombre != null && clienteNombre.isNotEmpty) {
-            queryParams['clienteNombre'] = clienteNombre;
-          }
-          final uri = Uri(
-            path: '/mesero/pedidos/detalle/$mesaIdInt/$nuevoPedidoId',
-            queryParameters: queryParams,
-          );
-          context.go(uri.toString());
         } else {
           Navigator.of(sheetContext).pop();
           if (!mounted) return;
@@ -1008,6 +1119,8 @@ class _SeleccionProductosScreenState
             const SnackBar(content: Text('Pedido cancelado.')),
           );
         }
+        if (!mounted) return;
+        _volverAPantallaDeMesas();
       } catch (e) {
         _mostrarError(context, 'Error al cancelar pedido: $e');
       }
@@ -1047,19 +1160,15 @@ class _SeleccionProductosScreenState
           0;
       return sum + precioBase + precioAdicionales;
     });
-    // ✅ USAR LOS PARA�METROS PASADOS DESDE LA URL:
     final mesaIdInt =
         widget.mesaId != null ? int.tryParse(widget.mesaId!) : null;
-    print("🔧 DATOS DE MESA RECIBIDOS:");
-    print("   - Mesa ID: $mesaIdInt");
-    print("   - Mesa Nombre: ${widget.mesaNombre}");
-    print("   - Cliente: ${widget.clienteNombre}");
-    // Crear documento con toda la informacion
-    // ✅ IMPORTANTE: Solo crear/actualizar cuando realmente se confirma
-    await FirebaseFirestore.instance
-        .collection('pedido')
-        .doc(widget.pedidoId)
-        .set({
+    final mesaNombre = _decodeIfNeeded(widget.mesaNombre);
+    final clienteNombre = _decodeIfNeeded(widget.clienteNombre);
+    final tableNumber = mesaNombre ??
+        (mesaIdInt != null ? 'Mesa $mesaIdInt' : null) ??
+        widget.pedidoId;
+
+    final pedidoData = <String, dynamic>{
       'id': widget.pedidoId,
       'items': items,
       'subtotal': subtotal,
@@ -1068,18 +1177,28 @@ class _SeleccionProductosScreenState
       'pagado': pagado,
       'paymentStatus': pagado ? 'paid' : 'pending',
       'mode': 'mesa',
-      'tableNumber': widget.pedidoId,
+      'tableNumber': tableNumber,
       'meseroId': user?.uid,
       'meseroNombre': user != null
           ? '${user.nombre} ${user.apellidos}'
           : 'Mesero desconocido',
-      // ✅ USAR LOS DATOS PASADOS:
-      'mesaId': mesaIdInt,
-      'mesaNombre': widget.mesaNombre,
-      'clienteNombre': widget.clienteNombre,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    };
+    if (mesaIdInt != null) {
+      pedidoData['mesaId'] = mesaIdInt;
+    }
+    if (mesaNombre != null && mesaNombre.trim().isNotEmpty) {
+      pedidoData['mesaNombre'] = mesaNombre;
+    }
+    if (clienteNombre != null && clienteNombre.trim().isNotEmpty) {
+      pedidoData['clienteNombre'] = clienteNombre;
+    }
+
+    await FirebaseFirestore.instance
+        .collection('pedido')
+        .doc(widget.pedidoId)
+        .set(pedidoData, SetOptions(merge: true));
     setState(() {
       pedidoConfirmado = status != 'nuevo';
     });
@@ -1088,171 +1207,6 @@ class _SeleccionProductosScreenState
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0;
     return 0;
-  }
-
-  Future<void> _guardarPedido(
-    List<ItemCarrito> carrito, {
-    required bool pagado,
-    required String statusDestino,
-    Map<String, dynamic>? pedidoActual,
-    bool esExtra = false,
-  }) async {
-    final adicionalesAsync = await ref.read(additionalProvider.future);
-
-    UserModel? user;
-    try {
-      user = await ref.read(userModelProvider.future);
-    } catch (_) {
-      user = null;
-    }
-
-    Map<String, dynamic> _mapearItem(ItemCarrito item) {
-      final adicionalesSeleccionados = item.modificacionesSeleccionadas
-          .map(
-            (id) => adicionalesAsync.firstWhere(
-              (a) => a.id == id,
-            ),
-          )
-          .toList();
-
-      return {
-        'productId': item.producto.id,
-        'name': item.producto.name,
-        'price': item.precioUnitario,
-        'quantity': item.cantidad,
-        'notes': item.notas,
-        'adicionales': adicionalesSeleccionados.map((a) => a.toMap()).toList(),
-      };
-    }
-
-    final nuevoDetalle = carrito.map<Map<String, dynamic>>(_mapearItem).toList();
-
-    final subtotalCarrito = carrito.fold<double>(0, (sum, item) {
-      final precioBase = item.precioUnitario * item.cantidad;
-      final precioAdicionales = item.adicionales?.fold<double>(
-            0,
-            (acumulado, adicional) =>
-                acumulado + (adicional.price * item.cantidad),
-          ) ??
-          0;
-      return sum + precioBase + precioAdicionales;
-    });
-
-    final pedidoRef = FirebaseFirestore.instance
-        .collection('pedido')
-        .doc(widget.pedidoId);
-
-    final mesaIdInt = widget.mesaId != null
-        ? int.tryParse(widget.mesaId!)
-        : pedidoActual?['mesaId'] as int?;
-
-    if (esExtra && pedidoActual != null) {
-      final existentesRaw = (pedidoActual['items'] as List?) ?? [];
-      final existentes = existentesRaw
-          .whereType<Map<String, dynamic>>()
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
-
-      final subtotalActual = (pedidoActual['subtotal'] as num?)?.toDouble() ?? 0.0;
-      final totalActual = (pedidoActual['total'] as num?)?.toDouble() ?? subtotalActual;
-
-      final initialItemsRaw = pedidoActual['initialItems'] as List?;
-      Map<String, dynamic>? initialItemsUpdate;
-      if (initialItemsRaw == null || initialItemsRaw.isEmpty) {
-        initialItemsUpdate = {
-          'initialItems': existentes
-              .map((item) => Map<String, dynamic>.from(item))
-              .toList(),
-        };
-      }
-
-      existentes.addAll(nuevoDetalle);
-
-      final pagoRegistrado =
-          (pedidoActual['pagado'] == true) || pagado;
-      final paymentStatusActual = pedidoActual['paymentStatus'];
-
-      final extrasEntry = {
-        'items': nuevoDetalle,
-        'createdAt': FieldValue.serverTimestamp(),
-        'meseroId': user?.uid,
-        'meseroNombre': user != null
-            ? '${user.nombre} ${user.apellidos}'.trim()
-            : null,
-      };
-
-      final extrasActualesRaw =
-          (pedidoActual['extrasHistory'] as List?) ?? const [];
-      final extrasActuales = extrasActualesRaw
-          .whereType<Map<String, dynamic>>()
-          .map((extra) => Map<String, dynamic>.from(extra))
-          .toList()
-        ..add(extrasEntry);
-
-      final updateData = <String, dynamic>{
-        'items': existentes,
-        'subtotal': subtotalActual + subtotalCarrito,
-        'total': totalActual + subtotalCarrito,
-        'pagado': pagoRegistrado,
-        'paymentStatus': paymentStatusActual is String
-            ? paymentStatusActual
-            : (pagoRegistrado ? 'paid' : 'pending'),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'extrasHistory': extrasActuales,
-      };
-
-      if (initialItemsUpdate != null) {
-        updateData.addAll(initialItemsUpdate);
-      }
-
-      await pedidoRef.update(updateData);
-      return;
-    }
-
-    final data = <String, dynamic>{
-      'id': widget.pedidoId,
-      'items': nuevoDetalle,
-      'initialItems': nuevoDetalle,
-      'subtotal': subtotalCarrito,
-      'total': subtotalCarrito,
-      'status': statusDestino,
-      'mode': (pedidoActual?['mode'] ?? 'mesa').toString(),
-      'tableNumber': pedidoActual?['tableNumber'] ?? widget.pedidoId,
-      'meseroId': user?.uid,
-      'meseroNombre': user != null
-          ? '${user.nombre} ${user.apellidos}'.trim()
-          : 'Mesero desconocido',
-      'mesaId': mesaIdInt,
-      'mesaNombre': widget.mesaNombre ?? pedidoActual?['mesaNombre'],
-      'clienteNombre': widget.clienteNombre ?? pedidoActual?['clienteNombre'],
-      'pagado': pagado,
-      'paymentStatus': pagado ? 'paid' : 'pending',
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-
-    if (pedidoActual == null || !pedidoActual.containsKey('createdAt')) {
-      data['createdAt'] = FieldValue.serverTimestamp();
-    }
-
-    await pedidoRef.set(data, SetOptions(merge: true));
-  }
-
-  void _onPedidoActualizado(BuildContext context, {required String mensaje}) {
-    if (!mounted) return;
-
-    setState(() {
-      pedidoConfirmado = true;
-      _agregandoExtras = false;
-    });
-
-    ref.read(carritoProvider.notifier).limpiarCarrito();
-    _cargarCarritoDelPedido();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje)),
-    );
-
-    Navigator.pop(context);
   }
 
   String? _decodeIfNeeded(String? value) {
@@ -1270,6 +1224,12 @@ class _SeleccionProductosScreenState
         SnackBar(content: Text(mensaje)),
       );
     }
+  }
+
+  Future<void> _reportarProblema(BuildContext context) async {
+    // TODO: Implement report issue functionality
+    SnackbarHelper.showInfo('Funcionalidad de reporte de problemas próximamente');
+   
   }
 }
 

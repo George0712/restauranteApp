@@ -6,6 +6,7 @@ import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/widgets/dialog_ocupar_mesa.dart';
 import 'package:restaurante_app/presentation/widgets/dialog_reservar_mesa.dart';
+import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +16,7 @@ import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.d
 import 'package:restaurante_app/data/models/mesa_model.dart';
 import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
 import 'package:restaurante_app/presentation/widgets/build_stadistics_mesas.dart';
+import 'package:restaurante_app/presentation/providers/notification/notification_provider.dart';
 
 class MesasScreen extends ConsumerStatefulWidget {
   const MesasScreen({super.key});
@@ -24,12 +26,17 @@ class MesasScreen extends ConsumerStatefulWidget {
 }
 
 class _MesasScreenState extends ConsumerState<MesasScreen> {
+  static const Duration _limiteSinConsumo = Duration(minutes: 10);
+  static const Duration _limiteAlertaConsumo = Duration(hours: 2);
+
   int? mesaSeleccionadaId;
   String filtro = 'Todas';
   String searchTerm = '';
   final ScrollController _scrollController = ScrollController();
   Timer? _tiempoTicker;
   DateTime _relojActual = DateTime.now();
+  final Map<int, DateTime> _ocupacionesProcesadas = {};
+  final Set<int> _mesasEnProceso = {};
 
   @override
   void initState() {
@@ -66,6 +73,13 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         final mesasFiltradas = _filtrarMesas(mesas);
         final mesaSeleccionada =
             _obtenerMesaSeleccionada(mesasFiltradas, mesaSeleccionadaId);
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          _verificarMesasExpiradas(mesas);
+        });
 
         return Scaffold(
           appBar: _buildAppBar(notifier),
@@ -562,7 +576,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               onPressed: () => _mostrarOpcionesMesa(mesa),
               icon: const Icon(Icons.more_horiz, color: Colors.white70),
               label: const Text(
-                'Más opciones',
+                'Mas opciones',
                 style: TextStyle(color: Colors.white70),
               ),
             ),
@@ -595,7 +609,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         ];
 
       case 'ocupada':
-        return [
+        final puedeCobrar = _puedeCobrarMesa(mesa);
+        final acciones = <Widget>[
           _buildAccionPrincipal(
             titulo: 'Abrir pedido',
             icono: Icons.receipt_long,
@@ -605,14 +620,24 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             },
           ),
           const SizedBox(height: 10),
-          _buildAccionSecundaria(
-            titulo: 'Agregar productos',
-            icono: Icons.add_circle_outline,
-            onPressed: () {
-              _agregarAlPedido(mesa, closeSheet: false);
-            },
-          ),
-          const SizedBox(height: 10),
+        ];
+
+        if (puedeCobrar) {
+          acciones
+            ..add(
+              _buildAccionSecundaria(
+                titulo: 'Cobrar mesa',
+                icono: Icons.attach_money,
+                color: Colors.tealAccent.shade400,
+                onPressed: () {
+                  _cobrarMesa(mesa, closeSheet: false);
+                },
+              ),
+            )
+            ..add(const SizedBox(height: 10));
+        }
+
+        acciones.add(
           _buildAccionSecundaria(
             titulo: 'Liberar mesa',
             icono: Icons.logout,
@@ -621,7 +646,9 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               _liberarMesa(mesa, closeSheet: false);
             },
           ),
-        ];
+        );
+
+        return acciones;
 
       case 'reservada':
         return [
@@ -647,6 +674,30 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       default:
         return [];
     }
+  }
+
+  bool _puedeCobrarMesa(MesaModel mesa) {
+    final pedidoId = mesa.pedidoId;
+    if (pedidoId == null || pedidoId.isEmpty) {
+      return false;
+    }
+
+    final pedidoAsync = ref.watch(pedidos.pedidoPorIdProvider(pedidoId));
+    return pedidoAsync.maybeWhen(
+      data: (pedido) {
+        if (pedido == null) {
+          return false;
+        }
+
+        final status =
+            (pedido['status'] as String?)?.toLowerCase().trim() ?? '';
+        final pagado = pedido['pagado'] == true;
+        const estadosPermitidos = {'terminado', 'entregado', 'completado'};
+
+        return !pagado && estadosPermitidos.contains(status);
+      },
+      orElse: () => false,
+    );
   }
 
   Future<void> _crearPedidoRapido(MesaModel mesa) async {
@@ -957,7 +1008,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: colorEstado.withOpacity(0.16),
                     borderRadius: BorderRadius.circular(14),
@@ -1049,21 +1101,21 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
   Widget _buildTiempoActivoChip(Color colorEstado, MesaModel mesa) {
     final tiempo = _formatearTiempoActivo(mesa);
     return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.timer_outlined, color: colorEstado, size: 16),
-          const SizedBox(width: 6),
-          Text(
-            tiempo,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              letterSpacing: 0.4,
-              color: colorEstado,
-            ),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.timer_outlined, color: colorEstado, size: 16),
+        const SizedBox(width: 6),
+        Text(
+          tiempo,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            letterSpacing: 0.4,
+            color: colorEstado,
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   Widget _buildReservaChip(Color colorEstado, MesaModel mesa) {
@@ -1135,6 +1187,237 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     return '${horas.toString().padLeft(2, '0')}:${minutos.toString().padLeft(2, '0')}:${segundos.toString().padLeft(2, '0')}';
   }
 
+  void _notificarLiberacionAutomatica(
+    MesaModel mesa, {
+    required String motivo,
+    required Duration duracion,
+    String? estadoPedido,
+    String? pedidoId,
+  }) {
+    ref.read(notificationCenterProvider.notifier).notifyMesaAutoRelease(
+          mesaId: mesa.id,
+          cliente: mesa.cliente,
+          motivo: motivo,
+          tiempoOcupacion: duracion,
+          estadoPedido: estadoPedido,
+          pedidoId: pedidoId,
+        );
+  }
+
+  void _verificarMesasExpiradas(List<MesaModel> mesas) {
+    for (final mesa in mesas) {
+      final hora = mesa.horaOcupacion;
+
+      if (mesa.estado != 'ocupada' || hora == null) {
+        _ocupacionesProcesadas.remove(mesa.id);
+        _mesasEnProceso.remove(mesa.id);
+        continue;
+      }
+
+      final procesada = _ocupacionesProcesadas[mesa.id];
+      if (procesada != null && !procesada.isAtSameMomentAs(hora)) {
+        _ocupacionesProcesadas.remove(mesa.id);
+        _mesasEnProceso.remove(mesa.id);
+      }
+
+      final duracion = _relojActual.difference(hora);
+      if (duracion < _limiteSinConsumo) {
+        _ocupacionesProcesadas.remove(mesa.id);
+        _mesasEnProceso.remove(mesa.id);
+        continue;
+      }
+
+      if (_ocupacionesProcesadas[mesa.id]?.isAtSameMomentAs(hora) ?? false) {
+        continue;
+      }
+
+      if (_mesasEnProceso.contains(mesa.id)) {
+        continue;
+      }
+
+      _mesasEnProceso.add(mesa.id);
+      unawaited(_manejarMesaExpirada(mesa));
+    }
+  }
+
+  Future<void> _manejarMesaExpirada(MesaModel mesa) async {
+    final hora = mesa.horaOcupacion;
+    if (hora == null) {
+      _mesasEnProceso.remove(mesa.id);
+      return;
+    }
+
+    final duracion = _relojActual.difference(hora);
+    if (duracion < _limiteSinConsumo) {
+      _mesasEnProceso.remove(mesa.id);
+      return;
+    }
+
+    try {
+      final pedidoId = mesa.pedidoId;
+      if (pedidoId == null || pedidoId.isEmpty) {
+        final liberada = await _liberarMesaPorInactividad(mesa);
+        if (liberada) {
+          _ocupacionesProcesadas[mesa.id] = hora;
+          _notificarLiberacionAutomatica(
+            mesa,
+            motivo: 'Sin pedido asignado',
+            duracion: duracion,
+            pedidoId: pedidoId,
+          );
+        }
+        return;
+      }
+
+      final pedidoRef =
+          FirebaseFirestore.instance.collection('pedido').doc(pedidoId);
+      final pedidoSnapshot = await pedidoRef.get();
+
+      if (!pedidoSnapshot.exists) {
+        final liberada = await _liberarMesaPorInactividad(mesa);
+        if (liberada) {
+          _ocupacionesProcesadas[mesa.id] = hora;
+          _notificarLiberacionAutomatica(
+            mesa,
+            motivo: 'Pedido no encontrado en el sistema',
+            duracion: duracion,
+            pedidoId: pedidoId,
+          );
+        }
+        return;
+      }
+
+      final pedidoData = pedidoSnapshot.data();
+      final statusRaw = (pedidoData?['status'] as String?)?.toLowerCase() ?? '';
+      final List<dynamic> items =
+          (pedidoData?['items'] as List?)?.cast<dynamic>() ?? const [];
+      final List<dynamic> extrasHistory =
+          (pedidoData?['extrasHistory'] as List?)?.cast<dynamic>() ?? const [];
+
+      final bool tieneConsumoRegistrado =
+          items.isNotEmpty || extrasHistory.isNotEmpty;
+
+      const estadosLiberables = {
+        'cancelado',
+        'pagado',
+        'cerrado',
+        'finalizado'
+      };
+
+      if (!tieneConsumoRegistrado) {
+        final liberada = await _liberarMesaPorInactividad(mesa);
+        if (liberada) {
+          _ocupacionesProcesadas[mesa.id] = hora;
+          _notificarLiberacionAutomatica(
+            mesa,
+            motivo: 'Pedido sin consumo registrado',
+            duracion: duracion,
+            estadoPedido: statusRaw.isEmpty ? null : statusRaw,
+            pedidoId: pedidoId,
+          );
+        }
+        return;
+      }
+
+      if (estadosLiberables.contains(statusRaw)) {
+        final liberada = await _liberarMesaPorInactividad(mesa);
+        if (liberada) {
+          _ocupacionesProcesadas[mesa.id] = hora;
+          _notificarLiberacionAutomatica(
+            mesa,
+            motivo: 'Pedido en estado $statusRaw',
+            duracion: duracion,
+            estadoPedido: statusRaw.isEmpty ? null : statusRaw,
+            pedidoId: pedidoId,
+          );
+        }
+        return;
+      }
+
+      if (duracion < _limiteAlertaConsumo) {
+        return;
+      }
+
+      const estadosActivos = {'pendiente', 'preparando', 'terminado'};
+      const estadosPendientesDeCobro = {'entregado', 'completado'};
+
+      final bool pedidoActivo = estadosActivos.contains(statusRaw);
+      final bool posiblePendienteCobro =
+          estadosPendientesDeCobro.contains(statusRaw) ||
+              (!pedidoActivo && !estadosLiberables.contains(statusRaw));
+
+      if (!mounted) {
+        return;
+      }
+
+      _ocupacionesProcesadas[mesa.id] = hora;
+
+      if (pedidoActivo) {
+        SnackbarHelper.showInfo(
+          'Mesa ${mesa.id} tiene un pedido activo por mas de 2 horas. Verificar con el cliente.',
+        );
+      } else if (posiblePendienteCobro) {
+        SnackbarHelper.showInfo(
+          'Mesa ${mesa.id} registra consumo pendiente de cobro tras 2 horas. Validar antes de liberar.',
+        );
+      } else {
+        SnackbarHelper.showInfo(
+          'Mesa ${mesa.id} requiere verificacion manual antes de liberar.',
+        );
+      }
+      return;
+    } catch (e) {
+      debugPrint(
+        'Error al verificar la mesa ${mesa.id} por tiempo excedido: $e',
+      );
+      _ocupacionesProcesadas.remove(mesa.id);
+    } finally {
+      _mesasEnProceso.remove(mesa.id);
+    }
+  }
+
+  Future<bool> _liberarMesaPorInactividad(MesaModel mesa) async {
+    final hora = mesa.horaOcupacion;
+    if (hora == null) {
+      return false;
+    }
+
+    try {
+      await _cancelarPedidoActivo(mesa);
+
+      final mesaActualizada = mesa.copyWith(
+        estado: 'disponible',
+        cliente: null,
+        tiempo: null,
+        pedidoId: null,
+        horaOcupacion: null,
+        total: null,
+        fechaReserva: null,
+      );
+
+      await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+
+      if (!mounted) {
+        return true;
+      }
+
+      if (mesaSeleccionadaId == mesa.id) {
+        setState(() {
+          mesaSeleccionadaId = null;
+        });
+      }
+
+      SnackbarHelper.showInfo(
+        'Mesa ${mesa.id} liberada automaticamente por inactividad.',
+      );
+      return true;
+    } catch (e) {
+      debugPrint(
+        'Error al liberar automaticamente la mesa ${mesa.id}: $e',
+      );
+      return false;
+    }
+  }
 
   void _mostrarOpcionesMesa(MesaModel mesa) {
     setState(() => mesaSeleccionadaId = mesa.id);
@@ -1148,7 +1431,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
 
   Widget _buildOpcionesBottomSheet(MesaModel mesa) {
     return Container(
-       decoration: const BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
             Color(0xFF1A1A2E),
@@ -1226,7 +1509,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         ];
 
       case 'ocupada':
-        return [
+        final puedeCobrar = _puedeCobrarMesa(mesa);
+        final opciones = <Widget>[
           _buildBotonOpcion(
             'Ver Pedido',
             Icons.receipt_long,
@@ -1234,13 +1518,22 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             () => _verPedido(mesa),
           ),
           const SizedBox(height: 12),
-          _buildBotonOpcion(
-            'Agregar al Pedido',
-            Icons.add_shopping_cart,
-            Colors.green,
-            () => _agregarAlPedido(mesa),
-          ),
-          const SizedBox(height: 12),
+        ];
+
+        if (puedeCobrar) {
+          opciones
+            ..add(
+              _buildBotonOpcion(
+                'Cobrar Mesa',
+                Icons.attach_money,
+                Colors.teal,
+                () => _cobrarMesa(mesa),
+              ),
+            )
+            ..add(const SizedBox(height: 12));
+        }
+
+        opciones.add(
           _buildBotonOpcion(
             'Liberar Mesa',
             Icons.logout,
@@ -1249,7 +1542,9 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               _liberarMesa(mesa);
             },
           ),
-        ];
+        );
+
+        return opciones;
 
       case 'reservada':
         return [
@@ -1349,12 +1644,63 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     }
   }
 
-  void _agregarAlPedido(MesaModel mesa, {bool closeSheet = true}) {
-    if (closeSheet) {
+  Future<void> _cobrarMesa(MesaModel mesa, {bool closeSheet = true}) async {
+    if (closeSheet && mounted) {
       Navigator.pop(context);
     }
-    if (mesa.pedidoId != null && mounted) {
-      context.push('/mesero/pedidos/detalle/${mesa.id}/${mesa.pedidoId}');
+
+    final pedidoId = mesa.pedidoId;
+    if (pedidoId == null || pedidoId.isEmpty) {
+      SnackbarHelper.showError('No hay un pedido activo para esta mesa.');
+      return;
+    }
+
+    try {
+      final pedidoSnapshot = await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(pedidoId)
+          .get();
+
+      if (!pedidoSnapshot.exists) {
+        SnackbarHelper.showError('No encontramos informacion del pedido.');
+        return;
+      }
+
+      final data = pedidoSnapshot.data() as Map<String, dynamic>;
+      final status = (data['status'] ?? '').toString().toLowerCase().trim();
+      final pagado = data['pagado'] == true;
+      const estadosPermitidos = {'terminado', 'entregado', 'completado'};
+
+      if (pagado) {
+        SnackbarHelper.showInfo('El pedido ya fue cobrado.');
+        return;
+      }
+
+      if (!estadosPermitidos.contains(status)) {
+        SnackbarHelper.showInfo(
+          'Debes marcar el pedido como terminado antes de cobrar.',
+        );
+        return;
+      }
+
+      final cobroCompletado = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => PaymentBottomSheet(pedidoId: pedidoId),
+      );
+
+      if (cobroCompletado == true && mounted) {
+        setState(() => mesaSeleccionadaId = null);
+        SnackbarHelper.showSuccess('Pago registrado correctamente.');
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      SnackbarHelper.showError(
+        'No se pudo iniciar el cobro. Intentalo nuevamente.',
+      );
     }
   }
 
@@ -1452,13 +1798,13 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       setState(() => mesaSeleccionadaId = null);
 
       SnackbarHelper.showSuccess('Mesa liberada y pedido cancelado.');
-      
     } catch (e) {
       print('Error liberando mesa ${mesa.id}: $e');
       if (!mounted) {
         return;
       }
-      SnackbarHelper.showError('No se pudo liberar la mesa. Inténtalo nuevamente.');
+      SnackbarHelper.showError(
+          'No se pudo liberar la mesa. Inténtalo nuevamente.');
     }
   }
 

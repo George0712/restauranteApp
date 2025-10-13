@@ -110,6 +110,10 @@ final GoRouter router = GoRouter(
     ),
 
     GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsUserScreen(),
+    ),
+    GoRoute(
       path: '/admin/settings',
       builder: (context, state) => const SettingsUserScreen(),
     ),
@@ -157,17 +161,25 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/mesero/pedidos/detalle/:mesaId/:pedidoId',
       builder: (context, state) {
-        //final mesaId = state.pathParameters['mesaId']!;
         final pedidoId = state.pathParameters['pedidoId']!;
-        
-        // âœ… OBTENER QUERY PARAMETERS:
+        final mesaIdFromPath = state.pathParameters['mesaId'];
+
+        String? decodeParam(String? value) {
+          if (value == null) return null;
+          try {
+            return Uri.decodeComponent(value);
+          } catch (_) {
+            return value;
+          }
+        }
+
         final queryParams = state.uri.queryParameters;
-        
+
         return SeleccionProductosScreen(
           pedidoId: pedidoId,
-          mesaId: queryParams['mesaId'],
-          mesaNombre: queryParams['mesaNombre'],
-          clienteNombre: queryParams['clienteNombre'],
+          mesaId: mesaIdFromPath ?? queryParams['mesaId'],
+          mesaNombre: decodeParam(queryParams['mesaNombre']),
+          clienteNombre: decodeParam(queryParams['clienteNombre']),
         );
       },
     ),

@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:restaurante_app/presentation/widgets/payment/payment_bottom_sheet.dart';
+import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 
 class TicketPreviewScreen extends ConsumerStatefulWidget {
   const TicketPreviewScreen({
@@ -301,8 +301,8 @@ class _TicketItemsList extends StatelessWidget {
           color: Colors.blueGrey.shade50,
           borderRadius: BorderRadius.circular(18),
         ),
-        child: Column(
-          children: const [
+        child: const Column(
+          children: [
             Icon(Icons.shopping_bag_outlined, size: 40, color: Colors.blueGrey),
             SizedBox(height: 12),
             Text('No hay productos registrados en este ticket.'),

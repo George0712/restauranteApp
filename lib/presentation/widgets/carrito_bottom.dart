@@ -16,6 +16,7 @@ class CarritoBottomSheet extends ConsumerWidget {
   final VoidCallback onModificarPedido;
   final VoidCallback onCancelarPedido;
   final VoidCallback onActualizarPedido;
+  final VoidCallback onReportIssue;
   final VoidCallback onGenerarTicket;
   final String? pedidoId;
   const CarritoBottomSheet({
@@ -26,6 +27,7 @@ class CarritoBottomSheet extends ConsumerWidget {
     required this.onModificarPedido,
     required this.onCancelarPedido,
     required this.onActualizarPedido,
+    required this.onReportIssue,
     required this.onGenerarTicket,
     this.pedidoId,
   });
@@ -210,11 +212,65 @@ class CarritoBottomSheet extends ConsumerWidget {
         final pedidoData = snapshot.data!.data() as Map<String, dynamic>;
         final estado =
             (pedidoData['status'] ?? 'pendiente').toString().toLowerCase();
+        final estadoNormalizado = estado.replaceAll(' ', '_');
         final pagado = pedidoData['pagado'] == true;
         final pedidoItems = (pedidoData['items'] as List?) ?? [];
+        final bool pedidoSinItems = pedidoItems.isEmpty;
+        if (pedidoSinItems && estadoNormalizado == 'nuevo') {
+          if (carrito.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _PrimaryButton(
+                icon: Icons.local_fire_department,
+                label: 'Enviar pedido a cocina',
+                onPressed: onConfirmarSinPagar,
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+              const SizedBox(height: 12),
+              _PrimaryButton(
+                icon: Icons.receipt_long,
+                label: 'Enviar y generar ticket',
+                onPressed: onConfirmarYPagar,
+                backgroundColor: Colors.green,
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Generar el ticket no marca el pedido como pagado.',
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
+          );
+        }
         final hayCambios = _tieneCambiosEnCarrito(carrito, pedidoItems);
+        const estadosActualizacion = {'pendiente'};
+        const estadosEdicion = {'nuevo', 'pendiente'};
+        const estadosCancelacion = {
+          'nuevo',
+          'pendiente',
+          'preparando',
+          'preparacion',
+          'en_preparacion',
+        };
+        const estadosFinalizados = {
+          'terminado',
+          'entregado',
+          'completado',
+          'pagado',
+          'finalizado',
+          'cerrado',
+        };
+        final estadoPermiteActualizacion =
+            estadosActualizacion.contains(estadoNormalizado);
+        final estadoPermiteEdicion =
+            estadosEdicion.contains(estadoNormalizado);
+        final estadoPermiteCancelacion =
+            estadosCancelacion.contains(estadoNormalizado);
+        final estadoFinalizado = estadosFinalizados.contains(estadoNormalizado);
         final acciones = <Widget>[];
-        if (hayCambios) {
+        if (hayCambios && estadoPermiteActualizacion) {
           acciones.add(
             _PrimaryButton(
               icon: Icons.local_fire_department,
@@ -247,7 +303,7 @@ class CarritoBottomSheet extends ConsumerWidget {
           style: TextStyle(fontSize: 12, color: Colors.black54),
         ));
         acciones.add(const SizedBox(height: 16));
-        if (!pagado) {
+        if (!pagado && estadoFinalizado) {
           acciones.add(
             _PrimaryButton(
               icon: Icons.payments,
@@ -257,9 +313,10 @@ class CarritoBottomSheet extends ConsumerWidget {
             ),
           );
           acciones.add(const SizedBox(height: 16));
-        } else {
+        }
+        if (pagado) {
           acciones.add(
-            _InfoBox(
+            const _InfoBox(
               icon: Icons.verified_outlined,
               message:
                   'El pedido ya esta pagado. Puedes volver a generar el ticket si lo necesitas.',
@@ -268,10 +325,7 @@ class CarritoBottomSheet extends ConsumerWidget {
           );
           acciones.add(const SizedBox(height: 16));
         }
-        if (!pagado &&
-            (estado == 'pendiente' ||
-                estado == 'preparacion' ||
-                estado == 'en_preparacion')) {
+        if (!pagado && estadoPermiteEdicion) {
           acciones.add(
             _SecondaryButton(
               icon: Icons.edit_outlined,
@@ -281,12 +335,22 @@ class CarritoBottomSheet extends ConsumerWidget {
           );
           acciones.add(const SizedBox(height: 12));
         }
-        if (isAdmin && !pagado) {
+        if (isAdmin && !pagado && estadoPermiteCancelacion) {
           acciones.add(
             _DangerButton(
               icon: Icons.cancel_outlined,
               label: 'Cancelar pedido',
               onPressed: onCancelarPedido,
+            ),
+          );
+          acciones.add(const SizedBox(height: 12));
+        }
+        if (estadoFinalizado) {
+          acciones.add(
+            _DangerButton(
+              icon: Icons.report_problem_outlined,
+              label: 'Notificar problema',
+              onPressed: onReportIssue,
             ),
           );
         }
@@ -308,8 +372,8 @@ class CarritoBottomSheet extends ConsumerWidget {
         color: Colors.blueGrey.shade50,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        children: const [
+      child: const Column(
+        children: [
           Icon(Icons.shopping_bag_outlined, size: 48, color: Colors.blueGrey),
           SizedBox(height: 12),
           Text(
@@ -334,6 +398,11 @@ class CarritoBottomSheet extends ConsumerWidget {
     if (pedidoItems.isEmpty) {
       return carrito.isNotEmpty;
     }
+    double asDouble(dynamic value) {
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0;
+      return 0;
+    }
     final carritoCanonico = carrito.map((item) {
       final adicionales = [...item.modificacionesSeleccionadas]..sort();
       final nota = item.notas ?? '';
@@ -348,8 +417,8 @@ class CarritoBottomSheet extends ConsumerWidget {
           [];
       adicionales.sort();
       final nota = (data['notes'] ?? '').toString();
-      final price = data['price'] ?? 0;
-      return '${data['productId']}|${data['quantity']}|${price.toString()}|$nota|${adicionales.join(',')}';
+      final price = asDouble(data['price']);
+      return '${data['productId']}|${data['quantity']}|${price.toStringAsFixed(2)}|$nota|${adicionales.join(',')}';
     }).toList()
       ..sort();
     if (carritoCanonico.length != pedidoCanonico.length) {

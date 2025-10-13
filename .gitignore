@@ -123,6 +123,9 @@ app.*.symbols
 .svn/
 .atom/
 
+# WARP configuration (local only)
+WARP.md
+
 # IntelliJ/Android Studio
 *.iml
 *.ipr
