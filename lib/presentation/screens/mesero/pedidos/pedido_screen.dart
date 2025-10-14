@@ -1232,7 +1232,10 @@ class _SeleccionProductosScreenState
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => DetalleProductoScreen(producto: producto),
+      builder: (context) => DetalleProductoScreen(
+        producto: producto,
+        pedidoId: widget.pedidoId,
+      ),
     );
   }
 

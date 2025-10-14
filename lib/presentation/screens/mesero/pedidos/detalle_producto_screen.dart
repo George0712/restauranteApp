@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
@@ -9,10 +10,12 @@ import 'package:restaurante_app/presentation/widgets/cantidad_selector.dart';
 
 class DetalleProductoScreen extends ConsumerStatefulWidget {
   final ProductModel producto;
+  final String? pedidoId;
 
   const DetalleProductoScreen({
     super.key,
     required this.producto,
+    this.pedidoId,
   });
 
   @override
@@ -24,6 +27,14 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
   int cantidad = 1;
   List<String> adicionalesSeleccionados = [];
   final TextEditingController _notasController = TextEditingController();
+  bool _pedidoFinalizado = false;
+  String _mensajeEstado = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _verificarEstadoPedido();
+  }
 
   @override
   void dispose() {
@@ -31,8 +42,110 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
     super.dispose();
   }
 
+  Future<void> _verificarEstadoPedido() async {
+    if (widget.pedidoId == null) {
+      setState(() {
+        _pedidoFinalizado = false;
+        _mensajeEstado = '';
+      });
+      return;
+    }
+
+    try {
+      final pedidoDoc = await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(widget.pedidoId)
+          .get();
+
+      if (pedidoDoc.exists) {
+        final pedidoData = pedidoDoc.data() as Map<String, dynamic>;
+        final estado = (pedidoData['status'] ?? 'pendiente').toString().toLowerCase();
+        final estadoNormalizado = estado.replaceAll(' ', '_');
+        const estadosFinalizados = {
+          'terminado',
+          'entregado',
+          'completado',
+          'pagado',
+          'finalizado',
+          'cerrado',
+          'listo_para_pago',
+        };
+
+        setState(() {
+          _pedidoFinalizado = estadosFinalizados.contains(estadoNormalizado);
+          if (_pedidoFinalizado) {
+            switch (estadoNormalizado) {
+              case 'entregado':
+                _mensajeEstado = 'Este pedido ya fue entregado';
+                break;
+              case 'pagado':
+                _mensajeEstado = 'Este pedido ya está pagado';
+                break;
+              case 'terminado':
+              case 'completado':
+              case 'finalizado':
+                _mensajeEstado = 'Este pedido ya está finalizado';
+                break;
+              case 'listo_para_pago':
+                _mensajeEstado = 'Este pedido está listo para pago';
+                break;
+              default:
+                _mensajeEstado = 'No se pueden agregar más productos';
+            }
+          } else {
+            _mensajeEstado = '';
+          }
+        });
+      }
+    } catch (e) {
+      // En caso de error, permitir agregar productos
+      setState(() {
+        _pedidoFinalizado = false;
+        _mensajeEstado = '';
+      });
+    }
+  }
+
   void _agregarAlCarrito() async {
     try {
+      // Validar estado del pedido antes de agregar
+      if (widget.pedidoId != null) {
+        final pedidoDoc = await FirebaseFirestore.instance
+            .collection('pedido')
+            .doc(widget.pedidoId)
+            .get();
+        
+        if (pedidoDoc.exists) {
+          final pedidoData = pedidoDoc.data() as Map<String, dynamic>;
+          final estado = (pedidoData['status'] ?? 'pendiente').toString().toLowerCase();
+          final estadoNormalizado = estado.replaceAll(' ', '_');
+          const estadosFinalizados = {
+            'terminado',
+            'entregado',
+            'completado',
+            'pagado',
+            'finalizado',
+            'cerrado',
+            'listo_para_pago',
+          };
+          
+          if (estadosFinalizados.contains(estadoNormalizado)) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text(
+                    'No se pueden agregar productos a un pedido que ya está finalizado',
+                  ),
+                  backgroundColor: Colors.orange.shade700,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+            return;
+          }
+        }
+      }
+      
       final adicionalesAsync = await ref.read(additionalProvider.future);
       final adicionalesDisponibles = {
         for (final adicional in adicionalesAsync.where((a) => a.disponible))
@@ -479,25 +592,85 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
   }
 
   Widget _buildBottomButton() {
+    final puedeAgregar = widget.producto.disponible && !_pedidoFinalizado;
+    
     return Container(
       padding: const EdgeInsets.all(24),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: widget.producto.disponible ? _agregarAlCarrito : null,
-          icon: const Icon(Icons.add_shopping_cart),
-          label: const Text('Agregar al carrito'),
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            backgroundColor: widget.producto.disponible
-                ? Theme.of(context).primaryColor
-                : Colors.grey.shade600,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_pedidoFinalizado) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade700.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade700.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.orange.shade700,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _mensajeEstado,
+                          style: TextStyle(
+                            color: Colors.orange.shade700,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'No se pueden agregar más productos a este pedido',
+                          style: TextStyle(
+                            color: Colors.orange.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: puedeAgregar ? _agregarAlCarrito : null,
+              icon: Icon(
+                _pedidoFinalizado ? Icons.block : Icons.add_shopping_cart,
+              ),
+              label: Text(
+                _pedidoFinalizado 
+                    ? 'Pedido finalizado'
+                    : !widget.producto.disponible
+                        ? 'Producto no disponible'
+                        : 'Agregar al carrito',
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: puedeAgregar
+                    ? Theme.of(context).primaryColor
+                    : Colors.grey.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
