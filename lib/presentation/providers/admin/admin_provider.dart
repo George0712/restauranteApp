@@ -31,12 +31,12 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
-/// Extrae cada métrica de AdminDashboardModel
+/// Extrae cada métrica de AdminDashboardModel - Solo cuenta pedidos PAGADOS
 final totalVentasProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
     .collection('pedido')
-    .where('status', isEqualTo: 'terminado')
+    .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
     .snapshots()
     .map((snapshot) {
       int totalVentas = 0;
@@ -110,7 +110,7 @@ final weeklySalesProvider = StreamProvider<List<SalesPoint>>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'terminado')
+      .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
       .snapshots()
       .map((snapshot) {
     final now = DateTime.now();
@@ -153,7 +153,7 @@ final todaySalesProvider = StreamProvider<double>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'terminado')
+      .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
       .snapshots()
       .map((snapshot) {
     final today = DateTime.now();
@@ -212,7 +212,7 @@ final averageTicketProvider = StreamProvider<double>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'terminado')
+      .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
       .snapshots()
       .map((snapshot) {
     if (snapshot.size == 0) return 0.0;
@@ -257,7 +257,7 @@ final topProductsProvider = StreamProvider<List<TopProductMetric>>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'terminado')
+      .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
       .snapshots()
       .map((snapshot) {
     final Map<String, _ProductAccumulator> aggregated = {};

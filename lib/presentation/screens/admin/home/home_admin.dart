@@ -65,25 +65,53 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             preferredSize: const Size.fromHeight(80),
             child: Container(
               margin: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
               ),
               child: TabBar(
                 indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
+                  color: theme.primaryColor.withValues(alpha: 0.12),
                 ),
-                labelColor: theme.primaryColor,
-                unselectedLabelColor: Colors.white70,
                 dividerColor: Colors.transparent,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white.withValues(alpha: 0.65),
                 labelStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.2,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13.5,
                 ),
                 tabs: const [
-                  Tab(text: 'Dashboard'),
-                  Tab(text: 'Gestión'),
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.dashboard_outlined, size: 16),
+                        SizedBox(width: 6),
+                        Text('Dashboard'),
+                      ],
+                    ),
+                  ),
+                  Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.settings_outlined, size: 16),
+                        SizedBox(width: 6),
+                        Text('Gestión'),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -658,11 +658,11 @@ class PedidoCard extends ConsumerWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.warning_rounded, color: Colors.redAccent, size: 24),
-            const SizedBox(width: 8),
-            const Text(
+            SizedBox(width: 8),
+            Text(
               'Opciones del pedido',
               style: TextStyle(
                 color: Colors.white,
@@ -733,11 +733,11 @@ class PedidoCard extends ConsumerWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.report_problem_outlined, color: Colors.redAccent, size: 24),
-            const SizedBox(width: 8),
-            const Text(
+            SizedBox(width: 8),
+            Text(
               'Reportar problema',
               style: TextStyle(
                 color: Colors.white,
@@ -819,11 +819,11 @@ class PedidoCard extends ConsumerWidget {
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 24),
-            const SizedBox(width: 8),
-            const Text(
+            SizedBox(width: 8),
+            Text(
               'Cancelar pedido',
               style: TextStyle(
                 color: Colors.white,

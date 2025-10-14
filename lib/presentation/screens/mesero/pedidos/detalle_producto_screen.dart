@@ -676,10 +676,10 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
   }
 
   Widget _buildLoadingSection() {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Adicionales',
           style: TextStyle(
             fontSize: 18,
@@ -687,8 +687,8 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
             color: Colors.white,
           ),
         ),
-        const SizedBox(height: 12),
-        const Center(
+        SizedBox(height: 12),
+        Center(
           child: CircularProgressIndicator(),
         ),
       ],

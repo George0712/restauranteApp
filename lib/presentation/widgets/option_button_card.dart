@@ -101,18 +101,6 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color.fromRGBO(
-                            widget.color.r.toInt(),
-                            widget.color.g.toInt(),
-                            widget.color.b.toInt(),
-                            0.3,
-                          ),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     child: widget.icon,
                   ),

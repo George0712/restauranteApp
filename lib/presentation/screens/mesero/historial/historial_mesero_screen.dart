@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +7,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
@@ -279,15 +277,15 @@ class _HistorialScreenState extends State<HistorialScreen> {
       } catch (e) {
         // Intentar calcular total desde items si falla
         try {
-          total = items.fold<double>(0.0, (sum, item) {
+          total = items.fold<double>(0.0, (acc, item) {
             if (item is Map<String, dynamic>) {
               final itemPrice = item['price'] ?? 0;
               final itemQuantity = item['quantity'] ?? 1;
               if (itemPrice is num && itemQuantity is num) {
-                return sum + (itemPrice * itemQuantity).toDouble();
+                return acc + (itemPrice * itemQuantity).toDouble();
               }
             }
-            return sum;
+            return acc;
           });
         } catch (e2) {
           total = 0.0;
@@ -472,15 +470,15 @@ class _HistorialScreenState extends State<HistorialScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              const Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline,
                     color: Colors.red,
                     size: 24,
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  SizedBox(width: 12),
+                  Expanded(
                     child: Text(
                       'Error al cargar pedido',
                       style: TextStyle(
@@ -762,13 +760,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
       
       // Si total es 0, intentar calcular desde items
       if (total == 0.0 && items.isNotEmpty) {
-        total = items.fold<double>(0.0, (sum, item) {
+        total = items.fold<double>(0.0, (acc, item) {
           if (item is Map<String, dynamic>) {
             final price = (item['price'] as num?)?.toDouble() ?? 0.0;
             final quantity = (item['quantity'] as num?)?.toInt() ?? 1;
-            return sum + (price * quantity);
+            return acc + (price * quantity);
           }
-          return sum;
+          return acc;
         });
       }
     } catch (e) {
@@ -869,13 +867,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
                     ),
                     const Spacer(),
                     if (pagado) ...[
-                      Icon(
+                      const Icon(
                         Icons.verified,
                         color: Colors.green,
                         size: 18,
                       ),
                       const SizedBox(width: 4),
-                      Text(
+                      const Text(
                         'Pagado',
                         style: TextStyle(
                           color: Colors.green,
@@ -1254,7 +1252,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.note_outlined,
                       color: Colors.orange,
                       size: 16,
@@ -1368,13 +1366,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
       }
       
       if (total == 0.0 && items.isNotEmpty) {
-        total = items.fold<double>(0.0, (sum, item) {
+        total = items.fold<double>(0.0, (acc, item) {
           if (item is Map<String, dynamic>) {
             final price = (item['price'] as num?)?.toDouble() ?? 0.0;
             final quantity = (item['quantity'] as num?)?.toInt() ?? 1;
-            return sum + (price * quantity);
+            return acc + (price * quantity);
           }
-          return sum;
+          return acc;
         });
       }
     } catch (e) {
@@ -1699,10 +1697,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            print('DEBUG: Compartir button pressed');
-                            _compartirTexto(pedidoId, data);
-                          },
+                          onPressed: () => _compartirTexto(pedidoId, data),
                           icon: const Icon(Icons.share, size: 18),
                           label: const Text('Compartir Imagen'),
                           style: ElevatedButton.styleFrom(
@@ -1742,13 +1737,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
       }
       
       if (total == 0.0 && items.isNotEmpty) {
-        total = items.fold<double>(0.0, (sum, item) {
+        total = items.fold<double>(0.0, (acc, item) {
           if (item is Map<String, dynamic>) {
             final price = (item['price'] as num?)?.toDouble() ?? 0.0;
             final quantity = (item['quantity'] as num?)?.toInt() ?? 1;
-            return sum + (price * quantity);
+            return acc + (price * quantity);
           }
-          return sum;
+          return acc;
         });
       }
     } catch (e) {
@@ -2200,17 +2195,17 @@ class _HistorialScreenState extends State<HistorialScreen> {
             ),
             
             // Título
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(24, 8, 24, 24),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.share,
                     color: Color(0xFF8B5CF6),
                     size: 28,
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  SizedBox(width: 12),
+                  Expanded(
                     child: Text(
                       '¿Cómo quieres compartir?',
                       style: TextStyle(
@@ -2359,13 +2354,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
         }
         
         if (total == 0.0 && items.isNotEmpty) {
-          total = items.fold<double>(0.0, (sum, item) {
+          total = items.fold<double>(0.0, (acc, item) {
             if (item is Map<String, dynamic>) {
               final price = (item['price'] as num?)?.toDouble() ?? 0.0;
               final quantity = (item['quantity'] as num?)?.toInt() ?? 1;
-              return sum + (price * quantity);
+              return acc + (price * quantity);
             }
-            return sum;
+            return acc;
           });
         }
       } catch (e) {
@@ -2486,13 +2481,13 @@ class _HistorialScreenState extends State<HistorialScreen> {
       }
       
       if (total == 0.0 && items.isNotEmpty) {
-        total = items.fold<double>(0.0, (sum, item) {
+        total = items.fold<double>(0.0, (acc, item) {
           if (item is Map<String, dynamic>) {
             final price = (item['price'] as num?)?.toDouble() ?? 0.0;
             final quantity = (item['quantity'] as num?)?.toInt() ?? 1;
-            return sum + (price * quantity);
+            return acc + (price * quantity);
           }
-          return sum;
+          return acc;
         });
       }
     } catch (e) {
