@@ -188,6 +188,154 @@ class HomeCocineroScreen extends ConsumerWidget {
   }
 }
 
+// -------------------- Vista de Mazo de Cartas para Móviles --------------------
+class _CardStackView extends StatefulWidget {
+  final List pedidos;
+  final Color emptyStateColor;
+
+  const _CardStackView({
+    required this.pedidos,
+    required this.emptyStateColor,
+  });
+
+  @override
+  State<_CardStackView> createState() => _CardStackViewState();
+}
+
+class _CardStackViewState extends State<_CardStackView> {
+  late PageController _pageController;
+  int currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.pedidos.isEmpty) {
+      return const Center(
+        child: Text(
+          'No hay pedidos',
+          style: TextStyle(color: Colors.white54),
+        ),
+      );
+    }
+
+    return Stack(
+      children: [
+        // Contador simple de pedidos
+        Positioned(
+          top: 0,
+          right: 0,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 16, right: 20),
+              child: Text(
+                '${currentIndex + 1} de ${widget.pedidos.length}',
+                style: TextStyle(
+                  color: widget.emptyStateColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Stack de cartas respetando SafeArea
+        Positioned.fill(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 40, 0, 40), // Ancho igual a otros contenedores y menos espacio superior
+              child: PageView.builder(
+                controller: _pageController,
+                physics: const BouncingScrollPhysics(parent: ClampingScrollPhysics()),
+                onPageChanged: (index) {
+                  setState(() {
+                    currentIndex = index;
+                  });
+                  // Agregamos un pequeño haptic feedback para mejor UX
+                  HapticFeedback.lightImpact();
+                },
+                itemCount: widget.pedidos.length,
+                itemBuilder: (context, index) {
+                  final pedido = widget.pedidos[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0), // Separación ajustada al ancho
+                    child: Hero(
+                      tag: 'pedido_${pedido.id}',
+                      child: PedidoCard(pedido: pedido),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+
+        // Botón flotante para regresar a la primera tarjeta
+        if (currentIndex > 0)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 20, bottom: 30),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                      BoxShadow(
+                        color: widget.emptyStateColor.withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      _pageController.animateToPage(
+                        0,
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeOutCubic,
+                      );
+                      HapticFeedback.mediumImpact();
+                    },
+                    backgroundColor: widget.emptyStateColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0, // Sin elevación porque usamos sombra personalizada
+                    mini: true,
+                    child: const Icon(Icons.first_page_rounded, size: 20),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _KitchenTabBar extends StatelessWidget {
   final int pendingCount;
   final int completedCount;
@@ -318,16 +466,9 @@ class _PendingOrdersTab extends ConsumerWidget {
                 color: const Color(0xFFF97316),
                 backgroundColor: const Color(0xFF0F172A),
                 onRefresh: refresh,
-                child: ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(4, 12, 4, 120),
-                  itemCount: pedidos.length,
-                  itemBuilder: (context, index) {
-                    final pedido = pedidos[index];
-                    return PedidoCard(pedido: pedido);
-                  },
+                child: _CardStackView(
+                  pedidos: pedidos,
+                  emptyStateColor: const Color(0xFFF97316),
                 ),
               );
             } else {
@@ -394,16 +535,9 @@ class _CompletedOrdersTab extends ConsumerWidget {
                 color: const Color(0xFF10B981),
                 backgroundColor: const Color(0xFF0F172A),
                 onRefresh: refresh,
-                child: ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: BouncingScrollPhysics(),
-                  ),
-                  padding: const EdgeInsets.fromLTRB(4, 12, 4, 120),
-                  itemCount: pedidos.length,
-                  itemBuilder: (context, index) {
-                    final pedido = pedidos[index];
-                    return PedidoCard(pedido: pedido);
-                  },
+                child: _CardStackView(
+                  pedidos: pedidos,
+                  emptyStateColor: const Color(0xFF10B981),
                 ),
               );
             } else {

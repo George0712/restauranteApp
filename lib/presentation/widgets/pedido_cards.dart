@@ -7,11 +7,13 @@ import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.da
 class PedidoCard extends ConsumerWidget {
   final Pedido pedido;
   final bool isCompact;
+  final bool isStackBackground;
 
   const PedidoCard({
     super.key,
     required this.pedido,
     this.isCompact = false,
+    this.isStackBackground = false,
   });
 
   @override
@@ -21,8 +23,8 @@ class PedidoCard extends ConsumerWidget {
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: isCompact ? 6 : 8,
-        vertical: isCompact ? 10 : 12,
+        horizontal: isCompact ? 2 : 4, // Menor margen horizontal para más ancho
+        vertical: isCompact ? 8 : 12,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(isCompact ? 18 : 20),
@@ -35,20 +37,13 @@ class PedidoCard extends ConsumerWidget {
           end: Alignment.bottomRight,
         ),
         border: Border.all(color: statusColor.withValues(alpha: 0.25), width: 1.4),
-        boxShadow: [
-          BoxShadow(
-            color: statusColor.withValues(alpha: 0.18),
-            blurRadius: 20,
-            offset: const Offset(0, 14),
-          ),
-        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(isCompact ? 18 : 20),
         child: Container(
           padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 16 : 20,
-            vertical: isCompact ? 16 : 22,
+            horizontal: isCompact ? 12 : 16,
+            vertical: isCompact ? 12 : 16,
           ),
           decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.18),
@@ -57,16 +52,28 @@ class PedidoCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(statusColor),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               _buildMetaInfo(),
-              const SizedBox(height: 18),
-              _buildItemsList(statusColor),
-              if (pedido.notas != null && pedido.notas!.trim().isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _buildNotes(),
+              const SizedBox(height: 12),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildItemsList(statusColor),
+                      if (pedido.notas != null && pedido.notas!.trim().isNotEmpty && !isStackBackground) ...[
+                        const SizedBox(height: 12),
+                        _buildNotes(),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              // Botones siempre en la parte inferior
+              if (!isStackBackground) ...[
+                const SizedBox(height: 12),
+                _buildActionButtons(context, ref, isProcessing),
               ],
-              const SizedBox(height: 18),
-              _buildActionButtons(context, ref, isProcessing),
             ],
           ),
         ),
@@ -75,14 +82,14 @@ class PedidoCard extends ConsumerWidget {
   }
 
   Widget _buildHeader(Color statusColor) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
                 'Pedido #${_generateFriendlyId(pedido.id)}',
                 style: const TextStyle(
                   color: Colors.white,
@@ -91,38 +98,56 @@ class PedidoCard extends ConsumerWidget {
                   letterSpacing: 0.3,
                 ),
               ),
-              const SizedBox(height: 6),
-              Row(
-                children: [
-                  Icon(Icons.access_time_rounded,
-                      size: 14, color: Colors.white.withValues(alpha: 0.6)),
-                  const SizedBox(width: 4),
-                  Text(
+            ),
+            _StatusPill(label: _getStatusText(pedido.status), color: statusColor),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Información temporal en una fila flexible
+        Wrap(
+          spacing: 12,
+          runSpacing: 4,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.access_time_rounded,
+                    size: 14, color: Colors.white.withValues(alpha: 0.6)),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
                     _getTimeDisplay(),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.75),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 12),
-                  Icon(Icons.calendar_today_outlined,
-                      size: 13, color: Colors.white.withValues(alpha: 0.45)),
-                  const SizedBox(width: 4),
-                  Text(
+                ),
+              ],
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.calendar_today_outlined,
+                    size: 13, color: Colors.white.withValues(alpha: 0.45)),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
                     _getCreatedDisplay(),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.55),
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
-        _StatusPill(label: _getStatusText(pedido.status), color: statusColor),
       ],
     );
   }
@@ -520,18 +545,18 @@ class PedidoCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: () => _showCancelDialog(context, ref),
-              icon: const Icon(Icons.close_rounded),
-              label: const Text('Cancelar'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.redAccent,
-                side: const BorderSide(color: Colors.redAccent),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+              ),
+              child: IconButton(
+                onPressed: () => _showReportDialog(context, ref),
+                icon: const Icon(Icons.warning_rounded, size: 22),
+                color: Colors.redAccent,
+                tooltip: 'Reportar problema',
+                padding: const EdgeInsets.all(14),
               ),
             ),
           ],
@@ -561,18 +586,18 @@ class PedidoCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: () => _showCancelDialog(context, ref),
-              icon: const Icon(Icons.close_rounded),
-              label: const Text('Cancelar'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.redAccent,
-                side: const BorderSide(color: Colors.redAccent),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+              ),
+              child: IconButton(
+                onPressed: () => _showReportDialog(context, ref),
+                icon: const Icon(Icons.warning_rounded, size: 22),
+                color: Colors.redAccent,
+                tooltip: 'Reportar problema',
+                padding: const EdgeInsets.all(14),
               ),
             ),
           ],
@@ -627,21 +652,188 @@ class PedidoCard extends ConsumerWidget {
     }
   }
 
-  void _showCancelDialog(BuildContext context, WidgetRef ref) {
+  void _showReportDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF0F172A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Text(
-          'Cancelar pedido',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
+        title: Row(
+          children: [
+            Icon(Icons.warning_rounded, color: Colors.redAccent, size: 24),
+            const SizedBox(width: 8),
+            const Text(
+              'Opciones del pedido',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pedido #${_generateFriendlyId(pedido.id)}',
+              style: const TextStyle(
+                color: Color(0xFFCBD5F5),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '¿Qué acción deseas realizar?',
+              style: TextStyle(
+                color: Color(0xFFCBD5F5),
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          // Botón de reportar problema
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showReportIssueDialog(context, ref);
+            },
+            icon: const Icon(Icons.report_problem_outlined, size: 18),
+            label: const Text('Reportar problema'),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
           ),
+          // Botón de cancelar pedido
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showCancelConfirmDialog(context, ref);
+            },
+            icon: const Icon(Icons.cancel_outlined, size: 18),
+            label: const Text('Cancelar pedido'),
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+          ),
+          // Botón de cerrar
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportIssueDialog(BuildContext context, WidgetRef ref) {
+    final TextEditingController reportController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF0F172A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            Icon(Icons.report_problem_outlined, color: Colors.redAccent, size: 24),
+            const SizedBox(width: 8),
+            const Text(
+              'Reportar problema',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Describe el problema con el pedido #${_generateFriendlyId(pedido.id)}:',
+              style: const TextStyle(
+                color: Color(0xFFCBD5F5),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reportController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'Ej: Faltan ingredientes, cliente canceló, problema con la cocina...',
+                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.05),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
+              ),
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              if (reportController.text.trim().isNotEmpty) {
+                Navigator.of(context).pop();
+                // Aquí se puede implementar la lógica para enviar el reporte
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Problema reportado exitosamente'),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.send, size: 18),
+            label: const Text('Enviar reporte'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelConfirmDialog(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF0F172A),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Row(
+          children: [
+            Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 24),
+            const SizedBox(width: 8),
+            const Text(
+              'Cancelar pedido',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
         content: Text(
-          '¿Deseas cancelar el pedido #${_generateFriendlyId(pedido.id)}? Esta acción notificará al resto del equipo.',
+          '¿Estás seguro de que deseas cancelar el pedido #${_generateFriendlyId(pedido.id)}?\n\nEsta acción notificará al equipo y no se puede deshacer.',
           style: const TextStyle(
             color: Color(0xFFCBD5F5),
             height: 1.4,
@@ -650,15 +842,19 @@ class PedidoCard extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Mantener pedido'),
+            child: const Text('No cancelar'),
           ),
-          TextButton(
+          ElevatedButton.icon(
             onPressed: () {
               Navigator.of(context).pop();
               ref.read(cocinaNotifierProvider.notifier).cancelOrder(pedido.id);
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-            child: const Text('Cancelar pedido'),
+            icon: const Icon(Icons.cancel, size: 18),
+            label: const Text('Sí, cancelar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),
