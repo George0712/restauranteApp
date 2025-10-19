@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/data/models/notification_model.dart';
@@ -34,6 +35,7 @@ class NotificationController extends StateNotifier<NotificationState> {
   DateTime _lastSound = DateTime.fromMillisecondsSinceEpoch(0);
   Timer? _tickTimer;
   bool _hydrated = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   void _onPedidosChanged(
     AsyncValue<List<Pedido>>? _,
@@ -484,7 +486,13 @@ class NotificationController extends StateNotifier<NotificationState> {
     }
 
     _lastSound = now;
-    SystemSound.play(SystemSoundType.alert);
+
+    // Reproducir sonido de notificación general
+    _audioPlayer.play(AssetSource('sounds/new_order.mp3')).catchError((e) {
+      // Si falla el audio, usar el sonido del sistema como fallback
+      HapticFeedback.heavyImpact();
+      SystemSound.play(SystemSoundType.alert);
+    });
   }
 
   String _humanizeDuration(Duration duration) {
@@ -554,6 +562,7 @@ class NotificationController extends StateNotifier<NotificationState> {
   void dispose() {
     _pedidosSub.close();
     _tickTimer?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
   }
 }

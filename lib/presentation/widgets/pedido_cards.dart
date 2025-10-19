@@ -60,7 +60,7 @@ class PedidoCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildItemsList(statusColor),
+                      _buildItemsList(statusColor, ref),
                       if (pedido.notas != null && pedido.notas!.trim().isNotEmpty && !isStackBackground) ...[
                         const SizedBox(height: 12),
                         _buildNotes(),
@@ -192,7 +192,7 @@ class PedidoCard extends ConsumerWidget {
   }
 
 
-  Widget _buildItemsList(Color statusColor) {
+  Widget _buildItemsList(Color statusColor, WidgetRef ref) {
     final baseItems =
         pedido.initialItems.isNotEmpty ? pedido.initialItems : pedido.items;
     final extras = pedido.extras;
@@ -238,9 +238,11 @@ class PedidoCard extends ConsumerWidget {
               ],
             ),
           ),
-          ...baseItems
-              .map((item) => _buildItemRow(item, statusColor))
-              .toList(),
+          ...baseItems.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            return _buildItemRow(item, statusColor, ref, itemIndex: index);
+          }).toList(),
         ],
       ),
     );
@@ -254,21 +256,28 @@ class PedidoCard extends ConsumerWidget {
         baseContainer,
         ...List.generate(
           extras.length,
-          (index) => _buildExtraSection(extras[index], index),
+          (index) => _buildExtraSection(extras[index], index, ref),
         ),
       ],
     );
   }
 
-  Widget _buildItemRow(ItemPedido item, Color statusColor,
-      {bool isExtra = false}) {
+  Widget _buildItemRow(ItemPedido item, Color statusColor, WidgetRef ref,
+      {bool isExtra = false, int? itemIndex}) {
     final accent = isExtra ? const Color(0xFF2563EB) : statusColor;
+    // Permitir interacción si no es extra, tiene índice y el pedido no está cancelado/terminado
+    final canInteract = !isExtra && itemIndex != null &&
+                        (pedido.status == 'pendiente' || pedido.status == 'preparando');
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
         ),
+        color: item.isPrepared
+            ? const Color(0xFF10B981).withValues(alpha: 0.08)
+            : Colors.transparent,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,18 +286,22 @@ class PedidoCard extends ConsumerWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.18),
+              color: item.isPrepared
+                  ? const Color(0xFF10B981).withValues(alpha: 0.25)
+                  : accent.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Center(
-              child: Text(
-                '${item.cantidad}x',
-                style: TextStyle(
-                  color: accent,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                ),
-              ),
+              child: item.isPrepared
+                  ? const Icon(Icons.check, color: Color(0xFF10B981), size: 18)
+                  : Text(
+                      '${item.cantidad}x',
+                      style: TextStyle(
+                        color: accent,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 14),
@@ -298,10 +311,14 @@ class PedidoCard extends ConsumerWidget {
               children: [
                 Text(
                   item.nombre,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    decoration: item.isPrepared
+                        ? TextDecoration.lineThrough
+                        : TextDecoration.none,
+                    decorationColor: Colors.white.withValues(alpha: 0.4),
                   ),
                 ),
                 if (item.adicionales != null && item.adicionales!.isNotEmpty)
@@ -390,12 +407,56 @@ class PedidoCard extends ConsumerWidget {
               ],
             ),
           ),
+          // Botón de preparación individual - con play o check
+          if (canInteract) ...[
+            const SizedBox(width: 12),
+            InkWell(
+              onTap: () async {
+                // Si el pedido está pendiente, auto-iniciar preparación
+                if (pedido.status == 'pendiente') {
+                  await ref
+                      .read(cocinaNotifierProvider.notifier)
+                      .startPreparation(pedido.id);
+                }
+                // Luego marcar el item como preparado
+                await ref
+                    .read(cocinaNotifierProvider.notifier)
+                    .toggleItemPreparation(pedido.id, itemIndex);
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: item.isPrepared
+                      ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                      : accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: item.isPrepared
+                        ? const Color(0xFF10B981).withValues(alpha: 0.4)
+                        : accent.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(
+                  item.isPrepared
+                      ? Icons.check_circle
+                      : (pedido.status == 'pendiente'
+                          ? Icons.play_arrow_rounded
+                          : Icons.radio_button_unchecked),
+                  color: item.isPrepared ? const Color(0xFF10B981) : accent,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildExtraSection(PedidoAdicion extra, int index) {
+  Widget _buildExtraSection(PedidoAdicion extra, int index, WidgetRef ref) {
     const accent = Color(0xFF2563EB);
     final titulo = 'Agregado ${index + 1} (${extra.items.length})';
     final momento = _formatExtraTime(extra.createdAt);
@@ -455,7 +516,7 @@ class PedidoCard extends ConsumerWidget {
             ),
           ),
           ...extra.items
-              .map((item) => _buildItemRow(item, accent, isExtra: true))
+              .map((item) => _buildItemRow(item, accent, ref, isExtra: true))
               .toList(),
         ],
       ),
@@ -508,6 +569,20 @@ class PedidoCard extends ConsumerWidget {
     );
   }
 
+  bool _areAllItemsPrepared() {
+    // Verificar si todos los items están preparados
+    for (final item in pedido.items) {
+      if (!item.isPrepared) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  int _getPreparedItemsCount() {
+    return pedido.items.where((item) => item.isPrepared).length;
+  }
+
   Widget _buildActionButtons(
       BuildContext context, WidgetRef ref, bool isProcessing) {
     if (isProcessing) {
@@ -525,11 +600,18 @@ class PedidoCard extends ConsumerWidget {
           children: [
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () => ref
-                    .read(cocinaNotifierProvider.notifier)
-                    .startPreparation(pedido.id),
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: const Text('Iniciar preparación'),
+                onPressed: () async {
+                  // Iniciar preparación del pedido
+                  await ref
+                      .read(cocinaNotifierProvider.notifier)
+                      .startPreparation(pedido.id);
+                  // Marcar todos los items como preparados
+                  await ref
+                      .read(cocinaNotifierProvider.notifier)
+                      .prepareAllItems(pedido.id, pedido.items.length);
+                },
+                icon: const Icon(Icons.done_all_rounded),
+                label: const Text('Preparar todo'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF97316),
                   foregroundColor: Colors.white,
@@ -562,69 +644,153 @@ class PedidoCard extends ConsumerWidget {
           ],
         );
       case 'preparando':
-        return Row(
+        final allPrepared = _areAllItemsPrepared();
+        final preparedCount = _getPreparedItemsCount();
+        final totalCount = pedido.items.length;
+
+        return Column(
           children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => ref
-                    .read(cocinaNotifierProvider.notifier)
-                    .finishOrder(pedido.id),
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Marcar terminado'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF10B981),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+            if (!allPrepared)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF97316).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFF97316).withValues(alpha: 0.3),
                   ),
                 ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        color: const Color(0xFFF97316), size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Items preparados: $preparedCount de $totalCount',
+                        style: const TextStyle(
+                          color: Color(0xFFFFD9A8),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.redAccent.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
-              ),
-              child: IconButton(
-                onPressed: () => _showReportDialog(context, ref),
-                icon: const Icon(Icons.warning_rounded, size: 22),
-                color: Colors.redAccent,
-                tooltip: 'Reportar problema',
-                padding: const EdgeInsets.all(14),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: allPrepared
+                        ? () => ref
+                            .read(cocinaNotifierProvider.notifier)
+                            .finishOrder(pedido.id, ref)
+                        : null,
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Marcar terminado'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor:
+                          Colors.grey.withValues(alpha: 0.3),
+                      disabledForegroundColor:
+                          Colors.white.withValues(alpha: 0.5),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: Colors.redAccent.withValues(alpha: 0.3)),
+                  ),
+                  child: IconButton(
+                    onPressed: () => _showReportDialog(context, ref),
+                    icon: const Icon(Icons.warning_rounded, size: 22),
+                    color: Colors.redAccent,
+                    tooltip: 'Reportar problema',
+                    padding: const EdgeInsets.all(14),
+                  ),
+                ),
+              ],
             ),
           ],
         );
       case 'cancelado':
-        return SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => ref
-                .read(cocinaNotifierProvider.notifier)
-                .reactivateOrder(pedido.id),
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Reactivar pedido'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF38BDF8),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              textStyle: const TextStyle(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+        // Solo mostrar botón de reactivar si fue cancelado por cocina
+        final canReactivate = pedido.cancelledBy == 'cocina';
+
+        if (canReactivate) {
+          return SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => ref
+                  .read(cocinaNotifierProvider.notifier)
+                  .reactivateOrder(pedido.id),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reactivar pedido'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF38BDF8),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
-          ),
-        );
+          );
+        } else {
+          // Si fue cancelado por el mesero, mostrar mensaje informativo
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.block_rounded,
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.8),
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Pedido cancelado por el mesero',
+                    style: TextStyle(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.9),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
       default:
         return Container(
           width: double.infinity,

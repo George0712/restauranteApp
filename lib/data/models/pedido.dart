@@ -9,7 +9,8 @@ class ItemPedido {
   final String? notas;
   final String? productId;
   final int? tiempoPreparacion;
-  final List<Map<String, dynamic>>? adicionales; // ✅ Usar Map en lugar de Adicional
+  final List<Map<String, dynamic>>? adicionales;
+  final bool isPrepared; // ✅ NUEVO: Estado de preparación individual del item
 
   ItemPedido({
     required this.id,
@@ -19,7 +20,8 @@ class ItemPedido {
     this.notas,
     this.productId,
     this.tiempoPreparacion,
-    this.adicionales, // ✅ Como Map
+    this.adicionales,
+    this.isPrepared = false, // ✅ Por defecto no preparado
   });
 
   // En fromJson:
@@ -32,8 +34,8 @@ class ItemPedido {
     notas: json['notes'] ?? json['notas'],
     productId: json['productId'],
     tiempoPreparacion: json['tiempoPreparacion'] ?? json['prepTime'],
-    // ✅ AÑADIR VALIDACIÓN ROBUSTA:
     adicionales: _parseAdicionales(json['adicionales']),
+    isPrepared: json['isPrepared'] ?? false, // ✅ NUEVO
   );
 }
 
@@ -66,8 +68,34 @@ static List<Map<String, dynamic>>? _parseAdicionales(dynamic adicionalesData) {
       'notes': notas,
       'productId': productId,
       'tiempoPreparacion': tiempoPreparacion,
-      'adicionales': adicionales, // ✅ Ya es una lista de Maps
+      'adicionales': adicionales,
+      'isPrepared': isPrepared, // ✅ NUEVO
     };
+  }
+
+  // ✅ NUEVO: Método para crear una copia con campos modificados
+  ItemPedido copyWith({
+    String? id,
+    String? nombre,
+    double? precio,
+    int? cantidad,
+    String? notas,
+    String? productId,
+    int? tiempoPreparacion,
+    List<Map<String, dynamic>>? adicionales,
+    bool? isPrepared,
+  }) {
+    return ItemPedido(
+      id: id ?? this.id,
+      nombre: nombre ?? this.nombre,
+      precio: precio ?? this.precio,
+      cantidad: cantidad ?? this.cantidad,
+      notas: notas ?? this.notas,
+      productId: productId ?? this.productId,
+      tiempoPreparacion: tiempoPreparacion ?? this.tiempoPreparacion,
+      adicionales: adicionales ?? this.adicionales,
+      isPrepared: isPrepared ?? this.isPrepared,
+    );
   }
 }
 
@@ -88,12 +116,15 @@ class Pedido {
   final String? notas;
   final String? meseroId;
   final String? meseroNombre;
-  
+
   // ✅ NUEVOS CAMPOS PARA INFORMACIÓN LEGIBLE:
   final int? mesaId;           // Número real de la mesa (1, 2, 3, etc.)
   final String? mesaNombre;    // "Mesa 3" - información legible
   final String? clienteNombre; // Nombre del cliente para historial
-  
+
+  // ✅ CAMPO PARA RASTREAR QUIÉN CANCELÓ EL PEDIDO:
+  final String? cancelledBy;   // 'cocina' o 'mesero'
+
   Pedido({
     required this.id,
     required this.status,
@@ -114,6 +145,7 @@ class Pedido {
     this.mesaId,
     this.mesaNombre,
     this.clienteNombre,
+    this.cancelledBy,
   });
 
   // Getters para compatibilidad con código existente
@@ -155,6 +187,7 @@ class Pedido {
       mesaId: json['mesaId'] as int?,
       mesaNombre: json['mesaNombre'],
       clienteNombre: json['clienteNombre'],
+      cancelledBy: json['cancelledBy'],
     );
   }
 
@@ -180,6 +213,7 @@ class Pedido {
       'mesaId': mesaId,
       'mesaNombre': mesaNombre,
       'clienteNombre': clienteNombre,
+      'cancelledBy': cancelledBy,
     };
   }
 

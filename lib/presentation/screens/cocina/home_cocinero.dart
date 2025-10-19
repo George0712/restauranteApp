@@ -2,12 +2,13 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:restaurante_app/data/models/pedido.dart';
 
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 import 'package:restaurante_app/data/models/notification_model.dart';
 import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
-import 'package:restaurante_app/presentation/widgets/kitchen_stats.dart';
 import 'package:restaurante_app/presentation/widgets/pedido_cards.dart';
+import 'package:restaurante_app/presentation/widgets/order_notification_banner.dart';
 
 class HomeCocineroScreen extends ConsumerWidget {
   const HomeCocineroScreen({super.key});
@@ -15,6 +16,9 @@ class HomeCocineroScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(pedidoStatsProvider);
+    final newOrderNotification = ref.watch(newOrderNotificationProvider);
+    final completedOrderNotification = ref.watch(completedOrderNotificationProvider);
+    final updatedOrderNotification = ref.watch(updatedOrderNotificationProvider);
 
     return statsAsync.when(
       data: (stats) {
@@ -32,7 +36,7 @@ class HomeCocineroScreen extends ConsumerWidget {
             child: Scaffold(
               backgroundColor: Colors.black,
               extendBodyBehindAppBar: true,
-              appBar: _buildAppBar(context, stats),
+              appBar: _buildAppBar(context, stats, ref),
               body: Stack(
                 children: [
                   Container(
@@ -49,40 +53,56 @@ class HomeCocineroScreen extends ConsumerWidget {
                     ),
                   ),
                   SafeArea(
-                    child: SingleChildScrollView(
-                      physics: const NeverScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 12),
-                          _buildIntroHeader(context),
-                          const KitchenStats(
-                            margin: EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Notification banners
+                        if (newOrderNotification != null)
+                          OrderNotificationBanner(
+                            type: NotificationType.newOrder,
+                            message: newOrderNotification,
+                            onDismiss: () {
+                              ref.read(newOrderNotificationProvider.notifier).state = null;
+                            },
                           ),
-                          const SizedBox(height: 18),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: _KitchenTabBar(
-                              pendingCount: pendingCount,
-                              completedCount: completedCount,
+                        if (completedOrderNotification != null)
+                          OrderNotificationBanner(
+                            type: NotificationType.orderCompleted,
+                            message: completedOrderNotification,
+                            onDismiss: () {
+                              ref.read(completedOrderNotificationProvider.notifier).state = null;
+                            },
+                          ),
+                        if (updatedOrderNotification != null)
+                          OrderNotificationBanner(
+                            type: NotificationType.orderUpdated,
+                            message: updatedOrderNotification,
+                            onDismiss: () {
+                              ref.read(updatedOrderNotificationProvider.notifier).state = null;
+                            },
+                          ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: _KitchenTabBar(
+                            pendingCount: pendingCount,
+                            completedCount: completedCount,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: TabBarView(
+                              physics: BouncingScrollPhysics(),
+                              children: [
+                                _PendingOrdersTab(),
+                                _CompletedOrdersTab(),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.6,
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: TabBarView(
-                                physics: BouncingScrollPhysics(),
-                                children: [
-                                  _PendingOrdersTab(),
-                                  _CompletedOrdersTab(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -115,7 +135,7 @@ class HomeCocineroScreen extends ConsumerWidget {
   }
 
   PreferredSizeWidget _buildAppBar(
-      BuildContext context, Map<String, int> stats) {
+      BuildContext context, Map<String, int> stats, WidgetRef ref) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -167,25 +187,6 @@ class HomeCocineroScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildIntroHeader(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'CONTROL DE COCINA',
-            style: TextStyle(
-              color: Color(0xFFF8FAFC),
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // -------------------- Vista de Mazo de Cartas para Móviles --------------------
@@ -213,6 +214,38 @@ class _CardStackViewState extends State<_CardStackView> {
   }
 
   @override
+  void didUpdateWidget(_CardStackView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Si llegó un nuevo pedido (aumentó la cantidad), volver a la primera carta
+    if (widget.pedidos.length > oldWidget.pedidos.length && currentIndex > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageController.hasClients) {
+          _pageController.animateToPage(
+            0,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutCubic,
+          );
+          HapticFeedback.lightImpact();
+        }
+      });
+    }
+
+    // Si estamos en un índice que ya no existe (porque se eliminaron pedidos)
+    if (currentIndex >= widget.pedidos.length && widget.pedidos.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _pageController.hasClients) {
+          final newIndex = widget.pedidos.length - 1;
+          _pageController.jumpToPage(newIndex);
+          setState(() {
+            currentIndex = newIndex;
+          });
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
@@ -231,103 +264,88 @@ class _CardStackViewState extends State<_CardStackView> {
 
     return Stack(
       children: [
-        // Contador simple de pedidos
+        // Contador simple de pedidos - centrado y sin caja
         Positioned(
-          top: 0,
+          top: 8,
+          left: 0,
           right: 0,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 16, right: 20),
-              child: Text(
-                '${currentIndex + 1} de ${widget.pedidos.length}',
-                style: TextStyle(
-                  color: widget.emptyStateColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 2,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
+          child: Center(
+            child: Text(
+              '${currentIndex + 1} / ${widget.pedidos.length}',
+              style: TextStyle(
+                color: widget.emptyStateColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
             ),
           ),
         ),
 
-        // Stack de cartas respetando SafeArea
-        Positioned.fill(
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 40, 0, 40), // Ancho igual a otros contenedores y menos espacio superior
-              child: PageView.builder(
-                controller: _pageController,
-                physics: const BouncingScrollPhysics(parent: ClampingScrollPhysics()),
-                onPageChanged: (index) {
-                  setState(() {
-                    currentIndex = index;
-                  });
-                  // Agregamos un pequeño haptic feedback para mejor UX
-                  HapticFeedback.lightImpact();
-                },
-                itemCount: widget.pedidos.length,
-                itemBuilder: (context, index) {
-                  final pedido = widget.pedidos[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0), // Separación ajustada al ancho
-                    child: Hero(
-                      tag: 'pedido_${pedido.id}',
-                      child: PedidoCard(pedido: pedido),
-                    ),
-                  );
-                },
+        // Stack de cartas ocupando todo el espacio disponible
+        PageView.builder(
+          controller: _pageController,
+          physics: const BouncingScrollPhysics(parent: ClampingScrollPhysics()),
+          onPageChanged: (index) {
+            setState(() {
+              currentIndex = index;
+            });
+            HapticFeedback.lightImpact();
+          },
+          itemCount: widget.pedidos.length,
+          itemBuilder: (context, index) {
+            final pedido = widget.pedidos[index];
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(8, 40, 8, 16),
+              child: Hero(
+                tag: 'pedido_${pedido.id}',
+                child: PedidoCard(pedido: pedido),
               ),
-            ),
-          ),
+            );
+          },
         ),
 
         // Botón flotante para regresar a la primera tarjeta
         if (currentIndex > 0)
           Positioned(
-            bottom: 0,
-            left: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20, bottom: 30),
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                      BoxShadow(
-                        color: widget.emptyStateColor.withValues(alpha: 0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+            bottom: 24,
+            left: 20,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
                   ),
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      _pageController.animateToPage(
-                        0,
-                        duration: const Duration(milliseconds: 500),
-                        curve: Curves.easeOutCubic,
-                      );
-                      HapticFeedback.mediumImpact();
-                    },
-                    backgroundColor: widget.emptyStateColor,
-                    foregroundColor: Colors.white,
-                    elevation: 0, // Sin elevación porque usamos sombra personalizada
-                    mini: true,
-                    child: const Icon(Icons.first_page_rounded, size: 20),
+                  BoxShadow(
+                    color: widget.emptyStateColor.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                ),
+                ],
+              ),
+              child: FloatingActionButton(
+                onPressed: () {
+                  _pageController.animateToPage(
+                    0,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutCubic,
+                  );
+                  HapticFeedback.mediumImpact();
+                },
+                backgroundColor: widget.emptyStateColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                child: const Icon(Icons.first_page_rounded, size: 24),
               ),
             ),
           ),
@@ -438,15 +456,104 @@ class _TabLabel extends StatelessWidget {
 }
 
 // -------------------- Pestana Pendientes --------------------
-class _PendingOrdersTab extends ConsumerWidget {
+class _PendingOrdersTab extends ConsumerStatefulWidget {
   const _PendingOrdersTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PendingOrdersTab> createState() => _PendingOrdersTabState();
+}
+
+class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
+  Set<String> _knownOrderIds = {};
+  Map<String, int> _orderItemCounts = {}; // Rastrear cantidad de items por pedido
+
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar después del primer frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pendingOrders = ref.read(pendingPedidosProvider);
+      pendingOrders.whenData((orders) {
+        if (mounted) {
+          setState(() {
+            _knownOrderIds = orders.map((p) => p.id).toSet();
+            _orderItemCounts = {
+              for (var order in orders) order.id: order.items.length
+            };
+          });
+        }
+      });
+    });
+  }
+
+  void _checkForNewOrders(List<Pedido> currentOrders) {
+    if (currentOrders.isEmpty) return;
+
+    final currentIds = currentOrders.map((p) => p.id).toSet();
+
+    // Solo verificar si ya tenemos IDs conocidos (evita notificación en primera carga)
+    if (_knownOrderIds.isNotEmpty) {
+      // Detectar NUEVOS pedidos
+      final newOrderIds = currentIds.difference(_knownOrderIds);
+
+      if (newOrderIds.isNotEmpty) {
+        for (final orderId in newOrderIds) {
+          final newOrder = currentOrders.firstWhere((p) => p.id == orderId);
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ref.read(newOrderNotificationProvider.notifier).state =
+                  'Pedido #${newOrder.id.substring(0, 8).toUpperCase()}';
+            }
+          });
+        }
+      }
+
+      // Detectar pedidos MODIFICADOS (cambió cantidad de items)
+      for (final order in currentOrders) {
+        final orderId = order.id;
+        final currentItemCount = order.items.length;
+        final previousItemCount = _orderItemCounts[orderId];
+
+        if (previousItemCount != null && currentItemCount != previousItemCount) {
+          // Se modificó el pedido (agregaron o eliminaron items)
+          String notificationMessage;
+
+          if (currentItemCount > previousItemCount) {
+            // Se agregaron items
+            final itemsAdded = currentItemCount - previousItemCount;
+            notificationMessage = 'Pedido #${orderId.substring(0, 8).toUpperCase()} - +$itemsAdded items';
+          } else {
+            // Se eliminaron items
+            final itemsRemoved = previousItemCount - currentItemCount;
+            notificationMessage = 'Pedido #${orderId.substring(0, 8).toUpperCase()} - -$itemsRemoved items';
+          }
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ref.read(updatedOrderNotificationProvider.notifier).state = notificationMessage;
+            }
+          });
+        }
+      }
+    }
+
+    // Actualizar IDs conocidos y conteo de items
+    _knownOrderIds = currentIds;
+    _orderItemCounts = {
+      for (var order in currentOrders) order.id: order.items.length
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final pendingOrdersAsync = ref.watch(pendingPedidosProvider);
 
     return pendingOrdersAsync.when(
       data: (pedidos) {
+        // Verificar nuevos pedidos
+        _checkForNewOrders(pedidos);
+
         if (pedidos.isEmpty) {
           return const _EmptyState(
             icon: Icons.emoji_food_beverage,
