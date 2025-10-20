@@ -401,32 +401,25 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
   Widget _buildWorkflowShortcuts(BuildContext context, bool isTablet) {
     final workflows = [
       _WorkflowAction(
-        title: 'Pedido rapido',
-        description: 'Registra en segundos un pedido desde la barra.',
-        icon: Icons.bolt_rounded,
-        color: const Color(0xFF6366F1),
-        onTap: () => context.push('/mesero/pedidos/pedido-rapido'),
-      ),
-      _WorkflowAction(
         title: 'Seguir pedidos',
         description: 'Consulta el estado y avanza pedidos en cocina.',
         icon: Icons.receipt_long_rounded,
         color: const Color(0xFF0EA5E9),
-        onTap: () => context.push('/mesero/pedidos/mesas'),
+        onTap: () => context.push('/mesero/pedidos/seguimiento'),
       ),
       _WorkflowAction(
         title: 'Cobrar mesa',
         description: 'Cierra cuentas y genera recibos de forma agil.',
         icon: Icons.attach_money_rounded,
         color: const Color(0xFF22C55E),
-        onTap: () {},
+        onTap: () => context.push('/mesero/pedidos/cobrar'),
       ),
       _WorkflowAction(
         title: 'Reportar incidencia',
         description: 'Comunicate con cocina o administracion al instante.',
         icon: Icons.support_agent_rounded,
         color: const Color(0xFFF97316),
-        onTap: () {},
+        onTap: () => context.push('/mesero/reportar-incidencia'),
       ),
     ];
 

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
@@ -40,7 +40,11 @@ import 'package:restaurante_app/presentation/screens/settings/settings_user_scre
 import 'package:restaurante_app/presentation/screens/splash/splash_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/pedido_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/ticket_preview_screen.dart';
-import 'package:restaurante_app/presentation/screens/mesero/quick_order/quick_order_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/orders/table_checkout_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/orders/order_tracking_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/incidencias/report_incident_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/incidencias/manage_incidencias_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/incidencias/incidencia_detail_screen.dart';
 
 final GoRouter router = GoRouter(
   navigatorKey: SnackbarHelper.navigatorKey,
@@ -80,6 +84,17 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/admin/manage/mesas',
       builder: (context, state) => const AdminMesasScreen(),
+    ),
+    GoRoute(
+      path: '/admin/manage/incidencias',
+      builder: (context, state) => const ManageIncidenciasScreen(),
+    ),
+    GoRoute(
+      path: '/admin/incidencias/detalle/:incidenciaId',
+      builder: (context, state) {
+        final incidenciaId = state.pathParameters['incidenciaId']!;
+        return IncidenciaDetailScreen(incidenciaId: incidenciaId);
+      },
     ),
 
     GoRoute(
@@ -161,8 +176,16 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const MesasScreen(),
     ),
     GoRoute(
-      path: '/mesero/pedidos/pedido-rapido',
-      builder: (context, state) => const QuickOrderScreen(),
+      path: '/mesero/pedidos/seguimiento',
+      builder: (context, state) => const OrderTrackingScreen(),
+    ),
+    GoRoute(
+      path: '/mesero/pedidos/cobrar',
+      builder: (context, state) => const TableCheckoutScreen(),
+    ),
+    GoRoute(
+      path: '/mesero/reportar-incidencia',
+      builder: (context, state) => const ReportIncidentScreen(),
     ),
 
     GoRoute(
