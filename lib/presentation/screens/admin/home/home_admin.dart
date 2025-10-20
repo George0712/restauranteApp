@@ -306,6 +306,12 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                 color: const Color(0xFFF59E0B),
                 onTap: () => context.push('/admin/manage/mesas'),
               ),
+              OptionButtonCard(
+                icon: const Icon(Icons.report_problem_rounded, size: 32),
+                text: 'Incidencias',
+                color: const Color(0xFFEF4444),
+                onTap: () => context.push('/admin/manage/incidencias'),
+              ),
             ],
           ),
         ],
