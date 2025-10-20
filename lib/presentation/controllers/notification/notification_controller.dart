@@ -555,7 +555,15 @@ class NotificationController extends StateNotifier<NotificationState> {
       return 'para mesa ${pedido.tableNumber}';
     }
 
-    return "para ${pedido.mode == 'domicilio' ? 'domicilio' : 'consumo interno'}";
+    if (pedido.mode == 'domicilio') {
+      return 'para domicilio';
+    }
+
+    if (pedido.mode == 'rapido') {
+      return 'para pedido rápido';
+    }
+
+    return 'para consumo interno';
   }
 
   @override

@@ -405,7 +405,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
         description: 'Registra en segundos un pedido desde la barra.',
         icon: Icons.bolt_rounded,
         color: const Color(0xFF6366F1),
-        onTap: () {},
+        onTap: () => context.push('/mesero/pedidos/pedido-rapido'),
       ),
       _WorkflowAction(
         title: 'Seguir pedidos',

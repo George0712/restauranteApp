@@ -259,6 +259,8 @@ class Order {
         return customerName ?? 'Cliente sin nombre';
       case 'paraLlevar':
         return customerName ?? 'Cliente sin nombre';
+      case 'rapido':
+        return customerName ?? 'Pedido rápido';
       default:
         return 'N/A';
     }

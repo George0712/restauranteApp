@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
@@ -39,8 +40,10 @@ import 'package:restaurante_app/presentation/screens/settings/settings_user_scre
 import 'package:restaurante_app/presentation/screens/splash/splash_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/pedido_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/ticket_preview_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/quick_order/quick_order_screen.dart';
 
 final GoRouter router = GoRouter(
+  navigatorKey: SnackbarHelper.navigatorKey,
   initialLocation: '/login',
   routes: [
     GoRoute(
@@ -156,6 +159,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/mesero/pedidos/mesas',
       builder: (context, state) => const MesasScreen(),
+    ),
+    GoRoute(
+      path: '/mesero/pedidos/pedido-rapido',
+      builder: (context, state) => const QuickOrderScreen(),
     ),
 
     GoRoute(

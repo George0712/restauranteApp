@@ -1102,6 +1102,8 @@ class PedidoCard extends ConsumerWidget {
         return Icons.delivery_dining;
       case 'parallevar':
         return Icons.shopping_bag_outlined;
+      case 'rapido':
+        return Icons.bolt_rounded;
       default:
         return Icons.restaurant;
     }
@@ -1115,6 +1117,8 @@ class PedidoCard extends ConsumerWidget {
         return 'Domicilio';
       case 'parallevar':
         return 'Para llevar';
+      case 'rapido':
+        return 'Pedido rápido';
       default:
         return 'Sin definir';
     }
