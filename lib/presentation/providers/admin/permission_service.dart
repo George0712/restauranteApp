@@ -44,7 +44,7 @@ class PermissionService {
     // Si está restringido (por controles parentales)
     if (status.isRestricted) {
       if (context != null) {
-        SnackbarHelper.showSnackBar('Acceso a galería restringido por el sistema');
+        SnackbarHelper.showWarning('Acceso a galería restringido por el sistema');
       }
       return false;
     }
@@ -67,7 +67,7 @@ class PermissionService {
       return context != null && context.mounted ? await _handlePermanentlyDenied(context) : false;
     } else {
       if (context != null) {
-        SnackbarHelper.showSnackBar('Permiso de galería denegado');
+        SnackbarHelper.showError('Permiso de galería denegado');
       }
       return false;
     }
@@ -88,7 +88,7 @@ class PermissionService {
     
     if (status.isRestricted) {
       if (context != null) {
-        SnackbarHelper.showSnackBar('Acceso a cámara restringido por el sistema');
+        SnackbarHelper.showWarning('Acceso a cámara restringido por el sistema');
       }
       return false;
     }
@@ -109,7 +109,7 @@ class PermissionService {
       return context != null && context.mounted ? await _handlePermanentlyDenied(context, isCamera: true) : false;
     } else {
       if (context != null) {
-        SnackbarHelper.showSnackBar('Permiso de cámara denegado');
+        SnackbarHelper.showError('Permiso de cámara denegado');
       }
       return false;
     }
@@ -140,7 +140,7 @@ class PermissionService {
               final opened = await openAppSettings();
               if (opened) {
                 // Opcional: Mostrar mensaje de que revise cuando regrese
-                SnackbarHelper.showSnackBar('Habilita el permiso de $permissionName y regresa a la aplicación');
+                SnackbarHelper.showInfo('Habilita el permiso de $permissionName y regresa a la aplicación');
               }
             },
             child: const Text('Abrir Configuración'),

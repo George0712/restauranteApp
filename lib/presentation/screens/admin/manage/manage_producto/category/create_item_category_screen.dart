@@ -272,13 +272,13 @@ class _CreateItemCategoryScreenState
                               }
 
                               if (result == null) {
-                                SnackbarHelper.showSnackBar(
+                                SnackbarHelper.showSuccess(
                                     widget.category == null
                                         ? 'Categoría agregada exitosamente'
                                         : 'Categoría actualizada exitosamente');
                                 context.pop();
                               } else {
-                                SnackbarHelper.showSnackBar('Error: $result');
+                                SnackbarHelper.showError('Error: $result');
                               }
                             }
                           : null,

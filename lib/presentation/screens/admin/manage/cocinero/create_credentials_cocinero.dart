@@ -162,7 +162,7 @@ class _CreateCredentialsCocineroState
                                 (_formKey.currentState?.validate() ?? false)
                             ? () async {
                                 if (tempUser == null) {
-                                  SnackbarHelper.showSnackBar(
+                                  SnackbarHelper.showWarning(
                                       'Falta información de contacto');
                                   return;
                                 }
@@ -184,11 +184,11 @@ class _CreateCredentialsCocineroState
                                         .trim(),
                                     rol: tempUser.rol,
                                   );
-                                  SnackbarHelper.showSnackBar(
+                                  SnackbarHelper.showSuccess(
                                       'Cocinero registrado con éxito');
                                   context.go('/admin/manage/cocinero');
                                 } catch (e) {
-                                  SnackbarHelper.showSnackBar(
+                                  SnackbarHelper.showError(
                                       'Error: ${e.toString()}');
                                 }
                               }

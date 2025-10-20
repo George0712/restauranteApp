@@ -395,7 +395,7 @@ class ProfileImageNotifier extends StateNotifier<File?> {
   // Método unificado para ambas fuentes
   Future<void> pickImageFromSource(ImageSource source) async {
     if (kIsWeb) {
-      SnackbarHelper.showSnackBar('Función no soportada en web');
+      SnackbarHelper.showInfo('Función no soportada en web');
       return;
     }
 
@@ -425,16 +425,16 @@ class ProfileImageNotifier extends StateNotifier<File?> {
 
         final sourceText =
             source == ImageSource.camera ? 'tomada' : 'seleccionada';
-        SnackbarHelper.showSnackBar('Imagen $sourceText correctamente');
+        SnackbarHelper.showSuccess('Imagen $sourceText correctamente');
       } else {
         final sourceText = source == ImageSource.camera ? 'tomó' : 'seleccionó';
-        SnackbarHelper.showSnackBar('No se $sourceText ninguna imagen');
+        SnackbarHelper.showWarning('No se $sourceText ninguna imagen');
       }
     } catch (e) {
       final sourceText = source == ImageSource.camera
           ? 'tomar la foto'
           : 'seleccionar la imagen';
-      SnackbarHelper.showSnackBar('Error al $sourceText: $e');
+      SnackbarHelper.showError('Error al $sourceText: $e');
     }
   }
 
@@ -452,11 +452,11 @@ class ProfileImageNotifier extends StateNotifier<File?> {
             photosStatus = await Permission.photos.request();
             if (!photosStatus.isGranted && !photosStatus.isLimited) {
               if (photosStatus.isPermanentlyDenied) {
-                SnackbarHelper.showSnackBar(
+                SnackbarHelper.showError(
                     'Permiso de galería denegado permanentemente. Ve a Configuración para habilitarlo.');
                 await openAppSettings();
               } else {
-                SnackbarHelper.showSnackBar(
+                SnackbarHelper.showWarning(
                     'Se necesita permiso para acceder a las fotos');
               }
               return false;
@@ -469,11 +469,11 @@ class ProfileImageNotifier extends StateNotifier<File?> {
             storageStatus = await Permission.storage.request();
             if (!storageStatus.isGranted) {
               if (storageStatus.isPermanentlyDenied) {
-                SnackbarHelper.showSnackBar(
+                SnackbarHelper.showError(
                     'Permiso de almacenamiento denegado permanentemente. Ve a Configuración para habilitarlo.');
                 await openAppSettings();
               } else {
-                SnackbarHelper.showSnackBar(
+                SnackbarHelper.showWarning(
                     'Se necesita permiso para acceder al almacenamiento');
               }
               return false;
@@ -486,11 +486,11 @@ class ProfileImageNotifier extends StateNotifier<File?> {
           photosStatus = await Permission.photos.request();
           if (!photosStatus.isGranted && !photosStatus.isLimited) {
             if (photosStatus.isPermanentlyDenied) {
-              SnackbarHelper.showSnackBar(
+              SnackbarHelper.showError(
                   'Permiso de galería denegado permanentemente. Ve a Configuración para habilitarlo.');
               await openAppSettings();
             } else {
-              SnackbarHelper.showSnackBar(
+              SnackbarHelper.showWarning(
                   'Se necesita permiso para acceder a las fotos');
             }
             return false;
@@ -500,7 +500,7 @@ class ProfileImageNotifier extends StateNotifier<File?> {
 
       return true;
     } catch (e) {
-      SnackbarHelper.showSnackBar('Error al verificar permisos de galería: $e');
+      SnackbarHelper.showError('Error al verificar permisos de galería: $e');
       return false;
     }
   }
@@ -513,11 +513,11 @@ class ProfileImageNotifier extends StateNotifier<File?> {
         cameraStatus = await Permission.camera.request();
         if (!cameraStatus.isGranted) {
           if (cameraStatus.isPermanentlyDenied) {
-            SnackbarHelper.showSnackBar(
+            SnackbarHelper.showError(
                 'Permiso de cámara denegado permanentemente. Ve a Configuración para habilitarlo.');
             await openAppSettings();
           } else {
-            SnackbarHelper.showSnackBar(
+            SnackbarHelper.showWarning(
                 'Se necesita permiso para acceder a la cámara');
           }
           return false;
@@ -526,7 +526,7 @@ class ProfileImageNotifier extends StateNotifier<File?> {
 
       return true;
     } catch (e) {
-      SnackbarHelper.showSnackBar('Error al verificar permisos de cámara: $e');
+      SnackbarHelper.showError('Error al verificar permisos de cámara: $e');
       return false;
     }
   }

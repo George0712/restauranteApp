@@ -159,7 +159,7 @@ class _CreateItemProductScreenState
         }
       });
     } catch (e) {
-      SnackbarHelper.showSnackBar('Error al seleccionar imagen: $e');
+      SnackbarHelper.showError('Error al seleccionar imagen: $e');
     }
   }
 
@@ -232,7 +232,7 @@ class _CreateItemProductScreenState
       final imageNotifier = ref.read(profileImageProvider.notifier);
       await imageNotifier.pickImage();
     } catch (e) {
-      SnackbarHelper.showSnackBar('Error al seleccionar imagen: $e');
+      SnackbarHelper.showError('Error al seleccionar imagen: $e');
     }
   }
 
@@ -241,7 +241,7 @@ class _CreateItemProductScreenState
       final imageNotifier = ref.read(profileImageProvider.notifier);
       await imageNotifier.pickImageFromCamera();
     } catch (e) {
-      SnackbarHelper.showSnackBar('Error al tomar foto: $e');
+      SnackbarHelper.showError('Error al tomar foto: $e');
     }
   }
 
@@ -252,19 +252,19 @@ class _CreateItemProductScreenState
       _originalImageUrl =
           null; // También limpiar la imagen original en modo edición
     });
-    SnackbarHelper.showSnackBar('Imagen eliminada');
+    SnackbarHelper.showInfo('Imagen eliminada');
   }
 
   // Método para manejar el envío del formulario
   Future<void> _handleSubmit() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
-      SnackbarHelper.showSnackBar(
+      SnackbarHelper.showWarning(
           'Por favor corrige los errores en el formulario');
       return;
     }
 
     if (selectedCategory == null) {
-      SnackbarHelper.showSnackBar('Por favor selecciona una categoría');
+      SnackbarHelper.showWarning('Por favor selecciona una categoría');
       return;
     }
 

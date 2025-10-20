@@ -339,7 +339,7 @@ class _CategoryOptionsBottomSheetState
       Navigator.pop(context);
     }
     if (result == null) {
-      SnackbarHelper.showSnackBar(categoria.disponible
+      SnackbarHelper.showSuccess(categoria.disponible
           ? 'Categoría desactivada'
           : 'Categoría activada');
     } else {

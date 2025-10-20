@@ -717,11 +717,11 @@ class _ProductOptionsBottomSheetState
             ? 'Producto desactivado correctamente'
             : 'Producto activado correctamente';
 
-        final color = widget.producto.disponible
-            ? const Color(0xFFF59E0B)
-            : const Color(0xFF10B981);
-
-        SnackbarHelper.showSnackBar(message, backgroundColor: color);
+        if (widget.producto.disponible) {
+          SnackbarHelper.showWarning(message);
+        } else {
+          SnackbarHelper.showSuccess(message);
+        }
       } else {
         // Error
         SnackbarHelper.showError('Error: $result');

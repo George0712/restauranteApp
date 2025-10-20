@@ -181,7 +181,7 @@ class _CreateCredentialsMeseroState
                                 (_formKey.currentState?.validate() ?? false)
                             ? () async {
                                 if (tempUser == null) {
-                                  SnackbarHelper.showSnackBar(
+                                  SnackbarHelper.showWarning(
                                       'Falta información de contacto');
                                   return;
                                 }
@@ -220,11 +220,11 @@ class _CreateCredentialsMeseroState
                                         .trim(),
                                   );
                                   if (res == null) {
-                                    SnackbarHelper.showSnackBar(
+                                    SnackbarHelper.showSuccess(
                                         'Credenciales actualizadas con éxito');
                                     context.go('/admin/manage/mesero');
                                   } else {
-                                    SnackbarHelper.showSnackBar('Error: $res');
+                                    SnackbarHelper.showError('Error: $res');
                                   }
                                 }
                               }

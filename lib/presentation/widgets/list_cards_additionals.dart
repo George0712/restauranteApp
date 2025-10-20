@@ -321,7 +321,7 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
     setState(() => _isLoading = false);
     if (mounted) Navigator.pop(context);
     if (result == null) {
-      SnackbarHelper.showSnackBar(widget.additional.disponible ? "Desactivado" : "Activado");
+      SnackbarHelper.showSuccess(widget.additional.disponible ? "Desactivado" : "Activado");
     } else {
       SnackbarHelper.showError(result);
     }
@@ -383,7 +383,7 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
     final result = await controller.eliminarAdditional(ref, id: widget.additional.id);
     setState(() => _isLoading = false);
     if (result == null) {
-      SnackbarHelper.showSnackBar('Adicional eliminado');
+      SnackbarHelper.showSuccess('Adicional eliminado');
     } else {
       SnackbarHelper.showError(result);
     }

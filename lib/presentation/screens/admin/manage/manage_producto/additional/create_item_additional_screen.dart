@@ -240,11 +240,11 @@ class _CreateItemAdditionalScreenState
                               }
 
                               if (result == null) {
-                                SnackbarHelper.showSnackBar(
+                                SnackbarHelper.showSuccess(
                                     widget.additional == null ? 'Adicional agregado' : 'Adicional actualizado');
                                 context.pop();
                               } else {
-                                SnackbarHelper.showSnackBar('Error: $result');
+                                SnackbarHelper.showError('Error: $result');
                               }
                             }
                           : null,
