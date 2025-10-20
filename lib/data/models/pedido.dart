@@ -124,6 +124,8 @@ class Pedido {
 
   // ✅ CAMPO PARA RASTREAR QUIÉN CANCELÓ EL PEDIDO:
   final String? cancelledBy;   // 'cocina' o 'mesero'
+  final bool pagado;
+  final String? paymentStatus;
 
   Pedido({
     required this.id,
@@ -146,6 +148,8 @@ class Pedido {
     this.mesaNombre,
     this.clienteNombre,
     this.cancelledBy,
+    this.pagado = false,
+    this.paymentStatus,
   });
 
   // Getters para compatibilidad con código existente
@@ -188,6 +192,8 @@ class Pedido {
       mesaNombre: json['mesaNombre'],
       clienteNombre: json['clienteNombre'],
       cancelledBy: json['cancelledBy'],
+      pagado: json['pagado'] == true,
+      paymentStatus: json['paymentStatus'],
     );
   }
 
@@ -214,6 +220,8 @@ class Pedido {
       'mesaNombre': mesaNombre,
       'clienteNombre': clienteNombre,
       'cancelledBy': cancelledBy,
+      'pagado': pagado,
+      if (paymentStatus != null) 'paymentStatus': paymentStatus,
     };
   }
 
