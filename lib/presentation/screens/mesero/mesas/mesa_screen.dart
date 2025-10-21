@@ -389,8 +389,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               ? [
                   BoxShadow(
                     color: color.withValues(alpha: 0.28),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                    blurRadius: 8,
                   ),
                 ]
               : null,

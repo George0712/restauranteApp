@@ -11,7 +11,8 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
   const OrderTrackingScreen({super.key});
 
   @override
-  ConsumerState<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
+  ConsumerState<OrderTrackingScreen> createState() =>
+      _OrderTrackingScreenState();
 }
 
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
@@ -56,8 +57,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         data: (pedidos) {
           final availableDays = _computeAvailableDays(pedidos);
           final effectiveDay = _resolveSelectedDay(availableDays);
-          final filtered = _applyFilters(pedidos, effectiveDay);
-          final stats = _computeStats(filtered);
+          final dayFiltered = _filterByDay(pedidos, effectiveDay);
+          final stats = _computeStats(dayFiltered);
+          final filtered = _applyFilters(dayFiltered, effectiveDay);
 
           return Scaffold(
             backgroundColor: Colors.black,
@@ -68,7 +70,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
               scrolledUnderElevation: 0,
               surfaceTintColor: Colors.transparent,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white),
                 onPressed: () => Navigator.of(context).maybePop(),
                 tooltip: 'Volver',
               ),
@@ -104,11 +107,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                             stats: stats,
                             availableDays: availableDays,
                             selectedDay: effectiveDay,
+                            totalForDay: dayFiltered.length,
                           ),
                         ),
                         const SliverToBoxAdapter(child: SizedBox(height: 20)),
                         SliverToBoxAdapter(
-                          child: _buildFilters(isTablet),
+                          child: _buildSearchSection(isTablet),
                         ),
                         const SliverToBoxAdapter(child: SizedBox(height: 18)),
                         if (filtered.isEmpty)
@@ -121,21 +125,24 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final pedido = filtered[index];
-                                final statusColor =
-                                    _statusColors[pedido.status.toLowerCase()] ??
-                                        const Color(0xFF6366F1);
+                                final statusColor = _statusColors[
+                                        pedido.status.toLowerCase()] ??
+                                    const Color(0xFF6366F1);
                                 final isPriority = _isPriority(pedido);
                                 return Padding(
                                   padding: EdgeInsets.only(
-                                    bottom: index == filtered.length - 1 ? 28 : 18,
+                                    bottom:
+                                        index == filtered.length - 1 ? 28 : 18,
                                   ),
                                   child: _TrackingCard(
                                     pedido: pedido,
                                     isTablet: isTablet,
                                     statusColor: statusColor,
                                     isPriority: isPriority,
-                                    onTogglePriority: () => _togglePriority(pedido, isPriority),
-                                    onSendNote: () => _openKitchenNoteDialog(pedido),
+                                    onTogglePriority: () =>
+                                        _togglePriority(pedido, isPriority),
+                                    onSendNote: () =>
+                                        _openKitchenNoteDialog(pedido),
                                   ),
                                 );
                               },
@@ -170,7 +177,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
             scrolledUnderElevation: 0,
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white),
               onPressed: () => Navigator.of(context).maybePop(),
               tooltip: 'Volver',
             ),
@@ -203,10 +211,20 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     required _TrackingStats stats,
     required List<DateTime> availableDays,
     required DateTime selectedDay,
+    required int totalForDay,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          'Seguimiento de pedidos',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isTablet ? 32 : 24,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
         Text(
           'Consulta el estado y avanza pedidos en cocina.',
           style: TextStyle(
@@ -218,42 +236,68 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         const SizedBox(height: 16),
         _buildDaySelector(availableDays, selectedDay),
         const SizedBox(height: 16),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              _SummaryStat(
-                title: 'Pendientes',
-                value: stats.pendingCount.toString(),
-                color: _statusColors['pendiente']!,
-                icon: Icons.timer_outlined,
-              ),
-              const SizedBox(width: 12),
-              _SummaryStat(
-                title: 'En cocina',
-                value: stats.preparingCount.toString(),
-                color: _statusColors['preparando']!,
-                icon: Icons.restaurant_rounded,
-              ),
-              const SizedBox(width: 12),
-              _SummaryStat(
-                title: 'Listos',
-                value: stats.completedCount.toString(),
-                color: _statusColors['terminado']!,
-                icon: Icons.task_alt_rounded,
-              ),
-              const SizedBox(width: 12),
-              _SummaryStat(
-                title: 'Entregados',
-                value: stats.deliveredCount.toString(),
-                color: _statusColors['entregado']!,
-                icon: Icons.verified_rounded,
-              ),
-            ],
-          ),
-        ),
+        _buildStatusFilters(stats: stats, total: totalForDay),
       ],
+    );
+  }
+
+  Widget _buildStatusFilters({
+    required _TrackingStats stats,
+    required int total,
+  }) {
+    final filters = <_StatusFilterData>[
+      _StatusFilterData(
+        key: 'all',
+        label: 'Todos',
+        count: total,
+        color: const Color(0xFF71717A),
+        icon: Icons.all_inclusive_rounded,
+      ),
+      _StatusFilterData(
+        key: 'pendiente',
+        label: 'Pendientes',
+        count: stats.pendingCount,
+        color: _statusColors['pendiente']!,
+        icon: Icons.timer_outlined,
+      ),
+      _StatusFilterData(
+        key: 'preparando',
+        label: 'En cocina',
+        count: stats.preparingCount,
+        color: _statusColors['preparando']!,
+        icon: Icons.local_fire_department_outlined,
+      ),
+      _StatusFilterData(
+        key: 'terminado',
+        label: 'Listos',
+        count: stats.completedCount,
+        color: _statusColors['terminado']!,
+        icon: Icons.inventory_2_outlined,
+      ),
+      _StatusFilterData(
+        key: 'entregado',
+        label: 'Entregados',
+        count: stats.deliveredCount,
+        color: _statusColors['entregado']!,
+        icon: Icons.delivery_dining,
+      ),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          for (var i = 0; i < filters.length; i++) ...[
+            _StatusChip(
+              data: filters[i],
+              isSelected: _statusFilter == filters[i].key,
+              onTap: () => setState(() => _statusFilter = filters[i].key),
+            ),
+            if (i != filters.length - 1) const SizedBox(width: 10),
+          ],
+        ],
+      ),
     );
   }
 
@@ -267,7 +311,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.calendar_today_rounded, color: Color(0xFF93C5FD), size: 20),
+          const Icon(Icons.calendar_today_rounded,
+              color: Color(0xFF93C5FD), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: DropdownButtonHideUnderline(
@@ -276,7 +321,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                 isExpanded: true,
                 dropdownColor: const Color(0xFF1F233A),
                 borderRadius: BorderRadius.circular(14),
-                icon: const Icon(Icons.expand_more_rounded, color: Colors.white),
+                icon:
+                    const Icon(Icons.expand_more_rounded, color: Colors.white),
                 items: days
                     .map(
                       (day) => DropdownMenuItem<DateTime>(
@@ -310,7 +356,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     );
   }
 
-  Widget _buildFilters(bool isTablet) {
+  Widget _buildSearchSection(bool isTablet) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -319,65 +365,30 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
           onChanged: (_) => setState(() {}),
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF8B5CF6)),
-            hintText: 'Buscar por mesa, cliente o código',
+            prefixIcon:
+                const Icon(Icons.search_rounded, color: Color(0xFF8B5CF6)),
+            hintText: 'Buscar por mesa, cliente o codigo',
             hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
             filled: true,
             fillColor: const Color(0xFF111827),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+              borderSide:
+                  BorderSide(color: Colors.white.withValues(alpha: 0.08)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+              borderSide:
+                  BorderSide(color: Colors.white.withValues(alpha: 0.08)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
-              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.6),
+              borderSide:
+                  const BorderSide(color: Color(0xFF6366F1), width: 1.6),
             ),
           ),
         ),
         const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Row(
-            children: [
-              _buildStatusChip(
-                label: 'Todos',
-                value: 'all',
-                selectedValue: _statusFilter,
-                color: const Color(0xFF71717A),
-              ),
-              _buildStatusChip(
-                label: 'Pendientes',
-                value: 'pendiente',
-                selectedValue: _statusFilter,
-                color: _statusColors['pendiente']!,
-              ),
-              _buildStatusChip(
-                label: 'En cocina',
-                value: 'preparando',
-                selectedValue: _statusFilter,
-                color: _statusColors['preparando']!,
-              ),
-              _buildStatusChip(
-                label: 'Listos',
-                value: 'terminado',
-                selectedValue: _statusFilter,
-                color: _statusColors['terminado']!,
-              ),
-              _buildStatusChip(
-                label: 'Entregados',
-                value: 'entregado',
-                selectedValue: _statusFilter,
-                color: _statusColors['entregado']!,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 6),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
@@ -413,38 +424,6 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     );
   }
 
-  Widget _buildStatusChip({
-    required String label,
-    required String value,
-    required String selectedValue,
-    required Color color,
-  }) {
-    final isSelected = selectedValue == value;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.75),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        selected: isSelected,
-        onSelected: (_) => setState(() => _statusFilter = value),
-        selectedColor: color.withValues(alpha: 0.7),
-        backgroundColor: const Color(0xFF1F233A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: isSelected ? color : Colors.white.withValues(alpha: 0.1),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      ),
-    );
-  }
-
   Widget _buildModeChip({
     required String label,
     required String value,
@@ -458,7 +437,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         label: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.75),
+            color: isSelected
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.75),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -477,6 +458,15 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     );
   }
 
+  List<Pedido> _filterByDay(List<Pedido> pedidos, DateTime selectedDay) {
+    final normalizedDay = _normalizeDate(selectedDay);
+    return pedidos.where((pedido) {
+      final reference = pedido.createdAt ?? pedido.updatedAt;
+      if (reference == null) return false;
+      return _normalizeDate(reference) == normalizedDay;
+    }).toList();
+  }
+
   List<Pedido> _applyFilters(List<Pedido> pedidos, DateTime selectedDay) {
     final query = _searchController.text.trim().toLowerCase();
     final normalizedDay = _normalizeDate(selectedDay);
@@ -486,7 +476,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         return false;
       }
 
-      if (_statusFilter != 'all' && pedido.status.toLowerCase() != _statusFilter) {
+      if (_statusFilter != 'all' &&
+          pedido.status.toLowerCase() != _statusFilter) {
         return false;
       }
 
@@ -501,15 +492,20 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
       }
 
       final mesa = (pedido.mesaNombre ?? '').toLowerCase();
-      final cliente = (pedido.clienteNombre ?? pedido.cliente ?? '').toLowerCase();
+      final cliente =
+          (pedido.clienteNombre ?? pedido.cliente ?? '').toLowerCase();
       final identifier = pedido.id.toLowerCase();
 
-      return mesa.contains(query) || cliente.contains(query) || identifier.contains(query);
+      return mesa.contains(query) ||
+          cliente.contains(query) ||
+          identifier.contains(query);
     }).toList();
 
     result.sort((a, b) {
-      final dateA = a.createdAt ?? a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final dateB = b.createdAt ?? b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final dateA =
+          a.createdAt ?? a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final dateB =
+          b.createdAt ?? b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
       return dateB.compareTo(dateA);
     });
 
@@ -555,11 +551,13 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     }
     if (pedido.extras.isNotEmpty) {
       final lastItems = pedido.extras.last.items;
-      if (lastItems.any((item) => (item.notas ?? '').toLowerCase().contains('prioridad'))) {
+      if (lastItems.any(
+          (item) => (item.notas ?? '').toLowerCase().contains('prioridad'))) {
         return true;
       }
     }
-    final priorityLevel = (pedido.toJson()['priorityLevel'] ?? '').toString().toLowerCase();
+    final priorityLevel =
+        (pedido.toJson()['priorityLevel'] ?? '').toString().toLowerCase();
     return priorityLevel == 'alta';
   }
 
@@ -611,13 +609,15 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar', style: TextStyle(color: Colors.white70)),
+            child:
+                const Text('Cancelar', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(controller.text.trim()),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6366F1),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Enviar'),
           ),
@@ -760,7 +760,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     return DateFormat('EEE d MMM', 'es').format(date);
   }
 
-  DateTime _normalizeDate(DateTime date) => DateTime(date.year, date.month, date.day);
+  DateTime _normalizeDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 }
 
 class _TrackingStats {
@@ -775,6 +776,107 @@ class _TrackingStats {
   final int preparingCount;
   final int completedCount;
   final int deliveredCount;
+}
+
+class _StatusFilterData {
+  final String key;
+  final String label;
+  final int count;
+  final Color color;
+  final IconData icon;
+
+  const _StatusFilterData({
+    required this.key,
+    required this.label,
+    required this.count,
+    required this.color,
+    required this.icon,
+  });
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    required this.data,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final _StatusFilterData data;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = isSelected
+        ? data.color.withValues(alpha: 0.18)
+        : Colors.white.withValues(alpha: 0.08);
+    final borderColor = isSelected
+        ? data.color.withValues(alpha: 0.6)
+        : Colors.white.withValues(alpha: 0.14);
+    final valueColor = isSelected ? Colors.white : data.color;
+    final iconColor = isSelected ? Colors.white : data.color;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: borderColor),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: data.color.withValues(alpha: 0.28),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? data.color.withValues(alpha: 0.4)
+                    : data.color.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(data.icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data.count.toString(),
+                  style: TextStyle(
+                    color: valueColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  data.label,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _TrackingCard extends StatelessWidget {
@@ -796,9 +898,11 @@ class _TrackingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemsCount = pedido.items.fold<int>(0, (total, item) => total + item.cantidad);
+    final itemsCount =
+        pedido.items.fold<int>(0, (total, item) => total + item.cantidad);
     final priorityLabel = isPriority ? 'Prioridad' : 'Normal';
-    final priorityColor = isPriority ? const Color(0xFFEF4444) : const Color(0xFF38BDF8);
+    final priorityColor =
+        isPriority ? const Color(0xFFEF4444) : const Color(0xFF38BDF8);
     final statusLabel = _statusText(pedido.status);
 
     return Container(
@@ -806,7 +910,8 @@ class _TrackingCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: const Color(0xFF121429),
-        border: Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2),
+        border:
+            Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: statusColor.withValues(alpha: 0.2),
@@ -855,7 +960,8 @@ class _TrackingCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   color: statusColor.withValues(alpha: 0.18),
@@ -897,11 +1003,14 @@ class _TrackingCard extends StatelessWidget {
                     isPriority ? Icons.bookmark_remove : Icons.bookmark_add,
                     size: 18,
                   ),
-                  label: Text(isPriority ? 'Quitar prioridad' : 'Marcar prioridad'),
+                  label: Text(
+                      isPriority ? 'Quitar prioridad' : 'Marcar prioridad'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    side:
+                        BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
                   ),
                 ),
               ),
@@ -1051,63 +1160,6 @@ class _MetaItem extends StatelessWidget {
     );
 
     return content;
-  }
-}
-
-class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({
-    required this.title,
-    required this.value,
-    required this.color,
-    required this.icon,
-  });
-
-  final String title;
-  final String value;
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 160,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: const Color(0xFF121429),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.18),
-            blurRadius: 14,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 14),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

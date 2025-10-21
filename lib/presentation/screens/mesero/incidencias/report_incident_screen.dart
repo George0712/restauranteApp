@@ -67,14 +67,6 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
             onPressed: () => Navigator.of(context).maybePop(),
             tooltip: 'Volver',
           ),
-          title: const Text(
-            'Reportar incidencia',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
         ),
         body: Stack(
           children: [
@@ -130,55 +122,22 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            color: const Color(0xFF6366F1).withValues(alpha: 0.15),
-            border: Border.all(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.3),
-            ),
+        Text(
+          'Reporta una incidencia',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isTablet ? 24 : 20,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.3,
           ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.2),
-                ),
-                child: const Icon(
-                  Icons.support_agent_rounded,
-                  color: Color(0xFF6366F1),
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Necesitas ayuda?',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Comunícate con cocina o administración al instante.',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 14,
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Por favor completa el formulario para reportar una incidencia.',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: isTablet ? 16 : 14,
+            height: 1.5,
           ),
         ),
       ],
@@ -200,7 +159,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
         ),
         const SizedBox(height: 12),
         Wrap(
-          spacing: 12,
+          spacing: 10,
           runSpacing: 12,
           children: [
             _buildTipoCard(
@@ -245,7 +204,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       onTap: () => setState(() => _tipoSeleccionado = tipo),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 160,
+        width: 180,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),

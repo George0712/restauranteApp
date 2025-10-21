@@ -22,6 +22,10 @@ class SeleccionProductosScreen extends ConsumerStatefulWidget {
   final String? mesaId;
   final String? mesaNombre;
   final String? clienteNombre;
+  final String orderMode;
+  final String? clienteTelefono;
+  final String? clienteDireccion;
+  final String? clienteReferencia;
 
   const SeleccionProductosScreen({
     super.key,
@@ -29,6 +33,10 @@ class SeleccionProductosScreen extends ConsumerStatefulWidget {
     this.mesaId,
     this.mesaNombre,
     this.clienteNombre,
+    this.orderMode = 'mesa',
+    this.clienteTelefono,
+    this.clienteDireccion,
+    this.clienteReferencia,
   });
 
   @override
@@ -530,6 +538,21 @@ class _SeleccionProductosScreenState
   }
 
   Widget _buildHeader() {
+    final orderMode = widget.orderMode.toLowerCase();
+    final clienteNombreDecoded = _decodeIfNeeded(widget.clienteNombre);
+    final clienteTelefono = _decodeIfNeeded(widget.clienteTelefono);
+    final clienteDireccion = _decodeIfNeeded(widget.clienteDireccion);
+    final clienteReferencia = _decodeIfNeeded(widget.clienteReferencia);
+    final hasClienteNombre =
+        clienteNombreDecoded != null && clienteNombreDecoded.trim().isNotEmpty;
+    final hasDeliveryInfo = orderMode == 'domicilio' &&
+        ((clienteTelefono?.trim().isNotEmpty ?? false) ||
+            (clienteDireccion?.trim().isNotEmpty ?? false) ||
+            (clienteReferencia?.trim().isNotEmpty ?? false));
+    final displayRecipient = hasClienteNombre
+        ? clienteNombreDecoded
+        : (orderMode == 'domicilio' ? 'el domicilio' : 'el pedido');
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -545,8 +568,8 @@ class _SeleccionProductosScreenState
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: 10),
-              if (widget.mesaNombre != null)
+              const SizedBox(width: 12),
+              if (orderMode == 'mesa' && widget.mesaNombre != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -565,20 +588,81 @@ class _SeleccionProductosScreenState
                     ),
                   ),
                 ),
+              if (orderMode == 'domicilio')
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.16),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.delivery_dining_rounded,
+                          size: 14, color: Colors.white70),
+                      SizedBox(width: 6),
+                      Text(
+                        'Domicilio',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
-            widget.clienteNombre != null 
-                ? 'Agregando productos para ${widget.clienteNombre}'
-                : 'Agregar productos al pedido',
+            hasClienteNombre
+                ? 'Agregando productos para ${displayRecipient[0].toUpperCase()}${displayRecipient.substring(1)}'
+                : (orderMode == 'domicilio'
+                    ? 'Agrega productos a este domicilio'
+                    : 'Agregar productos al pedido'),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.65),
               fontSize: 13,
               fontWeight: FontWeight.w400,
             ),
           ),
-          const SizedBox(height: 16),
+          if (hasDeliveryInfo) ...[
+            const SizedBox(height: 8),
+            if (clienteTelefono != null && clienteTelefono.trim().isNotEmpty)
+              _buildDeliveryInfoRow(Icons.phone_rounded, clienteTelefono),
+            if (clienteDireccion != null && clienteDireccion.trim().isNotEmpty)
+              _buildDeliveryInfoRow(Icons.location_on_rounded, clienteDireccion),
+            if (clienteReferencia != null && clienteReferencia.trim().isNotEmpty)
+              _buildDeliveryInfoRow(Icons.push_pin_outlined, clienteReferencia),
+          ],
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveryInfoRow(IconData icon, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.7)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.75),
+                fontSize: 12.5,
+                height: 1.3,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1289,7 +1373,7 @@ class _SeleccionProductosScreenState
           await _generarTicketFactura(context, mostrarMensaje: false);
       await _cargarCarritoDelPedido();
       if (!mounted) return;
-      Navigator.of(sheetContext).pop();
+      context.pop();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pedido enviado y ticket generado')),
@@ -1385,9 +1469,11 @@ class _SeleccionProductosScreenState
         final ticketInfo =
             await _generarTicketFactura(context, mostrarMensaje: false);
         await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
-        final mesaLiberada =
-            await _liberarMesaTrasPago(pedidoData: pedidoData);
-        if (mesaLiberada && mounted) {
+          bool mesaLiberada = true;
+          if (widget.orderMode.toLowerCase() == 'mesa') {
+            mesaLiberada = await _liberarMesaTrasPago(pedidoData: pedidoData);
+          }
+          if (mesaLiberada && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
@@ -1537,10 +1623,13 @@ class _SeleccionProductosScreenState
       return;
     }
     final router = GoRouter.of(context);
+    final fallbackRoute = widget.orderMode.toLowerCase() == 'domicilio'
+        ? '/mesero/pedidos/domicilio'
+        : '/mesero/pedidos/mesas';
     if (router.canPop()) {
       router.pop();
     } else {
-      router.go('/mesero/pedidos/mesas');
+      router.go(fallbackRoute);
     }
   }
 
@@ -1783,13 +1872,17 @@ class _SeleccionProductosScreenState
           0;
       return accumulator + precioBase + precioAdicionales;
     });
+    final orderMode = widget.orderMode.toLowerCase();
     final mesaIdInt =
-        widget.mesaId != null ? int.tryParse(widget.mesaId!) : null;
+        (orderMode == 'mesa' && widget.mesaId != null) ? int.tryParse(widget.mesaId!) : null;
     final mesaNombre = _decodeIfNeeded(widget.mesaNombre);
     final clienteNombre = _decodeIfNeeded(widget.clienteNombre);
-    final tableNumber = mesaNombre ??
-        (mesaIdInt != null ? 'Mesa $mesaIdInt' : null) ??
-        widget.pedidoId;
+    final clienteTelefono = _decodeIfNeeded(widget.clienteTelefono);
+    final clienteDireccion = _decodeIfNeeded(widget.clienteDireccion);
+    final clienteReferencia = _decodeIfNeeded(widget.clienteReferencia);
+    final tableNumber = orderMode == 'mesa'
+        ? (mesaNombre ?? (mesaIdInt != null ? 'Mesa $mesaIdInt' : null) ?? widget.pedidoId)
+        : null;
 
     final pedidoData = <String, dynamic>{
       'id': widget.pedidoId,
@@ -1799,8 +1892,7 @@ class _SeleccionProductosScreenState
       'status': status,
       'pagado': pagado,
       'paymentStatus': pagado ? 'paid' : 'pending',
-      'mode': 'mesa',
-      'tableNumber': tableNumber,
+      'mode': orderMode,
       'meseroId': user?.uid,
       'meseroNombre': user != null
           ? '${user.nombre} ${user.apellidos}'
@@ -1808,7 +1900,10 @@ class _SeleccionProductosScreenState
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
-    if (mesaIdInt != null) {
+    if (tableNumber != null) {
+      pedidoData['tableNumber'] = tableNumber;
+    }
+    if (orderMode == 'mesa' && mesaIdInt != null) {
       pedidoData['mesaId'] = mesaIdInt;
     }
     if (mesaNombre != null && mesaNombre.trim().isNotEmpty) {
@@ -1816,6 +1911,21 @@ class _SeleccionProductosScreenState
     }
     if (clienteNombre != null && clienteNombre.trim().isNotEmpty) {
       pedidoData['clienteNombre'] = clienteNombre;
+      pedidoData['cliente'] = clienteNombre;
+    }
+    if (orderMode == 'domicilio') {
+      if (clienteTelefono != null && clienteTelefono.trim().isNotEmpty) {
+        pedidoData['clienteTelefono'] = clienteTelefono;
+        pedidoData['phone'] = clienteTelefono;
+      }
+      if (clienteDireccion != null && clienteDireccion.trim().isNotEmpty) {
+        pedidoData['clienteDireccion'] = clienteDireccion;
+        pedidoData['address'] = clienteDireccion;
+      }
+      if (clienteReferencia != null && clienteReferencia.trim().isNotEmpty) {
+        pedidoData['clienteReferencia'] = clienteReferencia;
+        pedidoData['reference'] = clienteReferencia;
+      }
     }
 
     await FirebaseFirestore.instance
