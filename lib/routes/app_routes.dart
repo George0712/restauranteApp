@@ -40,8 +40,9 @@ import 'package:restaurante_app/presentation/screens/settings/settings_user_scre
 import 'package:restaurante_app/presentation/screens/splash/splash_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/pedido_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/pedidos/ticket_preview_screen.dart';
-import 'package:restaurante_app/presentation/screens/mesero/orders/table_checkout_screen.dart';
-import 'package:restaurante_app/presentation/screens/mesero/orders/order_tracking_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/pedidos/table_checkout_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/pedidos/delivery_orders_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/pedidos/order_tracking_screen.dart';
 import 'package:restaurante_app/presentation/screens/mesero/incidencias/report_incident_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/incidencias/manage_incidencias_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/incidencias/incidencia_detail_screen.dart';
@@ -176,6 +177,10 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const MesasScreen(),
     ),
     GoRoute(
+      path: '/mesero/pedidos/domicilio',
+      builder: (context, state) => const DeliveryOrdersScreen(),
+    ),
+    GoRoute(
       path: '/mesero/pedidos/seguimiento',
       builder: (context, state) => const OrderTrackingScreen(),
     ),
@@ -210,6 +215,10 @@ final GoRouter router = GoRouter(
           mesaId: mesaIdFromPath ?? queryParams['mesaId'],
           mesaNombre: decodeParam(queryParams['mesaNombre']),
           clienteNombre: decodeParam(queryParams['clienteNombre']),
+          orderMode: (queryParams['orderMode'] ?? 'mesa').toLowerCase(),
+          clienteTelefono: decodeParam(queryParams['clienteTelefono']),
+          clienteDireccion: decodeParam(queryParams['clienteDireccion']),
+          clienteReferencia: decodeParam(queryParams['clienteReferencia']),
         );
       },
     ),

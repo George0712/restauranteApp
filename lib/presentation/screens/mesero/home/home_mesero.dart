@@ -315,7 +315,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
         title: 'Domicilios',
         color: const Color(0xFF22D3EE),
         icon: const Iconify(Ri.motorbike_fill, size: 34, color: Colors.white),
-        onTap: () {},
+        onTap: () => context.push('/mesero/pedidos/domicilio'),
       ),
       _QuickAction(
         title: 'Para llevar',
@@ -518,28 +518,28 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(
-                horizontal: isTablet ? 24 : 18,
-                vertical: 14,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 0,
-            ),
-            onPressed: () {},
-            child: const Text(
-              'Ver guia',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
+          // const SizedBox(width: 12),
+          // ElevatedButton(
+          //   style: ElevatedButton.styleFrom(
+          //     backgroundColor: const Color(0xFF6366F1),
+          //     foregroundColor: Colors.white,
+          //     padding: EdgeInsets.symmetric(
+          //       horizontal: isTablet ? 24 : 18,
+          //       vertical: 14,
+          //     ),
+          //     shape: RoundedRectangleBorder(
+          //       borderRadius: BorderRadius.circular(14),
+          //     ),
+          //     elevation: 0,
+          //   ),
+          //   onPressed: () {},
+          //   child: const Text(
+          //     'Ver guia',
+          //     style: TextStyle(
+          //       fontWeight: FontWeight.w600,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

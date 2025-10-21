@@ -121,6 +121,9 @@ class Pedido {
   final int? mesaId;           // Número real de la mesa (1, 2, 3, etc.)
   final String? mesaNombre;    // "Mesa 3" - información legible
   final String? clienteNombre; // Nombre del cliente para historial
+  final String? clienteTelefono; // Telefono del cliente (domicilio / para llevar)
+  final String? clienteDireccion; // Direccion de entrega
+  final String? clienteReferencia; // Referencia extra para la entrega
 
   // ✅ CAMPO PARA RASTREAR QUIÉN CANCELÓ EL PEDIDO:
   final String? cancelledBy;   // 'cocina' o 'mesero'
@@ -147,6 +150,9 @@ class Pedido {
     this.mesaId,
     this.mesaNombre,
     this.clienteNombre,
+    this.clienteTelefono,
+    this.clienteDireccion,
+    this.clienteReferencia,
     this.cancelledBy,
     this.pagado = false,
     this.paymentStatus,
@@ -191,6 +197,18 @@ class Pedido {
       mesaId: json['mesaId'] as int?,
       mesaNombre: json['mesaNombre'],
       clienteNombre: json['clienteNombre'],
+      clienteTelefono: json['clienteTelefono'] ??
+          json['customerPhone'] ??
+          json['phone'] ??
+          json['telefono'],
+      clienteDireccion: json['clienteDireccion'] ??
+          json['customerAddress'] ??
+          json['address'] ??
+          json['direccion'],
+      clienteReferencia: json['clienteReferencia'] ??
+          json['customerReference'] ??
+          json['reference'] ??
+          json['referencia'],
       cancelledBy: json['cancelledBy'],
       pagado: json['pagado'] == true,
       paymentStatus: json['paymentStatus'],
@@ -219,6 +237,12 @@ class Pedido {
       'mesaId': mesaId,
       'mesaNombre': mesaNombre,
       'clienteNombre': clienteNombre,
+      if (clienteTelefono != null && clienteTelefono!.isNotEmpty)
+        'clienteTelefono': clienteTelefono,
+      if (clienteDireccion != null && clienteDireccion!.isNotEmpty)
+        'clienteDireccion': clienteDireccion,
+      if (clienteReferencia != null && clienteReferencia!.isNotEmpty)
+        'clienteReferencia': clienteReferencia,
       'cancelledBy': cancelledBy,
       'pagado': pagado,
       if (paymentStatus != null) 'paymentStatus': paymentStatus,
