@@ -347,15 +347,15 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.task_alt_rounded,
-                color: const Color(0xFF22C55E),
+                color: Color(0xFF22C55E),
                 size: 24,
               ),
-              const SizedBox(width: 10),
-              const Text(
+              SizedBox(width: 10),
+              Text(
                 'Resolución',
                 style: TextStyle(
                   color: Colors.white,

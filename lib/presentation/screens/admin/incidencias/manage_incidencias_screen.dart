@@ -205,11 +205,11 @@ class _ManageIncidenciasScreenState extends ConsumerState<ManageIncidenciasScree
       ),
       child: Column(
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.analytics_rounded, color: Color(0xFF6366F1), size: 20),
-              const SizedBox(width: 8),
-              const Text(
+              Icon(Icons.analytics_rounded, color: Color(0xFF6366F1), size: 20),
+              SizedBox(width: 8),
+              Text(
                 'Estadísticas',
                 style: TextStyle(
                   color: Colors.white,

@@ -1432,7 +1432,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text('Pedido ID: ${pedidoId.substring(0, 12)}...'),
-                      pw.Text('${mode == 'mesa' ? 'Mesa: $tableNumber' : 'Cliente: $customerName'}'),
+                      pw.Text(mode == 'mesa' ? 'Mesa: $tableNumber' : 'Cliente: $customerName'),
                       pw.Text('Estado: ${_getStatusDisplayName(status)}'),
                       if (pagado) pw.Text('✓ PAGADO', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                     ],

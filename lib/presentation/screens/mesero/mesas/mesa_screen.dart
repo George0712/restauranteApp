@@ -1042,7 +1042,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             ),
             const SizedBox(height: 14),
             Text(
-              'Mesa ${mesa.id.toString().padLeft(2, '0')}',
+              'Mesa ${mesa.id.toString()}',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,

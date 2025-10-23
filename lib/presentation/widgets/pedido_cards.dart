@@ -664,8 +664,8 @@ class PedidoCard extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline,
-                        color: const Color(0xFFF97316), size: 18),
+                    const Icon(Icons.info_outline,
+                        color: Color(0xFFF97316), size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
