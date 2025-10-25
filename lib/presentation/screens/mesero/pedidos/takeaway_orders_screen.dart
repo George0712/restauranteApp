@@ -649,27 +649,7 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
             // Management actions
             // Actions for ACTIVE orders (nuevo, pendiente, preparando)
             if (isActive) ...[
-              // Contact customer
-              if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _contactCustomer(pedido);
-                    },
-                    icon: const Icon(Icons.phone_rounded),
-                    label: const Text('Contactar cliente'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF3B82F6),
-                      side: const BorderSide(color: Color(0xFF3B82F6)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
+              
 
               // Process payment
               if (!pedido.pagado) ...[
@@ -713,24 +693,27 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                 const SizedBox(height: 12),
               ],
 
-              // Add/modify items
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _goToProductSelection(pedido);
-                  },
-                  icon: const Icon(Icons.edit_note_rounded),
-                  label: const Text('Modificar productos'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              // Contact customer
+              if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _contactCustomer(pedido);
+                    },
+                    icon: const Icon(Icons.phone_rounded),
+                    label: const Text('Contactar cliente'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF3B82F6),
+                      side: const BorderSide(color: Color(0xFF3B82F6)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+              ],
             ],
 
             // Actions for COMPLETED orders (terminado, entregado, pagado)
@@ -777,21 +760,20 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                 ),
                 const SizedBox(height: 12),
               ],
-
-              // Copy phone
+              // Contact customer
               if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      _copyToClipboard(pedido.clienteTelefono!, 'Teléfono copiado');
                       Navigator.pop(context);
+                      _contactCustomer(pedido);
                     },
-                    icon: const Icon(Icons.copy_rounded),
-                    label: const Text('Copiar teléfono del cliente'),
+                    icon: const Icon(Icons.phone_rounded),
+                    label: const Text('Contactar cliente'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      foregroundColor: const Color(0xFF3B82F6),
+                      side: const BorderSide(color: Color(0xFF3B82F6)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
@@ -811,11 +793,11 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
                     Icon(Icons.info_outline, color: const Color(0xFFEF4444)),
-                    const SizedBox(width: 12),
-                    const Expanded(
+                    SizedBox(width: 12),
+                    Expanded(
                       child: Text(
                         'Pedido cancelado - No hay acciones disponibles',
                         style: TextStyle(color: Colors.white),
