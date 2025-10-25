@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,16 +8,17 @@ import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
+import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:uuid/uuid.dart';
 
-class DeliveryOrdersScreen extends ConsumerStatefulWidget {
-  const DeliveryOrdersScreen({super.key});
+class TakeawayOrdersScreen extends ConsumerStatefulWidget {
+  const TakeawayOrdersScreen({super.key});
 
   @override
-  ConsumerState<DeliveryOrdersScreen> createState() => _DeliveryOrdersScreenState();
+  ConsumerState<TakeawayOrdersScreen> createState() => _TakeawayOrdersScreenState();
 }
 
-class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
+class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String _statusFilter = 'all';
@@ -62,8 +63,8 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: _creatingOrder ? null : _openCreateDeliverySheet,
-          backgroundColor: const Color(0xFF22C55E),
+          onPressed: _creatingOrder ? null : _openCreateTakeawaySheet,
+          backgroundColor: const Color(0xFF34D399),
           foregroundColor: Colors.white,
           icon: _creatingOrder
               ? const SizedBox(
@@ -105,11 +106,11 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
             SafeArea(
               child: pedidosAsync.when(
                 data: (pedidos) {
-                  final deliveryOrders = pedidos
-                      .where((pedido) => pedido.mode.toLowerCase() == 'domicilio')
+                  final takeawayOrders = pedidos
+                      .where((pedido) => pedido.mode.toLowerCase() == 'para_llevar')
                       .toList();
-                  final stats = _computeStats(deliveryOrders);
-                  final filtered = _applyFilters(deliveryOrders);
+                  final stats = _computeStats(takeawayOrders);
+                  final filtered = _applyFilters(takeawayOrders);
 
                   return CustomScrollView(
                     controller: _scrollController,
@@ -125,7 +126,7 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Pedidos Domiciliarios',
+                                'Pedidos Para Llevar',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: isTablet ? 32 : 24,
@@ -134,7 +135,7 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Gestiona los pedidos domiciliarios desde esta seccion.',
+                                'Gestiona los pedidos para llevar desde esta seccion.',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.75),
                                   fontSize: isTablet ? 18 : 14,
@@ -145,14 +146,12 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
                               _buildFilters(
                                 isTablet: isTablet,
                                 stats: stats,
-                                total: deliveryOrders.length,
+                                total: takeawayOrders.length,
                               ),
                               const SizedBox(height: 16),
-                              // _buildSearchField(),
-                              // const SizedBox(height: 16),
                               if (filtered.isEmpty)
                                 _EmptyState(
-                                  hasOrders: deliveryOrders.isNotEmpty,
+                                  hasOrders: takeawayOrders.isNotEmpty,
                                   onClear: () {
                                     setState(() {
                                       _statusFilter = 'all';
@@ -178,21 +177,15 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
                                         lowerStatus == 'preparando';
                                     final canDelete =
                                         lowerStatus == 'nuevo' && pedido.items.isEmpty;
-                                    return _DeliveryOrderCard(
+                                    return _TakeawayOrderCard(
                                       pedido: pedido,
                                       statusColor: color,
-                                      onManage: () => _goToDeliveryOrder(pedido),
+                                      onManage: () => _goToTakeawayOrder(pedido),
                                       onCopyPhone: (pedido.clienteTelefono ?? '').isEmpty
                                           ? null
                                           : () => _copyToClipboard(
                                                 pedido.clienteTelefono!,
                                                 'Telefono copiado',
-                                              ),
-                                      onCopyAddress: (pedido.clienteDireccion ?? '').isEmpty
-                                          ? null
-                                          : () => _copyToClipboard(
-                                                pedido.clienteDireccion!,
-                                                'Direccion copiada',
                                               ),
                                       onCancel: canCancel ? () => _cancelOrder(pedido) : null,
                                       onDelete: canDelete ? () => _deleteOrder(pedido) : null,
@@ -211,7 +204,7 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
                   );
                 },
                 loading: () => const Center(
-                  child: CircularProgressIndicator(color: Color(0xFF6366F1)),
+                  child: CircularProgressIndicator(color: Color(0xFF34D399)),
                 ),
                 error: (error, _) => _ErrorState(error: error),
               ),
@@ -253,12 +246,9 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
 
       final fields = <String?>[
         pedido.id,
-        pedido.tableNumber,
         pedido.cliente,
         pedido.clienteNombre,
         pedido.clienteTelefono,
-        pedido.clienteDireccion,
-        pedido.clienteReferencia,
       ];
 
       return fields
@@ -286,7 +276,7 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
         label: 'Todos',
         count: total,
         color: const Color(0xFF6366F1),
-        icon: Icons.local_mall_rounded,
+        icon: Icons.shopping_bag_rounded,
       ),
       _FilterData(
         key: 'nuevo',
@@ -321,7 +311,7 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
         label: 'Entregados',
         count: stats['entregado'] ?? 0,
         color: const Color(0xFF38BDF8),
-        icon: Icons.outbox_outlined,
+        icon: Icons.done_all_rounded,
       ),
       _FilterData(
         key: 'pagado',
@@ -360,61 +350,36 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
     );
   }
 
-  // Widget _buildSearchField() {
-  //   return TextField(
-  //     controller: _searchController,
-  //     style: const TextStyle(color: Colors.white, fontSize: 14.5),
-  //     decoration: InputDecoration(
-  //       hintText: 'Buscar por nombre, telefono, direccion o ID',
-  //       hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
-  //       filled: true,
-  //       fillColor: Colors.white.withValues(alpha: 0.06),
-  //       prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70),
-  //       suffixIcon: _searchController.text.isEmpty
-  //           ? null
-  //           : IconButton(
-  //               icon: const Icon(Icons.close_rounded, color: Colors.white70),
-  //               onPressed: () {
-  //                 _searchController.clear();
-  //                 setState(() {});
-  //               },
-  //             ),
-  //       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-  //       enabledBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(18),
-  //         borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-  //       ),
-  //       focusedBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(18),
-  //         borderSide: const BorderSide(color: Color(0xFF6366F1)),
-  //       ),
-  //     ),
-  //     onChanged: (_) => setState(() {}),
-  //     textInputAction: TextInputAction.search,
-  //   );
-  // }
-
-  Future<void> _openCreateDeliverySheet() async {
-    final data = await showModalBottomSheet<DeliveryCustomerData>(
+  Future<void> _openCreateTakeawaySheet() async {
+    final data = await showModalBottomSheet<TakeawayCustomerData>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       isDismissible: true,
       enableDrag: true,
-      builder: (context) => const _DeliveryCustomerSheet(),
+      builder: (context) => const _TakeawayCustomerSheet(),
     );
 
     if (!mounted || data == null) return;
 
+    // Crear un ID único para el pedido (igual que las órdenes de mesa)
+    final pedidoId = const Uuid().v4();
+
+    // Navegar a selección de productos con datos del cliente
+    _goToTakeawayProductSelection(pedidoId, data);
+  }
+
+  void _goToTakeawayProductSelection(String pedidoId, TakeawayCustomerData data) async {
+    // Crear pedido vacío en Firestore
     setState(() => _creatingOrder = true);
+
     try {
       final user = await ref.read(userModelProvider.future);
-      final pedidoId = const Uuid().v4();
       final timestamp = FieldValue.serverTimestamp();
 
       final payload = <String, dynamic>{
         'id': pedidoId,
-        'mode': 'domicilio',
+        'mode': 'para_llevar',
         'status': 'nuevo',
         'subtotal': 0.0,
         'total': 0.0,
@@ -423,11 +388,7 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
         'cliente': data.nombre,
         'clienteNombre': data.nombre,
         'clienteTelefono': data.telefono,
-        'clienteDireccion': data.direccion,
-        'clienteReferencia': data.referencia,
         'phone': data.telefono,
-        'address': data.direccion,
-        if (data.referencia != null && data.referencia!.isNotEmpty) 'reference': data.referencia,
         if (data.notas != null && data.notas!.isNotEmpty) 'notas': data.notas,
         'items': <Map<String, dynamic>>[],
         'createdAt': timestamp,
@@ -440,31 +401,19 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
 
       if (!mounted) return;
 
-      SnackbarHelper.showSuccess(
-        'Pedido domiciliario creado. Agrega productos.',
-      );
+      final query = <String, String>{
+        'orderMode': 'para_llevar',
+        'clienteNombre': Uri.encodeComponent(data.nombre),
+        'clienteTelefono': Uri.encodeComponent(data.telefono),
+        if (data.notas != null && data.notas!.isNotEmpty)
+          'notas': Uri.encodeComponent(data.notas!),
+      };
 
-      _goToDeliveryOrder(
-        Pedido(
-          id: pedidoId,
-          status: 'nuevo',
-          mode: 'domicilio',
-          subtotal: 0,
-          total: 0,
-          items: const [],
-          initialItems: const [],
-          cliente: data.nombre,
-          clienteNombre: data.nombre,
-          clienteTelefono: data.telefono,
-          clienteDireccion: data.direccion,
-          clienteReferencia: data.referencia,
-          notas: data.notas,
-          meseroId: user.uid,
-          meseroNombre: '${user.nombre} ${user.apellidos}'.trim(),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
+      final uri = Uri(
+        path: '/mesero/pedidos/detalle/para_llevar/$pedidoId',
+        queryParameters: query,
       );
+      context.push(uri.toString());
     } catch (error) {
       SnackbarHelper.showError('No se pudo crear el pedido: $error');
     } finally {
@@ -474,26 +423,9 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
     }
   }
 
-  void _goToDeliveryOrder(Pedido pedido) {
-    final query = <String, String>{
-      'orderMode': 'domicilio',
-      if ((pedido.clienteNombre ?? pedido.cliente ?? '').isNotEmpty)
-        'clienteNombre': Uri.encodeComponent(pedido.clienteNombre ?? pedido.cliente ?? ''),
-      if ((pedido.clienteTelefono ?? '').isNotEmpty)
-        'clienteTelefono': Uri.encodeComponent(pedido.clienteTelefono!),
-      if ((pedido.clienteDireccion ?? '').isNotEmpty)
-        'clienteDireccion': Uri.encodeComponent(pedido.clienteDireccion!),
-      if ((pedido.clienteReferencia ?? '').isNotEmpty)
-        'clienteReferencia': Uri.encodeComponent(pedido.clienteReferencia!),
-      if ((pedido.notas ?? '').isNotEmpty)
-        'notas': Uri.encodeComponent(pedido.notas!),
-    };
-
-    final uri = Uri(
-      path: '/mesero/pedidos/detalle/domicilio/${pedido.id}',
-      queryParameters: query.isEmpty ? null : query,
-    );
-    context.push(uri.toString());
+  void _goToTakeawayOrder(Pedido pedido) {
+    // Mostrar panel de gestión unificado para todos los estados
+    _showOrderManagementSheet(pedido);
   }
 
   Future<void> _cancelOrder(Pedido pedido) async {
@@ -618,7 +550,725 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
     Clipboard.setData(ClipboardData(text: value));
     SnackbarHelper.showInfo(message);
   }
+
+  Future<void> _showOrderManagementSheet(Pedido pedido) async {
+    final lowerStatus = pedido.status.toLowerCase();
+    final isActive = lowerStatus == 'nuevo' || lowerStatus == 'pendiente' || lowerStatus == 'preparando';
+    final isCompleted = lowerStatus == 'terminado' || lowerStatus == 'entregado' || lowerStatus == 'pagado';
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Title
+            Text(
+              'Gestionar Pedido #${pedido.id.substring(0, 6).toUpperCase()}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _getStatusDescription(lowerStatus),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Order summary
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(
+                    icon: Icons.person_outline,
+                    label: 'Cliente',
+                    value: pedido.clienteNombre ?? pedido.cliente ?? 'Sin nombre',
+                  ),
+                  if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
+                    const SizedBox(height: 12),
+                    _buildInfoRow(
+                      icon: Icons.phone_outlined,
+                      label: 'Teléfono',
+                      value: pedido.clienteTelefono!,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    icon: Icons.shopping_bag_outlined,
+                    label: 'Artículos',
+                    value: '${pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad)} producto${pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad) == 1 ? '' : 's'}',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    icon: Icons.payments_outlined,
+                    label: 'Total',
+                    value: NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0)
+                        .format(pedido.total),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Management actions
+            // Actions for ACTIVE orders (nuevo, pendiente, preparando)
+            if (isActive) ...[
+              // Contact customer
+              if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _contactCustomer(pedido);
+                    },
+                    icon: const Icon(Icons.phone_rounded),
+                    label: const Text('Contactar cliente'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF3B82F6),
+                      side: const BorderSide(color: Color(0xFF3B82F6)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Process payment
+              if (!pedido.pagado) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _processPayment(pedido);
+                    },
+                    icon: const Icon(Icons.payments_rounded),
+                    label: const Text('Procesar pago'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Mark as ready (only for preparando)
+              if (lowerStatus == 'preparando') ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _markAsReady(pedido);
+                    },
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Marcar como listo'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF22C55E),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Add/modify items
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _goToProductSelection(pedido);
+                  },
+                  icon: const Icon(Icons.edit_note_rounded),
+                  label: const Text('Modificar productos'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            ],
+
+            // Actions for COMPLETED orders (terminado, entregado, pagado)
+            if (isCompleted) ...[
+              // Mark as delivered (only for terminado)
+              if (lowerStatus == 'terminado') ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _markAsDelivered(pedido);
+                    },
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Marcar como entregado'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF22C55E),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // View order details
+              if (lowerStatus == 'entregado' || lowerStatus == 'pagado') ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _viewOrderDetails(pedido);
+                    },
+                    icon: const Icon(Icons.receipt_long_outlined),
+                    label: const Text('Ver detalles del pedido'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Copy phone
+              if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      _copyToClipboard(pedido.clienteTelefono!, 'Teléfono copiado');
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.copy_rounded),
+                    label: const Text('Copiar teléfono del cliente'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ],
+
+            // Actions for CANCELLED orders
+            if (lowerStatus == 'cancelado') ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: const Color(0xFFEF4444)),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Pedido cancelado - No hay acciones disponibles',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Center(
+                child: Text(
+                  'Cerrar',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getStatusDescription(String status) {
+    switch (status) {
+      case 'nuevo':
+        return 'Pedido recién creado';
+      case 'pendiente':
+        return 'En espera de preparación';
+      case 'preparando':
+        return 'En preparación';
+      case 'terminado':
+        return 'Listo para entrega';
+      case 'entregado':
+        return 'Pedido completado y entregado';
+      case 'pagado':
+        return 'Pedido pagado';
+      case 'cancelado':
+        return 'Pedido cancelado';
+      default:
+        return 'Estado: $status';
+    }
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white.withValues(alpha: 0.7), size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _contactCustomer(Pedido pedido) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Contactar cliente',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.copy_rounded, color: Color(0xFF22C55E)),
+              ),
+              title: const Text(
+                'Copiar número',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                pedido.clienteTelefono ?? '',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+              ),
+              onTap: () {
+                _copyToClipboard(pedido.clienteTelefono!, 'Teléfono copiado');
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF25D366).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.message_rounded, color: Color(0xFF25D366)),
+              ),
+              title: const Text(
+                'Abrir WhatsApp',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                'Enviar mensaje al cliente',
+                style: TextStyle(color: Colors.white54),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _openWhatsApp(pedido);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openWhatsApp(Pedido pedido) {
+    // final phone = pedido.clienteTelefono?.replaceAll(RegExp(r'[^\d]'), '') ?? '';
+    // final orderNumber = pedido.id.substring(0, 6).toUpperCase();
+    // final message = Uri.encodeComponent(
+    //   'Hola! Tu pedido #$orderNumber está siendo preparado. Te avisaremos cuando esté listo para recoger.',
+    // );
+    // final url = 'https://wa.me/57$phone?text=$message';
+
+    SnackbarHelper.showInfo('Función WhatsApp pendiente de implementar');
+    // In a real app, you would use url_launcher package here
+    // launch(url);
+  }
+
+  Future<void> _processPayment(Pedido pedido) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => PaymentBottomSheet(pedidoId: pedido.id),
+    );
+
+    if (result == true && mounted) {
+      SnackbarHelper.showSuccess('Pago procesado correctamente');
+    }
+  }
+
+  Future<void> _markAsReady(Pedido pedido) async {
+    if (_processingOrders.contains(pedido.id)) return;
+
+    final confirmed = await _confirmAction(
+      title: 'Marcar como listo',
+      message: '¿El pedido está completo y empacado? Se notificará al cliente que puede recogerlo.',
+      confirmLabel: 'Marcar como listo',
+      confirmColor: const Color(0xFF22C55E),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _processingOrders.add(pedido.id);
+    });
+
+    try {
+      await FirebaseFirestore.instance.collection('pedido').doc(pedido.id).update({
+        'status': 'terminado',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      SnackbarHelper.showSuccess('Pedido marcado como listo para recoger');
+    } catch (error) {
+      SnackbarHelper.showError('Error al actualizar estado: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _processingOrders.remove(pedido.id);
+        });
+      }
+    }
+  }
+
+  void _goToProductSelection(Pedido pedido) {
+    final query = <String, String>{
+      'orderMode': 'para_llevar',
+      if ((pedido.clienteNombre ?? pedido.cliente ?? '').isNotEmpty)
+        'clienteNombre': Uri.encodeComponent(pedido.clienteNombre ?? pedido.cliente ?? ''),
+      if ((pedido.clienteTelefono ?? '').isNotEmpty)
+        'clienteTelefono': Uri.encodeComponent(pedido.clienteTelefono!),
+      if ((pedido.notas ?? '').isNotEmpty)
+        'notas': Uri.encodeComponent(pedido.notas!),
+    };
+
+    final uri = Uri(
+      path: '/mesero/pedidos/detalle/para_llevar/${pedido.id}',
+      queryParameters: query.isEmpty ? null : query,
+    );
+    context.push(uri.toString());
+  }
+
+  Future<void> _markAsDelivered(Pedido pedido) async {
+    if (_processingOrders.contains(pedido.id)) return;
+
+    setState(() {
+      _processingOrders.add(pedido.id);
+    });
+
+    try {
+      await FirebaseFirestore.instance.collection('pedido').doc(pedido.id).update({
+        'status': 'entregado',
+        'updatedAt': FieldValue.serverTimestamp(),
+        'deliveredAt': FieldValue.serverTimestamp(),
+      });
+      SnackbarHelper.showSuccess('Pedido marcado como entregado.');
+    } catch (error) {
+      SnackbarHelper.showError('No se pudo actualizar el estado: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _processingOrders.remove(pedido.id);
+        });
+      }
+    }
+  }
+
+  void _viewOrderDetails(Pedido pedido) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Title
+            Text(
+              'Detalles del Pedido',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Pedido #${pedido.id.substring(0, 6).toUpperCase()}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Items list
+            if (pedido.items.isNotEmpty) ...[
+              Text(
+                'Productos',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...pedido.items.map((item) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF34D399).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${item.cantidad}x',
+                            style: const TextStyle(
+                              color: Color(0xFF34D399),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.nombre,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (item.adicionales != null && item.adicionales!.isNotEmpty)
+                              Text(
+                                item.adicionales!
+                                    .map((adicional) => adicional['name'] ?? adicional['nombre'] ?? '')
+                                    .where((nombre) => nombre.isNotEmpty)
+                                    .join(', '),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        NumberFormat.currency(
+                          locale: 'es_CO',
+                          symbol: r'$',
+                          decimalDigits: 0,
+                        ).format(item.precio * item.cantidad),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF34D399).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF34D399).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      NumberFormat.currency(
+                        locale: 'es_CO',
+                        symbol: r'$',
+                        decimalDigits: 0,
+                      ).format(pedido.total),
+                      style: const TextStyle(
+                        color: Color(0xFF34D399),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF34D399),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Cerrar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+
 class _FilterData {
   final String key;
   final String label;
@@ -719,13 +1369,12 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-class _DeliveryOrderCard extends StatelessWidget {
-  const _DeliveryOrderCard({
+class _TakeawayOrderCard extends StatelessWidget {
+  const _TakeawayOrderCard({
     required this.pedido,
     required this.statusColor,
     required this.onManage,
     this.onCopyPhone,
-    this.onCopyAddress,
     this.onCancel,
     this.onDelete,
     this.isBusy = false,
@@ -737,7 +1386,6 @@ class _DeliveryOrderCard extends StatelessWidget {
   final Color statusColor;
   final VoidCallback onManage;
   final VoidCallback? onCopyPhone;
-  final VoidCallback? onCopyAddress;
   final VoidCallback? onCancel;
   final VoidCallback? onDelete;
   final bool isBusy;
@@ -748,8 +1396,6 @@ class _DeliveryOrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final String name = pedido.clienteNombre ?? pedido.cliente ?? 'Cliente sin nombre';
     final String? telefono = pedido.clienteTelefono;
-    final String? direccion = pedido.clienteDireccion;
-    // final String? referencia = pedido.clienteReferencia;
     final int itemsCount = pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad);
     final DateTime created = pedido.createdAt ?? pedido.updatedAt ?? DateTime.now();
     final String elapsed = _formatElapsed(created);
@@ -814,14 +1460,31 @@ class _DeliveryOrderCard extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               if (telefono != null && telefono.isNotEmpty)
-                _InfoRow(icon: Icons.phone_rounded, label: telefono, onPressed: onCopyPhone),
-              if (direccion != null && direccion.isNotEmpty) ...[
-                _InfoRow(icon: Icons.location_on_rounded, label: direccion, onPressed: onCopyAddress),
-              ],
-              // if (referencia != null && referencia.isNotEmpty) ...[
-              //   const SizedBox(height: 8),
-              //   _InfoRow(icon: Icons.push_pin_outlined, label: referencia),
-              // ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.phone_rounded, color: Colors.white.withValues(alpha: 0.7), size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        telefono,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                    if (onCopyPhone != null)
+                      IconButton(
+                        onPressed: onCopyPhone,
+                        icon: const Icon(Icons.copy_rounded),
+                        color: Colors.white.withValues(alpha: 0.6),
+                        iconSize: 18,
+                        tooltip: 'Copiar',
+                      ),
+                  ],
+                ),
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerLeft,
@@ -829,7 +1492,7 @@ class _DeliveryOrderCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _Tag(icon: Icons.receipt_long_outlined, label: '$itemsCount articulo${itemsCount == 1 ? '' : 's'}'),
+                    _Tag(icon: Icons.shopping_bag_outlined, label: '$itemsCount articulo${itemsCount == 1 ? '' : 's'}'),
                     _Tag(
                       icon: Icons.payments_outlined,
                       label: NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0)
@@ -847,7 +1510,7 @@ class _DeliveryOrderCard extends StatelessWidget {
                     onPressed: isBusy ? null : onManage,
                     icon: const Icon(Icons.edit_note_rounded),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
+                      backgroundColor: const Color(0xFF34D399),
                       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       textStyle: const TextStyle(
@@ -931,47 +1594,6 @@ class _DeliveryOrderCard extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Icon(icon, color: Colors.white.withValues(alpha: 0.7), size: 18),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13.5,
-              height: 1.35,
-            ),
-          ),
-        ),
-        if (onPressed != null)
-          IconButton(
-            onPressed: onPressed,
-            icon: const Icon(Icons.copy_rounded),
-            color: Colors.white.withValues(alpha: 0.6),
-            iconSize: 18,
-            tooltip: 'Copiar',
-          ),
-      ],
-    );
-  }
-}
-
 class _Tag extends StatelessWidget {
   const _Tag({
     required this.icon,
@@ -1039,6 +1661,7 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 }
+
 class _EmptyState extends StatelessWidget {
   const _EmptyState({
     required this.hasOrders,
@@ -1063,13 +1686,13 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            hasOrders ? Icons.filter_alt_off_rounded : Icons.delivery_dining_outlined,
+            hasOrders ? Icons.filter_alt_off_rounded : Icons.shopping_bag_outlined,
             color: Colors.white.withValues(alpha: 0.35),
             size: 52,
           ),
           const SizedBox(height: 12),
           Text(
-            hasOrders ? 'Sin resultados para la busqueda' : 'Aun no hay pedidos domiciliarios',
+            hasOrders ? 'Sin resultados para la busqueda' : 'Aun no hay pedidos para llevar',
             style: textTheme.titleMedium?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.w700,
@@ -1080,7 +1703,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             hasOrders
                 ? 'Ajusta los filtros o busca con otro dato del cliente.'
-                : 'Crea tu primer pedido a domicilio para iniciar el flujo de entrega.',
+                : 'Crea tu primer pedido para llevar para iniciar.',
             style: textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.6),
               height: 1.4,
@@ -1139,45 +1762,38 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
-class DeliveryCustomerData {
-  DeliveryCustomerData({
+class TakeawayCustomerData {
+  TakeawayCustomerData({
     required this.nombre,
     required this.telefono,
-    required this.direccion,
-    this.referencia,
     this.notas,
   });
 
   final String nombre;
   final String telefono;
-  final String direccion;
-  final String? referencia;
   final String? notas;
 }
 
-class _DeliveryCustomerSheet extends ConsumerStatefulWidget {
-  const _DeliveryCustomerSheet();
+class _TakeawayCustomerSheet extends ConsumerStatefulWidget {
+  const _TakeawayCustomerSheet();
 
   @override
-  ConsumerState<_DeliveryCustomerSheet> createState() => _DeliveryCustomerSheetState();
+  ConsumerState<_TakeawayCustomerSheet> createState() => _TakeawayCustomerSheetState();
 }
 
-class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> {
+class _TakeawayCustomerSheetState extends ConsumerState<_TakeawayCustomerSheet> {
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
-  final TextEditingController _direccionController = TextEditingController();
-  final TextEditingController _referenciaController = TextEditingController();
   final TextEditingController _notasController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _submitting = false;
+  bool _showOptionalFields = false;
 
   @override
   void dispose() {
     _nombreController.dispose();
     _telefonoController.dispose();
-    _direccionController.dispose();
-    _referenciaController.dispose();
     _notasController.dispose();
     super.dispose();
   }
@@ -1186,53 +1802,52 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.45),
-              blurRadius: 30,
-              offset: const Offset(0, 18),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-          child: Form(
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 30,
+                offset: const Offset(0, -8),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildHandle(),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  child: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Datos del cliente',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.white),
-                      onPressed: _submitting ? null : () => Navigator.of(context).maybePop(),
-                    ),
-                  ],
+                const Text(
+                  'Nuevo Pedido Para Llevar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Completa la informacion para agilizar la entrega y mantener contacto con el cliente.',
+                  'El pago se procesa al confirmar el pedido',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.7),
                   ),
@@ -1260,7 +1875,7 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
                   validator: (value) {
                     final trimmed = value?.trim() ?? '';
                     if (trimmed.isEmpty) {
-                      return 'Agrega el telefono para la entrega';
+                      return 'Agrega el telefono de contacto';
                     }
                     if (trimmed.length < 7) {
                       return 'El telefono es muy corto';
@@ -1269,35 +1884,27 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
                   },
                 ),
                 const SizedBox(height: 14),
-                _buildField(
-                  controller: _direccionController,
-                  label: 'Direccion de entrega *',
-                  hint: 'Ej. Calle 123 #45-67, Apto 302',
-                  keyboardType: TextInputType.streetAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Indica la direccion completa de entrega';
-                    }
-                    return null;
-                  },
+                TextButton.icon(
+                  onPressed: () => setState(() => _showOptionalFields = !_showOptionalFields),
+                  icon: Icon(
+                    _showOptionalFields ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                    color: const Color(0xFF34D399),
+                  ),
+                  label: Text(
+                    _showOptionalFields ? 'Ocultar campos opcionales' : 'Mostrar campos opcionales',
+                    style: const TextStyle(color: Color(0xFF34D399)),
+                  ),
                 ),
-                const SizedBox(height: 14),
-                _buildField(
-                  controller: _referenciaController,
-                  label: 'Referencia o indicaciones',
-                  hint: 'Punto de referencia, piso, porteria, etc.',
-                  maxLines: 2,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 14),
-                _buildField(
-                  controller: _notasController,
-                  label: 'Notas internas',
-                  hint: 'Informacion adicional para el equipo',
-                  maxLines: 2,
-                  textInputAction: TextInputAction.done,
-                ),
+                if (_showOptionalFields) ...[
+                  const SizedBox(height: 14),
+                  _buildField(
+                    controller: _notasController,
+                    label: 'Notas (Opcional)',
+                    hint: 'Preferencias o indicaciones especiales',
+                    maxLines: 2,
+                    textInputAction: TextInputAction.done,
+                  ),
+                ],
                 const SizedBox(height: 22),
                 SizedBox(
                   width: double.infinity,
@@ -1314,7 +1921,7 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
                         : const Icon(Icons.navigate_next_rounded),
                     label: Text(_submitting ? 'Creando...' : 'Continuar con productos'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF22C55E),
+                      backgroundColor: const Color(0xFF34D399),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -1328,8 +1935,24 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
                 ),
               ],
             ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHandle() {
+    return Container(
+      margin: const EdgeInsets.only(top: 12, bottom: 8),
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }
@@ -1374,7 +1997,7 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFF6366F1)),
+              borderSide: const BorderSide(color: Color(0xFF34D399)),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -1395,7 +2018,13 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
     if (form == null) return;
     if (!form.validate()) return;
 
-    setState(() => _submitting = true);
-
+    Navigator.of(context).pop(
+      TakeawayCustomerData(
+        nombre: _nombreController.text.trim(),
+        telefono: _telefonoController.text.trim(),
+        notas: _notasController.text.trim().isEmpty ? null : _notasController.text.trim(),
+      ),
+    );
   }
 }
+

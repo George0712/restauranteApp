@@ -1329,9 +1329,11 @@ class _SeleccionProductosScreenState
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => CarritoBottomSheet(
-        pedidoId: widget.pedidoId, // Pasar el ID del pedido
+        pedidoId: widget.pedidoId,
+        orderMode: widget.orderMode,
         onConfirmarSinPagar: () => _confirmarPedidoSinPagar(context),
         onConfirmarYPagar: () => _confirmarPedidoYPagar(context),
+        onConfirmarYPagarTakeaway: () => _confirmarYPagarTakeaway(context),
         onRegistrarPago: () { _registrarPago(context); },
         onModificarPedido: () => _modificarPedido(context),
         onCancelarPedido: () => _cancelarPedido(context),
@@ -1384,6 +1386,69 @@ class _SeleccionProductosScreenState
       _mostrarError(context, 'Error al confirmar y generar ticket: $e');
     }
   }
+
+  // Método específico para pedidos para llevar: envía a cocina y procesa pago inmediatamente
+  Future<void> _confirmarYPagarTakeaway(BuildContext sheetContext) async {
+    final carrito = ref.read(carritoProvider);
+    if (carrito.isEmpty) {
+      _mostrarError(context, 'Agrega productos antes de confirmar el pedido.');
+      return;
+    }
+
+    try {
+      // 1. Guardar el pedido con status='pendiente' para que aparezca en cocina
+      await _crearActualizarPedido(carrito, 'pendiente', false);
+      await _cargarCarritoDelPedido();
+
+      if (!mounted) return;
+
+      // 2. Cerrar el carrito
+      Navigator.of(sheetContext).pop();
+
+      if (!mounted) return;
+
+      // 3. Mostrar mensaje de que se envió a cocina
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pedido enviado a cocina')),
+      );
+
+      // 4. Abrir el diálogo de pago inmediatamente
+      final pagoCompletado = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        isDismissible: true,
+        builder: (_) => PaymentBottomSheet(
+          pedidoId: widget.pedidoId,
+          onPaid: () => ref.read(carritoProvider.notifier).limpiarCarrito(),
+        ),
+      );
+
+      // 5. Si el pago fue completado, generar el ticket y mostrar
+      if (pagoCompletado == true && mounted) {
+        await _cargarCarritoDelPedido();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pago registrado correctamente')),
+        );
+
+        // Generar y mostrar el ticket
+        final ticketInfo = await _generarTicketFactura(context, mostrarMensaje: false);
+        await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
+
+        // Volver a la pantalla anterior después de completar todo
+        if (mounted) {
+          context.pop();
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _mostrarError(context, 'Error al procesar el pedido: $e');
+    }
+  }
+
   Future<void> _actualizarPedidoExistente(BuildContext sheetContext) async {
     final carrito = ref.read(carritoProvider);
     if (carrito.isEmpty) {

@@ -19,9 +19,8 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
-  String _modeFilter = 'mesa';
+  String _modeFilter = 'all';
   String _paymentFilter = 'pending';
-  late DateTime _selectedDay;
 
   static const Map<String, Color> _statusColors = {
     'pendiente': Color(0xFFF97316),
@@ -38,7 +37,6 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedDay = _normalizeDate(DateTime.now());
   }
 
   @override
@@ -58,11 +56,9 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
       value: SystemUiOverlayStyle.light,
       child: pedidosAsync.when(
         data: (pedidos) {
-          final availableDays = _computeAvailableDays(pedidos);
-          final effectiveDay = _resolveSelectedDay(availableDays);
-          final dayOrders = _ordersForDay(pedidos, effectiveDay);
-          final filtered = _applyFilters(dayOrders, effectiveDay);
-          final stats = _computeStats(dayOrders);
+          final last7DaysOrders = _ordersLast7Days(pedidos);
+          final filtered = _applyFilters(last7DaysOrders);
+          final stats = _computeStats(last7DaysOrders);
 
           return Scaffold(
             backgroundColor: Colors.black,
@@ -107,8 +103,6 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
                           child: _buildHeader(
                             isTablet: isTablet,
                             stats: stats,
-                            availableDays: availableDays,
-                            selectedDay: effectiveDay,
                           ),
                         ),
                         const SliverToBoxAdapter(child: SizedBox(height: 20)),
@@ -206,23 +200,28 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
   Widget _buildHeader({
     required bool isTablet,
     required _CheckoutStats stats,
-    required List<DateTime> availableDays,
-    required DateTime selectedDay,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Agiliza el cobro de mesas listas para pagar.',
+          'Cobrar Pedidos',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.85),
-            fontSize: isTablet ? 18 : 16,
+            color: Colors.white,
+            fontSize: isTablet ? 32 : 28,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Gestiona el cobro de pedidos de los últimos 7 días.',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.75),
+            fontSize: isTablet ? 16 : 14,
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 16),
-        _buildDaySelector(availableDays, selectedDay),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(vertical: 6),
@@ -262,58 +261,6 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
     );
   }
 
-  Widget _buildDaySelector(List<DateTime> days, DateTime selectedDay) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.calendar_today_rounded, color: Color(0xFF93C5FD), size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<DateTime>(
-                value: selectedDay,
-                isExpanded: true,
-                dropdownColor: const Color(0xFF1F233A),
-                borderRadius: BorderRadius.circular(14),
-                icon: const Icon(Icons.expand_more_rounded, color: Colors.white),
-                items: days
-                    .map(
-                      (day) => DropdownMenuItem<DateTime>(
-                        value: day,
-                        child: Text(
-                          _formatDay(day),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    _selectedDay = _normalizeDate(value);
-                  });
-                  _scrollController.animateTo(
-                    0,
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeOutCubic,
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildFilters(bool isTablet) {
     return Column(
@@ -376,16 +323,28 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
           child: Row(
             children: [
               _buildModeChip(
-                label: 'Solo mesas',
-                value: 'mesa',
-                selectedValue: _modeFilter,
-                color: const Color(0xFF4F46E5),
-              ),
-              _buildModeChip(
-                label: 'Todos los modos',
+                label: 'Todos',
                 value: 'all',
                 selectedValue: _modeFilter,
                 color: const Color(0xFF38BDF8),
+              ),
+              _buildModeChip(
+                label: 'Mesas',
+                value: 'mesa',
+                selectedValue: _modeFilter,
+                color: const Color(0xFF8B5CF6),
+              ),
+              _buildModeChip(
+                label: 'Domicilio',
+                value: 'domicilio',
+                selectedValue: _modeFilter,
+                color: const Color(0xFF22D3EE),
+              ),
+              _buildModeChip(
+                label: 'Para llevar',
+                value: 'para_llevar',
+                selectedValue: _modeFilter,
+                color: const Color(0xFF34D399),
               ),
             ],
           ),
@@ -458,19 +417,18 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
     );
   }
 
-  List<Pedido> _ordersForDay(List<Pedido> pedidos, DateTime day) {
-    final normalizedDay = _normalizeDate(day);
+  List<Pedido> _ordersLast7Days(List<Pedido> pedidos) {
+    final now = DateTime.now();
+    final sevenDaysAgo = now.subtract(const Duration(days: 7));
+
     return pedidos.where((pedido) {
-      if (_modeFilter != 'all' && pedido.mode.toLowerCase() != _modeFilter) {
-        return false;
-      }
       final reference = pedido.createdAt ?? pedido.updatedAt;
       if (reference == null) return false;
-      return _normalizeDate(reference) == normalizedDay;
+      return reference.isAfter(sevenDaysAgo);
     }).toList();
   }
 
-  List<Pedido> _applyFilters(List<Pedido> pedidos, DateTime selectedDay) {
+  List<Pedido> _applyFilters(List<Pedido> pedidos) {
     final query = _searchController.text.trim().toLowerCase();
     const readyStatuses = {'terminado', 'entregado', 'completado', 'listo', 'pagado'};
 
@@ -501,9 +459,15 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
 
       final mesa = (pedido.mesaNombre ?? '').toLowerCase();
       final cliente = (pedido.clienteNombre ?? pedido.cliente ?? '').toLowerCase();
+      final telefono = (pedido.clienteTelefono ?? '').toLowerCase();
+      final direccion = (pedido.clienteDireccion ?? '').toLowerCase();
       final identifier = pedido.id.toLowerCase();
 
-      return mesa.contains(query) || cliente.contains(query) || identifier.contains(query);
+      return mesa.contains(query) ||
+             cliente.contains(query) ||
+             telefono.contains(query) ||
+             direccion.contains(query) ||
+             identifier.contains(query);
     }).toList();
 
     result.sort((a, b) {
@@ -656,65 +620,6 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
     );
   }
 
-  List<DateTime> _computeAvailableDays(List<Pedido> pedidos) {
-    final today = _normalizeDate(DateTime.now());
-    final earliest = today.subtract(const Duration(days: 6));
-    final set = <DateTime>{};
-
-    for (final pedido in pedidos) {
-      if (pedido.mode.toLowerCase() != 'mesa') continue;
-      final reference = pedido.createdAt ?? pedido.updatedAt;
-      if (reference == null) continue;
-      final normalized = _normalizeDate(reference);
-      if (normalized.isBefore(earliest)) continue;
-      set.add(normalized);
-    }
-
-    final days = set.toList()..sort((a, b) => b.compareTo(a));
-    if (days.isEmpty) {
-      days.add(today);
-    }
-    return days.take(7).toList();
-  }
-
-  DateTime _resolveSelectedDay(List<DateTime> days) {
-    final normalizedSelected = _normalizeDate(_selectedDay);
-    if (days.isEmpty) {
-      final today = _normalizeDate(DateTime.now());
-      if (normalizedSelected != today) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() => _selectedDay = today);
-          }
-        });
-      }
-      return today;
-    }
-
-    final exists = days.any((day) => day == normalizedSelected);
-    if (!exists) {
-      final fallback = days.first;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() => _selectedDay = fallback);
-        }
-      });
-      return fallback;
-    }
-
-    return normalizedSelected;
-  }
-
-  String _formatDay(DateTime date) {
-    final today = _normalizeDate(DateTime.now());
-    final yesterday = today.subtract(const Duration(days: 1));
-
-    if (date == today) return 'Hoy';
-    if (date == yesterday) return 'Ayer';
-    return DateFormat('EEE d MMM', 'es').format(date);
-  }
-
-  DateTime _normalizeDate(DateTime date) => DateTime(date.year, date.month, date.day);
 }
 class _CheckoutStats {
   const _CheckoutStats({

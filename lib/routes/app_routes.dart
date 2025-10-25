@@ -46,6 +46,7 @@ import 'package:restaurante_app/presentation/screens/mesero/pedidos/order_tracki
 import 'package:restaurante_app/presentation/screens/mesero/incidencias/report_incident_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/incidencias/manage_incidencias_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/incidencias/incidencia_detail_screen.dart';
+import 'package:restaurante_app/presentation/screens/mesero/pedidos/takeaway_orders_screen.dart';
 
 final GoRouter router = GoRouter(
   navigatorKey: SnackbarHelper.navigatorKey,
@@ -191,6 +192,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/mesero/reportar-incidencia',
       builder: (context, state) => const ReportIncidentScreen(),
+    ),
+    GoRoute(
+      path: '/mesero/pedidos/para-llevar',
+      builder: (context, state) => const TakeawayOrdersScreen(),
     ),
 
     GoRoute(

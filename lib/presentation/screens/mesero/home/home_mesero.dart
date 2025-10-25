@@ -321,7 +321,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
         title: 'Para llevar',
         color: const Color(0xFF34D399),
         icon: const Iconify(Ion.fast_food, size: 34, color: Colors.white),
-        onTap: () {},
+        onTap: () => context.push('/mesero/pedidos/para-llevar'),
       ),
       _QuickAction(
         title: 'Historial',

@@ -18,7 +18,9 @@ class CarritoBottomSheet extends ConsumerWidget {
   final VoidCallback onActualizarPedido;
   final VoidCallback onReportIssue;
   final VoidCallback onGenerarTicket;
+  final VoidCallback? onConfirmarYPagarTakeaway;
   final String? pedidoId;
+  final String? orderMode;
   const CarritoBottomSheet({
     super.key,
     required this.onConfirmarSinPagar,
@@ -29,7 +31,9 @@ class CarritoBottomSheet extends ConsumerWidget {
     required this.onActualizarPedido,
     required this.onReportIssue,
     required this.onGenerarTicket,
+    this.onConfirmarYPagarTakeaway,
     this.pedidoId,
+    this.orderMode,
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -197,6 +201,7 @@ class CarritoBottomSheet extends ConsumerWidget {
       if (carrito.isEmpty) {
         return const SizedBox.shrink();
       }
+      // Para pedidos nuevos sin ID asignado, mostrar botones normales
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -260,10 +265,39 @@ class CarritoBottomSheet extends ConsumerWidget {
         final pagado = pedidoData['pagado'] == true;
         final pedidoItems = (pedidoData['items'] as List?) ?? [];
         final bool pedidoSinItems = pedidoItems.isEmpty;
+        final mode = (pedidoData['mode'] ?? orderMode ?? '').toString().toLowerCase();
+        final isParaguevar = mode == 'para_llevar';
+
         if (pedidoSinItems && estadoNormalizado == 'nuevo') {
           if (carrito.isEmpty) {
             return const SizedBox.shrink();
           }
+
+          // Para pedidos para llevar, mostrar solo un botón de confirmar y pagar
+          if (isParaguevar) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PrimaryButton(
+                  icon: Icons.restaurant,
+                  label: 'Enviar a cocina y cobrar',
+                  onPressed: onConfirmarYPagarTakeaway ?? onConfirmarYPagar,
+                  backgroundColor: const Color(0xFF22C55E),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'El pedido se enviará a cocina y se procesará el pago.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            );
+          }
+
+          // Para otros tipos de pedidos, mostrar las dos opciones normales
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -284,7 +318,7 @@ class CarritoBottomSheet extends ConsumerWidget {
               Text(
                 'Generar el ticket no marca el pedido como pagado.',
                 style: TextStyle(
-                  fontSize: 12, 
+                  fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.6),
                 ),
               ),
