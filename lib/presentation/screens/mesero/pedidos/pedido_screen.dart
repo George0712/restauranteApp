@@ -7,6 +7,7 @@ import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/item_carrito_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
+import 'package:restaurante_app/presentation/controllers/mesero/carrito_controller.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
@@ -1334,6 +1335,7 @@ class _SeleccionProductosScreenState
         onConfirmarSinPagar: () => _confirmarPedidoSinPagar(context),
         onConfirmarYPagar: () => _confirmarPedidoYPagar(context),
         onConfirmarYPagarTakeaway: () => _confirmarYPagarTakeaway(context),
+        onConfirmarYPagarDelivery: () => _confirmarYPagarDelivery(context),
         onRegistrarPago: () { _registrarPago(context); },
         onModificarPedido: () => _modificarPedido(context),
         onCancelarPedido: () => _cancelarPedido(context),
@@ -1439,6 +1441,130 @@ class _SeleccionProductosScreenState
         await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
 
         // Volver a la pantalla anterior después de completar todo
+        if (mounted) {
+          context.pop();
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _mostrarError(context, 'Error al procesar el pedido: $e');
+    }
+  }
+
+  // Método específico para pedidos domiciliarios: muestra opciones de pago antes de enviar a cocina
+  Future<void> _confirmarYPagarDelivery(BuildContext sheetContext) async {
+    final carrito = ref.read(carritoProvider);
+    if (carrito.isEmpty) {
+      _mostrarError(context, 'Agrega productos antes de confirmar el pedido.');
+      return;
+    }
+
+    try {
+      // 1. Cerrar el carrito primero
+      Navigator.of(sheetContext).pop();
+
+      if (!mounted) return;
+
+      // 2. Mostrar las opciones de pago (cash o paga al recibir)
+      final pagoResult = await showModalBottomSheet<Map<String, dynamic>>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        isDismissible: true,
+        builder: (_) => _DeliveryPaymentOptionsSheet(
+          pedidoId: widget.pedidoId,
+          total: ref.read(carritoControllerProvider).calcularTotal(),
+        ),
+      );
+
+      if (pagoResult == null || !mounted) return;
+
+      final paymentMethod = pagoResult['method'] as String;
+      final shouldProceed = pagoResult['proceed'] as bool? ?? false;
+
+      if (!shouldProceed) return;
+
+      // 3. Guardar el pedido con el método de pago seleccionado
+      await _crearActualizarPedido(carrito, 'pendiente', false);
+
+      if (!mounted) return;
+
+      // 4. Actualizar el estado de pago según la selección
+      final user = await ref.read(userModelProvider.future).catchError((_) => null);
+      final processedByName = '${user.nombre} ${user.apellidos}'.trim();
+
+      if (paymentMethod == 'pay_on_delivery') {
+        // Paga al recibir - pedido con pago pendiente
+        final paymentData = <String, dynamic>{
+          'method': 'pay_on_delivery',
+          'status': 'pending',
+          'amount': ref.read(carritoControllerProvider).calcularTotal(),
+          'processedAt': FieldValue.serverTimestamp(),
+        };
+
+        if (user != null) {
+          paymentData['processedBy'] = user.uid;
+          paymentData['processedByName'] = processedByName;
+        }
+
+        await FirebaseFirestore.instance
+            .collection('pedido')
+            .doc(widget.pedidoId)
+            .update({
+          'pagado': false,
+          'paymentStatus': 'pending',
+          'payment': paymentData,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        await _cargarCarritoDelPedido();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pedido enviado a cocina - Pago pendiente al entregar')),
+        );
+
+        // Volver a la pantalla anterior
+        if (mounted) {
+          context.pop();
+        }
+      } else if (paymentMethod == 'cash') {
+        // Pago en efectivo - procesar pago inmediatamente
+        final paymentData = <String, dynamic>{
+          'method': 'cash',
+          'status': 'completed',
+          'amount': ref.read(carritoControllerProvider).calcularTotal(),
+          'processedAt': FieldValue.serverTimestamp(),
+        };
+
+        paymentData['processedBy'] = user.uid;
+        paymentData['processedByName'] = processedByName;
+      
+        await FirebaseFirestore.instance
+            .collection('pedido')
+            .doc(widget.pedidoId)
+            .update({
+          'pagado': true,
+          'paymentStatus': 'paid',
+          'paidAt': FieldValue.serverTimestamp(),
+          'payment': paymentData,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        await _cargarCarritoDelPedido();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pedido enviado a cocina y pago registrado')),
+        );
+
+        // Generar y mostrar el ticket
+        final ticketInfo = await _generarTicketFactura(context, mostrarMensaje: false);
+        await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
+
+        // Volver a la pantalla anterior
         if (mounted) {
           context.pop();
         }
@@ -2033,6 +2159,212 @@ class _SeleccionProductosScreenState
   String _capitalizeFirstLetter(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+}
+
+// Widget para mostrar opciones de pago para pedidos domiciliarios
+class _DeliveryPaymentOptionsSheet extends StatefulWidget {
+  final String pedidoId;
+  final double total;
+
+  const _DeliveryPaymentOptionsSheet({
+    required this.pedidoId,
+    required this.total,
+  });
+
+  @override
+  State<_DeliveryPaymentOptionsSheet> createState() => _DeliveryPaymentOptionsSheetState();
+}
+
+class _DeliveryPaymentOptionsSheetState extends State<_DeliveryPaymentOptionsSheet> {
+  String _selectedMethod = 'cash';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF1A1B23),
+            Color(0xFF2D2E37),
+          ],
+        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom + 20,
+        top: 20,
+        left: 24,
+        right: 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade600,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const Text(
+            'Seleccionar método de pago',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Elige cómo se procesará el pago de este pedido',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade400,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: const Color(0xFF363740).withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade700),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Total del pedido',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '\$${widget.total.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Theme(
+            data: ThemeData(
+              unselectedWidgetColor: Colors.grey.shade600,
+            ),
+            child: RadioListTile<String>(
+              value: 'cash',
+              groupValue: _selectedMethod,
+              onChanged: (value) {
+                setState(() {
+                  _selectedMethod = value ?? 'cash';
+                });
+              },
+              title: const Text(
+                'Pago inmediato en efectivo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                'El pago se registra ahora y se envía a cocina',
+                style: TextStyle(color: Colors.grey.shade400),
+              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              activeColor: const Color(0xFF22C55E),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Theme(
+            data: ThemeData(
+              unselectedWidgetColor: Colors.grey.shade600,
+            ),
+            child: RadioListTile<String>(
+              value: 'pay_on_delivery',
+              groupValue: _selectedMethod,
+              onChanged: (value) {
+                setState(() {
+                  _selectedMethod = value ?? 'pay_on_delivery';
+                });
+              },
+              title: const Text(
+                'Paga al recibir',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                'El cliente pagará cuando reciba el pedido',
+                style: TextStyle(color: Colors.grey.shade400),
+              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              activeColor: const Color(0xFFF59E0B),
+            ),
+          ),
+          const SizedBox(height: 28),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.grey.shade600),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop({
+                      'method': _selectedMethod,
+                      'proceed': true,
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: _selectedMethod == 'cash'
+                        ? const Color(0xFF22C55E)
+                        : const Color(0xFFF59E0B),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    _selectedMethod == 'cash'
+                        ? 'Confirmar y enviar'
+                        : 'Enviar con pago pendiente',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

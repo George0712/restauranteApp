@@ -8,6 +8,7 @@ import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
+import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:uuid/uuid.dart';
 
 class DeliveryOrdersScreen extends ConsumerStatefulWidget {
@@ -406,10 +407,19 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
 
     if (!mounted || data == null) return;
 
+    // Crear un ID único para el pedido (igual que las órdenes de mesa)
+    final pedidoId = const Uuid().v4();
+
+    // Navegar a selección de productos con datos del cliente
+    _goToDeliveryProductSelection(pedidoId, data);
+  }
+
+  void _goToDeliveryProductSelection(String pedidoId, DeliveryCustomerData data) async {
+    // Crear pedido vacío en Firestore
     setState(() => _creatingOrder = true);
+
     try {
       final user = await ref.read(userModelProvider.future);
-      final pedidoId = const Uuid().v4();
       final timestamp = FieldValue.serverTimestamp();
 
       final payload = <String, dynamic>{
@@ -424,10 +434,12 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
         'clienteNombre': data.nombre,
         'clienteTelefono': data.telefono,
         'clienteDireccion': data.direccion,
-        'clienteReferencia': data.referencia,
         'phone': data.telefono,
         'address': data.direccion,
-        if (data.referencia != null && data.referencia!.isNotEmpty) 'reference': data.referencia,
+        if (data.referencia != null && data.referencia!.isNotEmpty)
+          'clienteReferencia': data.referencia,
+        if (data.referencia != null && data.referencia!.isNotEmpty)
+          'reference': data.referencia,
         if (data.notas != null && data.notas!.isNotEmpty) 'notas': data.notas,
         'items': <Map<String, dynamic>>[],
         'createdAt': timestamp,
@@ -440,31 +452,22 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
 
       if (!mounted) return;
 
-      SnackbarHelper.showSuccess(
-        'Pedido domiciliario creado. Agrega productos.',
-      );
+      final query = <String, String>{
+        'orderMode': 'domicilio',
+        'clienteNombre': Uri.encodeComponent(data.nombre),
+        'clienteTelefono': Uri.encodeComponent(data.telefono),
+        'clienteDireccion': Uri.encodeComponent(data.direccion),
+        if (data.referencia != null && data.referencia!.isNotEmpty)
+          'clienteReferencia': Uri.encodeComponent(data.referencia!),
+        if (data.notas != null && data.notas!.isNotEmpty)
+          'notas': Uri.encodeComponent(data.notas!),
+      };
 
-      _goToDeliveryOrder(
-        Pedido(
-          id: pedidoId,
-          status: 'nuevo',
-          mode: 'domicilio',
-          subtotal: 0,
-          total: 0,
-          items: const [],
-          initialItems: const [],
-          cliente: data.nombre,
-          clienteNombre: data.nombre,
-          clienteTelefono: data.telefono,
-          clienteDireccion: data.direccion,
-          clienteReferencia: data.referencia,
-          notas: data.notas,
-          meseroId: user.uid,
-          meseroNombre: '${user.nombre} ${user.apellidos}'.trim(),
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
+      final uri = Uri(
+        path: '/mesero/pedidos/detalle/domicilio/$pedidoId',
+        queryParameters: query,
       );
+      context.push(uri.toString());
     } catch (error) {
       SnackbarHelper.showError('No se pudo crear el pedido: $error');
     } finally {
@@ -475,25 +478,695 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
   }
 
   void _goToDeliveryOrder(Pedido pedido) {
-    final query = <String, String>{
-      'orderMode': 'domicilio',
-      if ((pedido.clienteNombre ?? pedido.cliente ?? '').isNotEmpty)
-        'clienteNombre': Uri.encodeComponent(pedido.clienteNombre ?? pedido.cliente ?? ''),
-      if ((pedido.clienteTelefono ?? '').isNotEmpty)
-        'clienteTelefono': Uri.encodeComponent(pedido.clienteTelefono!),
-      if ((pedido.clienteDireccion ?? '').isNotEmpty)
-        'clienteDireccion': Uri.encodeComponent(pedido.clienteDireccion!),
-      if ((pedido.clienteReferencia ?? '').isNotEmpty)
-        'clienteReferencia': Uri.encodeComponent(pedido.clienteReferencia!),
-      if ((pedido.notas ?? '').isNotEmpty)
-        'notas': Uri.encodeComponent(pedido.notas!),
-    };
+    // Mostrar panel de gestión unificado para todos los estados
+    _showOrderManagementSheet(pedido);
+  }
 
-    final uri = Uri(
-      path: '/mesero/pedidos/detalle/domicilio/${pedido.id}',
-      queryParameters: query.isEmpty ? null : query,
+  Future<void> _showOrderManagementSheet(Pedido pedido) async {
+    final lowerStatus = pedido.status.toLowerCase();
+    final isActive = lowerStatus == 'nuevo' || lowerStatus == 'pendiente' || lowerStatus == 'preparando';
+    final isCompleted = lowerStatus == 'terminado' || lowerStatus == 'entregado' || lowerStatus == 'pagado';
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Title
+            Text(
+              'Gestionar Pedido #${pedido.id.substring(0, 6).toUpperCase()}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _getStatusDescription(lowerStatus),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Order summary
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(
+                    icon: Icons.person_outline,
+                    label: 'Cliente',
+                    value: pedido.clienteNombre ?? pedido.cliente ?? 'Sin nombre',
+                  ),
+                  if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
+                    const SizedBox(height: 12),
+                    _buildInfoRow(
+                      icon: Icons.phone_outlined,
+                      label: 'Teléfono',
+                      value: pedido.clienteTelefono!,
+                    ),
+                  ],
+                  if (pedido.clienteDireccion?.isNotEmpty ?? false) ...[
+                    const SizedBox(height: 12),
+                    _buildInfoRow(
+                      icon: Icons.location_on_outlined,
+                      label: 'Dirección',
+                      value: pedido.clienteDireccion!,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    icon: Icons.shopping_bag_outlined,
+                    label: 'Artículos',
+                    value: '${pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad)} producto${pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad) == 1 ? '' : 's'}',
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    icon: Icons.payments_outlined,
+                    label: 'Total',
+                    value: NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0)
+                        .format(pedido.total),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Management actions
+            // Actions for ACTIVE orders (nuevo, pendiente, preparando)
+            if (isActive) ...[
+              // Process payment
+              if (!pedido.pagado) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _processPayment(pedido);
+                    },
+                    icon: const Icon(Icons.payments_rounded),
+                    label: const Text('Procesar pago'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Mark as ready (only for preparando)
+              if (lowerStatus == 'preparando') ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _markAsReady(pedido);
+                    },
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Marcar como listo'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF22C55E),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Contact customer
+              if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _contactCustomer(pedido);
+                    },
+                    icon: const Icon(Icons.phone_rounded),
+                    label: const Text('Contactar cliente'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF3B82F6),
+                      side: const BorderSide(color: Color(0xFF3B82F6)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ],
+
+            // Actions for COMPLETED orders (terminado, entregado, pagado)
+            if (isCompleted) ...[
+              // Mark as delivered (only for terminado)
+              if (lowerStatus == 'terminado') ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _markAsDelivered(pedido);
+                    },
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Marcar como entregado'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF22C55E),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // View order details
+              if (lowerStatus == 'entregado' || lowerStatus == 'pagado') ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _viewOrderDetails(pedido);
+                    },
+                    icon: const Icon(Icons.receipt_long_outlined),
+                    label: const Text('Ver detalles del pedido'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              // Contact customer
+              if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _contactCustomer(pedido);
+                    },
+                    icon: const Icon(Icons.phone_rounded),
+                    label: const Text('Contactar cliente'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF3B82F6),
+                      side: const BorderSide(color: Color(0xFF3B82F6)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ],
+
+            // Actions for CANCELLED orders
+            if (lowerStatus == 'cancelado') ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Color(0xFFEF4444)),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Pedido cancelado - No hay acciones disponibles',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Center(
+                child: Text(
+                  'Cerrar',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
-    context.push(uri.toString());
+  }
+
+  String _getStatusDescription(String status) {
+    switch (status) {
+      case 'nuevo':
+        return 'Pedido recién creado';
+      case 'pendiente':
+        return 'En espera de preparación';
+      case 'preparando':
+        return 'En preparación';
+      case 'terminado':
+        return 'Listo para entrega';
+      case 'entregado':
+        return 'Pedido completado y entregado';
+      case 'pagado':
+        return 'Pedido pagado';
+      case 'cancelado':
+        return 'Pedido cancelado';
+      default:
+        return 'Estado: $status';
+    }
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white.withValues(alpha: 0.7), size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _contactCustomer(Pedido pedido) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Contactar cliente',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.copy_rounded, color: Color(0xFF22C55E)),
+              ),
+              title: const Text(
+                'Copiar número',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                pedido.clienteTelefono ?? '',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+              ),
+              onTap: () {
+                _copyToClipboard(pedido.clienteTelefono!, 'Teléfono copiado');
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF25D366).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.message_rounded, color: Color(0xFF25D366)),
+              ),
+              title: const Text(
+                'Abrir WhatsApp',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                'Enviar mensaje al cliente',
+                style: TextStyle(color: Colors.white54),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _openWhatsApp(pedido);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openWhatsApp(Pedido pedido) {
+    // final phone = pedido.clienteTelefono?.replaceAll(RegExp(r'[^\d]'), '') ?? '';
+    // final orderNumber = pedido.id.substring(0, 6).toUpperCase();
+    // final message = Uri.encodeComponent(
+    //   'Hola! Tu pedido #$orderNumber está siendo preparado. Te avisaremos cuando esté en camino.',
+    // );
+    // final url = 'https://wa.me/57$phone?text=$message';
+
+    SnackbarHelper.showInfo('Función WhatsApp pendiente de implementar');
+    // In a real app, you would use url_launcher package here
+    // launch(url);
+  }
+
+  Future<void> _processPayment(Pedido pedido) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _DeliveryPaymentSheet(pedidoId: pedido.id),
+    );
+
+    if (result == true && mounted) {
+      SnackbarHelper.showSuccess('Pago procesado correctamente');
+    }
+  }
+
+  Future<void> _markAsReady(Pedido pedido) async {
+    if (_processingOrders.contains(pedido.id)) return;
+
+    final confirmed = await _confirmAction(
+      title: 'Marcar como listo',
+      message: '¿El pedido está completo y listo para ser enviado? Se notificará al cliente.',
+      confirmLabel: 'Marcar como listo',
+      confirmColor: const Color(0xFF22C55E),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _processingOrders.add(pedido.id);
+    });
+
+    try {
+      await FirebaseFirestore.instance.collection('pedido').doc(pedido.id).update({
+        'status': 'terminado',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      SnackbarHelper.showSuccess('Pedido marcado como listo para envío');
+    } catch (error) {
+      SnackbarHelper.showError('Error al actualizar estado: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _processingOrders.remove(pedido.id);
+        });
+      }
+    }
+  }
+
+  Future<void> _markAsDelivered(Pedido pedido) async {
+    if (_processingOrders.contains(pedido.id)) return;
+
+    setState(() {
+      _processingOrders.add(pedido.id);
+    });
+
+    try {
+      await FirebaseFirestore.instance.collection('pedido').doc(pedido.id).update({
+        'status': 'entregado',
+        'updatedAt': FieldValue.serverTimestamp(),
+        'deliveredAt': FieldValue.serverTimestamp(),
+      });
+      SnackbarHelper.showSuccess('Pedido marcado como entregado.');
+    } catch (error) {
+      SnackbarHelper.showError('No se pudo actualizar el estado: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _processingOrders.remove(pedido.id);
+        });
+      }
+    }
+  }
+
+  void _viewOrderDetails(Pedido pedido) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Title
+            Text(
+              'Detalles del Pedido',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Pedido #${pedido.id.substring(0, 6).toUpperCase()}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Items list
+            if (pedido.items.isNotEmpty) ...[
+              Text(
+                'Productos',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...pedido.items.map((item) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF22C55E).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${item.cantidad}x',
+                            style: const TextStyle(
+                              color: Color(0xFF22C55E),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.nombre,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (item.adicionales != null && item.adicionales!.isNotEmpty)
+                              Text(
+                                item.adicionales!
+                                    .map((adicional) => adicional['name'] ?? adicional['nombre'] ?? '')
+                                    .where((nombre) => nombre.isNotEmpty)
+                                    .join(', '),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 12,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        NumberFormat.currency(
+                          locale: 'es_CO',
+                          symbol: r'$',
+                          decimalDigits: 0,
+                        ).format(item.precio * item.cantidad),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      NumberFormat.currency(
+                        locale: 'es_CO',
+                        symbol: r'$',
+                        decimalDigits: 0,
+                      ).format(pedido.total),
+                      style: const TextStyle(
+                        color: Color(0xFF22C55E),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF22C55E),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Cerrar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _cancelOrder(Pedido pedido) async {
@@ -1171,6 +1844,7 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _submitting = false;
+  bool _showOptionalFields = false;
 
   @override
   void dispose() {
@@ -1186,150 +1860,179 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.45),
-              blurRadius: 30,
-              offset: const Offset(0, 18),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Datos del cliente',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.white),
-                      onPressed: _submitting ? null : () => Navigator.of(context).maybePop(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Completa la informacion para agilizar la entrega y mantener contacto con el cliente.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _buildField(
-                  controller: _nombreController,
-                  label: 'Nombre del cliente *',
-                  hint: 'Ej. Ana Gomez',
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Ingresa el nombre del cliente';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                _buildField(
-                  controller: _telefonoController,
-                  label: 'Telefono de contacto *',
-                  hint: 'Ej. 320 123 4567',
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    final trimmed = value?.trim() ?? '';
-                    if (trimmed.isEmpty) {
-                      return 'Agrega el telefono para la entrega';
-                    }
-                    if (trimmed.length < 7) {
-                      return 'El telefono es muy corto';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                _buildField(
-                  controller: _direccionController,
-                  label: 'Direccion de entrega *',
-                  hint: 'Ej. Calle 123 #45-67, Apto 302',
-                  keyboardType: TextInputType.streetAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Indica la direccion completa de entrega';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                _buildField(
-                  controller: _referenciaController,
-                  label: 'Referencia o indicaciones',
-                  hint: 'Punto de referencia, piso, porteria, etc.',
-                  maxLines: 2,
-                  textInputAction: TextInputAction.next,
-                ),
-                const SizedBox(height: 14),
-                _buildField(
-                  controller: _notasController,
-                  label: 'Notas internas',
-                  hint: 'Informacion adicional para el equipo',
-                  maxLines: 2,
-                  textInputAction: TextInputAction.done,
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    icon: _submitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 30,
+                offset: const Offset(0, -8),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildHandle(),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Nuevo Pedido Domiciliario',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'El pago se procesa al confirmar el pedido',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildField(
+                          controller: _nombreController,
+                          label: 'Nombre del cliente *',
+                          hint: 'Ej. Ana Gomez',
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Ingresa el nombre del cliente';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        _buildField(
+                          controller: _telefonoController,
+                          label: 'Telefono de contacto *',
+                          hint: 'Ej. 320 123 4567',
+                          keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            final trimmed = value?.trim() ?? '';
+                            if (trimmed.isEmpty) {
+                              return 'Agrega el telefono de contacto';
+                            }
+                            if (trimmed.length < 7) {
+                              return 'El telefono es muy corto';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        _buildField(
+                          controller: _direccionController,
+                          label: 'Direccion de entrega *',
+                          hint: 'Ej. Calle 123 #45-67, Apto 302',
+                          keyboardType: TextInputType.streetAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Indica la direccion completa de entrega';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        TextButton.icon(
+                          onPressed: () => setState(() => _showOptionalFields = !_showOptionalFields),
+                          icon: Icon(
+                            _showOptionalFields ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                            color: const Color(0xFF22C55E),
+                          ),
+                          label: Text(
+                            _showOptionalFields ? 'Ocultar campos opcionales' : 'Mostrar campos opcionales',
+                            style: const TextStyle(color: Color(0xFF22C55E)),
+                          ),
+                        ),
+                        if (_showOptionalFields) ...[
+                          const SizedBox(height: 14),
+                          _buildField(
+                            controller: _referenciaController,
+                            label: 'Referencia o indicaciones (Opcional)',
+                            hint: 'Punto de referencia, piso, porteria, etc.',
+                            maxLines: 2,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 14),
+                          _buildField(
+                            controller: _notasController,
+                            label: 'Notas (Opcional)',
+                            hint: 'Informacion adicional para el equipo',
+                            maxLines: 2,
+                            textInputAction: TextInputAction.done,
+                          ),
+                        ],
+                        const SizedBox(height: 22),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            icon: _submitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Icon(Icons.navigate_next_rounded),
+                            label: Text(_submitting ? 'Creando...' : 'Continuar con productos'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF22C55E),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
                             ),
-                          )
-                        : const Icon(Icons.navigate_next_rounded),
-                    label: Text(_submitting ? 'Creando...' : 'Continuar con productos'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF22C55E),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
+                            onPressed: _submitting ? null : _handleSubmit,
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: _submitting ? null : _handleSubmit,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHandle() {
+    return Container(
+      margin: const EdgeInsets.only(top: 12, bottom: 8),
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }
@@ -1374,7 +2077,7 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: Color(0xFF6366F1)),
+              borderSide: const BorderSide(color: Color(0xFF22C55E)),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -1397,5 +2100,527 @@ class _DeliveryCustomerSheetState extends ConsumerState<_DeliveryCustomerSheet> 
 
     setState(() => _submitting = true);
 
+    Navigator.of(context).pop(
+      DeliveryCustomerData(
+        nombre: _nombreController.text.trim(),
+        telefono: _telefonoController.text.trim(),
+        direccion: _direccionController.text.trim(),
+        referencia: _referenciaController.text.trim().isEmpty ? null : _referenciaController.text.trim(),
+        notas: _notasController.text.trim().isEmpty ? null : _notasController.text.trim(),
+      ),
+    );
+  }
+}
+
+// Custom payment sheet for delivery orders with "paga al recibir" option
+class _DeliveryPaymentSheet extends ConsumerStatefulWidget {
+  final String pedidoId;
+
+  const _DeliveryPaymentSheet({required this.pedidoId});
+
+  @override
+  ConsumerState<_DeliveryPaymentSheet> createState() => _DeliveryPaymentSheetState();
+}
+
+class _DeliveryPaymentSheetState extends ConsumerState<_DeliveryPaymentSheet> {
+  String _selectedMethod = 'cash';
+  bool _processing = false;
+  String? _errorMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF1A1B23),
+            Color(0xFF2D2E37),
+          ],
+        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).padding.bottom,
+      ),
+      child: SafeArea(
+        top: false,
+        child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('pedido')
+              .doc(widget.pedidoId)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const SizedBox(
+                height: 260,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                  ),
+                ),
+              );
+            }
+
+            final pedidoSnapshot = snapshot.data!;
+            if (!pedidoSnapshot.exists) {
+              return const SizedBox(
+                height: 200,
+                child: Center(
+                  child: Text(
+                    'No encontramos este pedido.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              );
+            }
+
+            final data = pedidoSnapshot.data() ?? {};
+            final total = (data['total'] as num?)?.toDouble() ?? 0.0;
+            final subtotal = (data['subtotal'] as num?)?.toDouble() ?? total;
+            final extras = (total - subtotal).clamp(0.0, double.infinity);
+            final pagado = data['pagado'] == true;
+            final paymentInfo = data['payment'] as Map<String, dynamic>?;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade600,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const Text(
+                    'Registrar pago',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Confirma el método de pago para el pedido domiciliario.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildResumenCard(
+                    subtotal: subtotal,
+                    extras: extras,
+                    total: total,
+                    pagado: pagado,
+                    paymentInfo: paymentInfo,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildMetodoPagoSelector(pagado: pagado),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade900.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.shade700),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(color: Colors.red.shade300),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _processing
+                              ? null
+                              : () => Navigator.of(context).pop(false),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            foregroundColor: Colors.white,
+                            side: BorderSide(color: Colors.grey.shade600),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Cancelar'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: pagado || _processing
+                              ? null
+                              : () => _registrarPago(total),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: const Color(0xFF6366F1),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _processing
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : Text(_selectedMethod == 'pay_on_delivery'
+                                  ? 'Confirmar pedido'
+                                  : 'Confirmar pago'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResumenCard({
+    required double subtotal,
+    required double extras,
+    required double total,
+    required bool pagado,
+    Map<String, dynamic>? paymentInfo,
+  }) {
+    final metodo = (paymentInfo?['method'] ?? '').toString();
+    final procesadoPor = (paymentInfo?['processedByName'] ?? '').toString();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF363740).withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade700),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Detalle del cobro',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildResumenRow('Subtotal', _formatCurrency(subtotal)),
+          if (extras > 0) ...[
+            const SizedBox(height: 6),
+            _buildResumenRow('Extras agregados', _formatCurrency(extras)),
+          ],
+          const SizedBox(height: 12),
+          Divider(height: 1, color: Colors.grey.shade600),
+          const SizedBox(height: 12),
+          _buildResumenRow(
+            pagado ? 'Total cobrado' : 'Total a cobrar',
+            _formatCurrency(total),
+            highlight: true,
+          ),
+          if (pagado) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade900.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.shade700),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Este pedido ya fue pagado.',
+                    style: TextStyle(
+                      color: Colors.green.shade300,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (metodo.isNotEmpty)
+                    Text(
+                      'Método: ${_getMethodLabel(metodo)}',
+                      style: TextStyle(color: Colors.green.shade300),
+                    ),
+                  if (procesadoPor.isNotEmpty)
+                    Text(
+                      'Registrado por: $procesadoPor',
+                      style: TextStyle(color: Colors.green.shade300),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResumenRow(String label, String value, {bool highlight = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: highlight ? 16 : 14,
+            fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
+            color: highlight ? Colors.white : Colors.grey.shade400,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: highlight ? 18 : 14,
+            fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
+            color: highlight ? Colors.white : Colors.grey.shade300,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetodoPagoSelector({required bool pagado}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Metodo de pago',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Theme(
+          data: ThemeData(
+            unselectedWidgetColor: Colors.grey.shade600,
+          ),
+          child: RadioListTile<String>(
+            value: 'cash',
+            groupValue: _selectedMethod,
+            onChanged: pagado || _processing
+                ? null
+                : (value) {
+                    setState(() {
+                      _selectedMethod = value ?? 'cash';
+                      _errorMessage = null;
+                    });
+                  },
+            title: const Text(
+              'Efectivo',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'Pago en efectivo al momento del pedido',
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            activeColor: const Color(0xFF6366F1),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Theme(
+          data: ThemeData(
+            unselectedWidgetColor: Colors.grey.shade600,
+          ),
+          child: RadioListTile<String>(
+            value: 'pay_on_delivery',
+            groupValue: _selectedMethod,
+            onChanged: pagado || _processing
+                ? null
+                : (value) {
+                    setState(() {
+                      _selectedMethod = value ?? 'pay_on_delivery';
+                      _errorMessage = null;
+                    });
+                  },
+            title: const Text(
+              'Paga al recibir',
+              style: TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'El cliente pagará cuando reciba el pedido',
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            activeColor: const Color(0xFFF59E0B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Theme(
+          data: ThemeData(
+            unselectedWidgetColor: Colors.grey.shade600,
+          ),
+          child: RadioListTile<String>(
+            value: 'card',
+            groupValue: _selectedMethod,
+            onChanged: null,
+            title: Text(
+              'Tarjeta',
+              style: TextStyle(color: Colors.grey.shade500),
+            ),
+            subtitle: Text(
+              'Disponible próximamente',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            secondary: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade900.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade700),
+              ),
+              child: const Text(
+                'Pronto',
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _registrarPago(double total) async {
+    if (_selectedMethod != 'cash' && _selectedMethod != 'pay_on_delivery') {
+      setState(() {
+        _errorMessage = 'Por ahora solo es posible cobrar en efectivo o paga al recibir.';
+      });
+      return;
+    }
+
+    setState(() {
+      _processing = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final user = await ref.read(userModelProvider.future).catchError((_) => null);
+
+      final processedByName = user != null
+          ? '${user.nombre} ${user.apellidos}'.trim()
+          : null;
+
+      // If "paga al recibir" is selected, we don't mark as paid but update payment method
+      if (_selectedMethod == 'pay_on_delivery') {
+        final paymentData = <String, dynamic>{
+          'method': 'pay_on_delivery',
+          'status': 'pending',
+          'amount': total,
+          'processedAt': FieldValue.serverTimestamp(),
+        };
+
+        if (user != null) {
+          paymentData['processedBy'] = user.uid;
+          paymentData['processedByName'] = processedByName;
+        }
+
+        await FirebaseFirestore.instance
+            .collection('pedido')
+            .doc(widget.pedidoId)
+            .update({
+          'pagado': false,
+          'paymentStatus': 'pending',
+          'payment': paymentData,
+          'updatedAt': FieldValue.serverTimestamp(),
+          'status': 'pendiente',
+        });
+      } else {
+        // Cash payment - mark as paid immediately
+        final paymentData = <String, dynamic>{
+          'method': 'cash',
+          'status': 'completed',
+          'amount': total,
+          'processedAt': FieldValue.serverTimestamp(),
+        };
+
+        if (user != null) {
+          paymentData['processedBy'] = user.uid;
+          paymentData['processedByName'] = processedByName;
+        }
+
+        await FirebaseFirestore.instance
+            .collection('pedido')
+            .doc(widget.pedidoId)
+            .update({
+          'pagado': true,
+          'paymentStatus': 'paid',
+          'paidAt': FieldValue.serverTimestamp(),
+          'payment': paymentData,
+          'updatedAt': FieldValue.serverTimestamp(),
+          'status': 'pendiente',
+        });
+      }
+
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _errorMessage = 'No pudimos registrar el pago. Intenta nuevamente.';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al registrar pago: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _processing = false;
+        });
+      }
+    }
+  }
+
+  String _formatCurrency(double value) {
+    return r'$' + NumberFormat('#,##0', 'es_CO').format(value);
+  }
+
+  String _getMethodLabel(String method) {
+    switch (method) {
+      case 'cash':
+        return 'Efectivo';
+      case 'pay_on_delivery':
+        return 'Paga al recibir';
+      case 'card':
+        return 'Tarjeta';
+      default:
+        return method;
+    }
   }
 }

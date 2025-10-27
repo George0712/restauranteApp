@@ -19,6 +19,7 @@ class CarritoBottomSheet extends ConsumerWidget {
   final VoidCallback onReportIssue;
   final VoidCallback onGenerarTicket;
   final VoidCallback? onConfirmarYPagarTakeaway;
+  final VoidCallback? onConfirmarYPagarDelivery;
   final String? pedidoId;
   final String? orderMode;
   const CarritoBottomSheet({
@@ -32,6 +33,7 @@ class CarritoBottomSheet extends ConsumerWidget {
     required this.onReportIssue,
     required this.onGenerarTicket,
     this.onConfirmarYPagarTakeaway,
+    this.onConfirmarYPagarDelivery,
     this.pedidoId,
     this.orderMode,
   });
@@ -267,6 +269,7 @@ class CarritoBottomSheet extends ConsumerWidget {
         final bool pedidoSinItems = pedidoItems.isEmpty;
         final mode = (pedidoData['mode'] ?? orderMode ?? '').toString().toLowerCase();
         final isParaguevar = mode == 'para_llevar';
+        final isDomicilio = mode == 'domicilio';
 
         if (pedidoSinItems && estadoNormalizado == 'nuevo') {
           if (carrito.isEmpty) {
@@ -287,6 +290,30 @@ class CarritoBottomSheet extends ConsumerWidget {
                 const SizedBox(height: 6),
                 Text(
                   'El pedido se enviará a cocina y se procesará el pago.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            );
+          }
+
+          // Para pedidos domiciliarios, mostrar botón con opciones de pago
+          if (isDomicilio) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _PrimaryButton(
+                  icon: Icons.delivery_dining,
+                  label: 'Confirmar pedido domiciliario',
+                  onPressed: onConfirmarYPagarDelivery ?? onConfirmarYPagar,
+                  backgroundColor: const Color(0xFF3B82F6),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Elige el método de pago y envía el pedido a cocina.',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.6),

@@ -1019,24 +1019,6 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
     }
   }
 
-  void _goToProductSelection(Pedido pedido) {
-    final query = <String, String>{
-      'orderMode': 'para_llevar',
-      if ((pedido.clienteNombre ?? pedido.cliente ?? '').isNotEmpty)
-        'clienteNombre': Uri.encodeComponent(pedido.clienteNombre ?? pedido.cliente ?? ''),
-      if ((pedido.clienteTelefono ?? '').isNotEmpty)
-        'clienteTelefono': Uri.encodeComponent(pedido.clienteTelefono!),
-      if ((pedido.notas ?? '').isNotEmpty)
-        'notas': Uri.encodeComponent(pedido.notas!),
-    };
-
-    final uri = Uri(
-      path: '/mesero/pedidos/detalle/para_llevar/${pedido.id}',
-      queryParameters: query.isEmpty ? null : query,
-    );
-    context.push(uri.toString());
-  }
-
   Future<void> _markAsDelivered(Pedido pedido) async {
     if (_processingOrders.contains(pedido.id)) return;
 
