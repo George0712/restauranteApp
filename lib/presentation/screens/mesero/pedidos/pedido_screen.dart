@@ -1490,7 +1490,7 @@ class _SeleccionProductosScreenState
       if (!mounted) return;
 
       // 4. Actualizar el estado de pago según la selección
-      final user = await ref.read(userModelProvider.future).catchError((_) => null);
+      final user = await ref.read(userModelProvider.future);
       final processedByName = '${user.nombre} ${user.apellidos}'.trim();
 
       if (paymentMethod == 'pay_on_delivery') {
@@ -1502,11 +1502,9 @@ class _SeleccionProductosScreenState
           'processedAt': FieldValue.serverTimestamp(),
         };
 
-        if (user != null) {
-          paymentData['processedBy'] = user.uid;
-          paymentData['processedByName'] = processedByName;
-        }
-
+        paymentData['processedBy'] = user.uid;
+        paymentData['processedByName'] = processedByName;
+      
         await FirebaseFirestore.instance
             .collection('pedido')
             .doc(widget.pedidoId)

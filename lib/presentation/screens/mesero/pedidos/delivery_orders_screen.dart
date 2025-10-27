@@ -8,7 +8,6 @@ import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
-import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:uuid/uuid.dart';
 
 class DeliveryOrdersScreen extends ConsumerStatefulWidget {
@@ -2528,11 +2527,9 @@ class _DeliveryPaymentSheetState extends ConsumerState<_DeliveryPaymentSheet> {
     });
 
     try {
-      final user = await ref.read(userModelProvider.future).catchError((_) => null);
+      final user = await ref.read(userModelProvider.future);
 
-      final processedByName = user != null
-          ? '${user.nombre} ${user.apellidos}'.trim()
-          : null;
+      final processedByName = '${user.nombre} ${user.apellidos}'.trim();
 
       // If "paga al recibir" is selected, we don't mark as paid but update payment method
       if (_selectedMethod == 'pay_on_delivery') {
@@ -2543,11 +2540,9 @@ class _DeliveryPaymentSheetState extends ConsumerState<_DeliveryPaymentSheet> {
           'processedAt': FieldValue.serverTimestamp(),
         };
 
-        if (user != null) {
-          paymentData['processedBy'] = user.uid;
-          paymentData['processedByName'] = processedByName;
-        }
-
+        paymentData['processedBy'] = user.uid;
+        paymentData['processedByName'] = processedByName;
+      
         await FirebaseFirestore.instance
             .collection('pedido')
             .doc(widget.pedidoId)
@@ -2567,11 +2562,9 @@ class _DeliveryPaymentSheetState extends ConsumerState<_DeliveryPaymentSheet> {
           'processedAt': FieldValue.serverTimestamp(),
         };
 
-        if (user != null) {
-          paymentData['processedBy'] = user.uid;
-          paymentData['processedByName'] = processedByName;
-        }
-
+        paymentData['processedBy'] = user.uid;
+        paymentData['processedByName'] = processedByName;
+      
         await FirebaseFirestore.instance
             .collection('pedido')
             .doc(widget.pedidoId)

@@ -143,6 +143,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                                         _togglePriority(pedido, isPriority),
                                     onSendNote: () =>
                                         _openKitchenNoteDialog(pedido),
+                                    onTap: () => _showOrderDetails(pedido),
                                   ),
                                 );
                               },
@@ -578,6 +579,15 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     }
   }
 
+  void _showOrderDetails(Pedido pedido) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _OrderDetailsSheet(pedido: pedido),
+    );
+  }
+
   Future<void> _openKitchenNoteDialog(Pedido pedido) async {
     final controller = TextEditingController();
 
@@ -887,6 +897,7 @@ class _TrackingCard extends StatelessWidget {
     required this.isPriority,
     required this.onTogglePriority,
     required this.onSendNote,
+    required this.onTap,
   });
 
   final Pedido pedido;
@@ -895,6 +906,7 @@ class _TrackingCard extends StatelessWidget {
   final bool isPriority;
   final VoidCallback onTogglePriority;
   final VoidCallback onSendNote;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -905,133 +917,151 @@ class _TrackingCard extends StatelessWidget {
         isPriority ? const Color(0xFFEF4444) : const Color(0xFF38BDF8);
     final statusLabel = _statusText(pedido.status);
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: const Color(0xFF121429),
-        border:
-            Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: statusColor.withValues(alpha: 0.2),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: const Color(0xFF121429),
+          border:
+              Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: statusColor.withValues(alpha: 0.2),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _locationLabel(pedido),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _locationLabel(pedido),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 6,
+                            children: [
+                              _ChipInfo(
+                                icon: Icons.priority_high_rounded,
+                                color: priorityColor,
+                                label: priorityLabel,
+                              ),
+                              if ((pedido.meseroNombre ?? '').trim().isNotEmpty)
+                                _ChipInfo(
+                                  icon: Icons.person_outline,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  label: (pedido.meseroNombre ?? '').trim(),
+                                ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 6,
-                      children: [
-                        _ChipInfo(
-                          icon: Icons.priority_high_rounded,
-                          color: priorityColor,
-                          label: priorityLabel,
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        color: statusColor.withValues(alpha: 0.18),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(
+                        statusLabel,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
                         ),
-                        if ((pedido.meseroNombre ?? '').trim().isNotEmpty)
-                          _ChipInfo(
-                            icon: Icons.person_outline,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            label: (pedido.meseroNombre ?? '').trim(),
-                          ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  color: statusColor.withValues(alpha: 0.18),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 18,
-            runSpacing: 6,
-            children: [
-              _MetaItem(
-                icon: Icons.inventory_2_outlined,
-                label: '$itemsCount ${itemsCount == 1 ? 'ítem' : 'ítems'}',
-              ),
-              _MetaItem(
-                icon: Icons.schedule_rounded,
-                label: _timeAgo(pedido.updatedAt ?? pedido.createdAt),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onTogglePriority,
-                  icon: Icon(
-                    isPriority ? Icons.bookmark_remove : Icons.bookmark_add,
-                    size: 18,
-                  ),
-                  label: Text(
-                      isPriority ? 'Quitar prioridad' : 'Marcar prioridad'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side:
-                        BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onSendNote,
-                  icon: const Icon(Icons.message_rounded, size: 18),
-                  label: const Text('Nota a cocina'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 18,
+                  runSpacing: 6,
+                  children: [
+                    _MetaItem(
+                      icon: Icons.inventory_2_outlined,
+                      label: '$itemsCount ${itemsCount == 1 ? 'ítem' : 'ítems'}',
                     ),
-                  ),
+                    _MetaItem(
+                      icon: Icons.schedule_rounded,
+                      label: _timeAgo(pedido.updatedAt ?? pedido.createdAt),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 18),
+                _OrderTimeline(status: pedido.status.toLowerCase()),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onTogglePriority,
+                        icon: Icon(
+                          isPriority ? Icons.bookmark_remove : Icons.bookmark_add,
+                          size: 18,
+                        ),
+                        label: Text(
+                            isPriority ? 'Quitar prioridad' : 'Marcar prioridad'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          side:
+                              BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: onSendNote,
+                        icon: const Icon(Icons.message_rounded, size: 18),
+                        label: const Text('Nota a cocina'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6366F1),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: Colors.white.withValues(alpha: 0.5),
+            size: 20,
           ),
         ],
+      ),
       ),
     );
   }
@@ -1219,5 +1249,534 @@ class _ScrollToTopButtonState extends State<_ScrollToTopButton> {
         ),
       ),
     );
+  }
+}
+
+// Timeline widget showing order progress
+class _OrderTimeline extends StatelessWidget {
+  const _OrderTimeline({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final stages = [
+      _TimelineStage(label: 'Pendiente', key: 'pendiente', icon: Icons.access_time),
+      _TimelineStage(label: 'Cocina', key: 'preparando', icon: Icons.restaurant),
+      _TimelineStage(label: 'Listo', key: 'terminado', icon: Icons.check_circle),
+      _TimelineStage(label: 'Entregado', key: 'entregado', icon: Icons.delivery_dining),
+    ];
+
+    final currentIndex = _getCurrentStageIndex(status);
+
+    return Row(
+      children: [
+        for (var i = 0; i < stages.length; i++) ...[
+          Expanded(
+            child: _TimelineStageItem(
+              stage: stages[i],
+              isActive: i <= currentIndex,
+              isCompleted: i < currentIndex,
+            ),
+          ),
+          if (i < stages.length - 1)
+            Expanded(
+              child: Container(
+                height: 2,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: i < currentIndex
+                        ? [const Color(0xFF22C55E), const Color(0xFF22C55E)]
+                        : [Colors.white.withValues(alpha: 0.2), Colors.white.withValues(alpha: 0.2)],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  int _getCurrentStageIndex(String status) {
+    switch (status) {
+      case 'pendiente':
+      case 'nuevo':
+        return 0;
+      case 'preparando':
+        return 1;
+      case 'terminado':
+      case 'listo':
+        return 2;
+      case 'entregado':
+      case 'pagado':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+}
+
+class _TimelineStage {
+  final String label;
+  final String key;
+  final IconData icon;
+
+  const _TimelineStage({
+    required this.label,
+    required this.key,
+    required this.icon,
+  });
+}
+
+class _TimelineStageItem extends StatelessWidget {
+  const _TimelineStageItem({
+    required this.stage,
+    required this.isActive,
+    required this.isCompleted,
+  });
+
+  final _TimelineStage stage;
+  final bool isActive;
+  final bool isCompleted;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isActive
+        ? (isCompleted ? const Color(0xFF22C55E) : const Color(0xFF6366F1))
+        : Colors.white.withValues(alpha: 0.3);
+
+    return Column(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isActive ? color.withValues(alpha: 0.2) : Colors.transparent,
+            border: Border.all(
+              color: color,
+              width: 2,
+            ),
+          ),
+          child: Icon(
+            isCompleted ? Icons.check : stage.icon,
+            color: color,
+            size: 20,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          stage.label,
+          style: TextStyle(
+            color: color,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+}
+
+// Order details sheet
+class _OrderDetailsSheet extends StatelessWidget {
+  const _OrderDetailsSheet({required this.pedido});
+
+  final Pedido pedido;
+
+  @override
+  Widget build(BuildContext context) {
+    final itemsCount = pedido.items.fold<int>(0, (total, item) => total + item.cantidad);
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
+      ),
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        gradient: LinearGradient(
+          colors: [Color(0xFF1E1B4B), Color(0xFF111827)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(top: 12, bottom: 20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Detalles del Pedido',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '#${pedido.id.substring(0, 8).toUpperCase()}',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(pedido.status).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _getStatusColor(pedido.status).withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Text(
+                        _formatStatus(pedido.status),
+                        style: TextStyle(
+                          color: _getStatusColor(pedido.status),
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Order info cards
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(Icons.table_restaurant, 'Ubicación', _getLocation(pedido)),
+                      if (pedido.mode.toLowerCase() == 'domicilio' && pedido.clienteDireccion != null) ...[
+                        const SizedBox(height: 12),
+                        _buildInfoRow(Icons.location_on, 'Dirección', pedido.clienteDireccion!),
+                      ],
+                      if (pedido.clienteTelefono != null) ...[
+                        const SizedBox(height: 12),
+                        _buildInfoRow(Icons.phone, 'Teléfono', pedido.clienteTelefono!),
+                      ],
+                      const SizedBox(height: 12),
+                      _buildInfoRow(Icons.person, 'Mesero', pedido.meseroNombre ?? 'Sin asignar'),
+                      const SizedBox(height: 12),
+                      _buildInfoRow(
+                        Icons.access_time,
+                        'Hora',
+                        _formatTime(pedido.createdAt ?? pedido.updatedAt),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Items list
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Productos',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$itemsCount ${itemsCount == 1 ? 'ítem' : 'ítems'}',
+                          style: const TextStyle(
+                            color: Color(0xFF6366F1),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ...pedido.items.map((item) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF22C55E).withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '${item.cantidad}x',
+                                    style: const TextStyle(
+                                      color: Color(0xFF22C55E),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.nombre,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    if (item.adicionales != null && item.adicionales!.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item.adicionales!
+                                            .map((a) => a['name'] ?? a['nombre'] ?? '')
+                                            .where((n) => n.isNotEmpty)
+                                            .join(', '),
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.6),
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                NumberFormat.currency(
+                                  locale: 'es_CO',
+                                  symbol: r'$',
+                                  decimalDigits: 0,
+                                ).format(item.precio * item.cantidad),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (item.notas != null && item.notas!.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.note_alt, color: Color(0xFFF59E0B), size: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      item.notas!,
+                                      style: const TextStyle(
+                                        color: Color(0xFFF59E0B),
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  const SizedBox(height: 16),
+                  // Total
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFF22C55E).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          NumberFormat.currency(
+                            locale: 'es_CO',
+                            symbol: r'$',
+                            decimalDigits: 0,
+                          ).format(pedido.total),
+                          style: const TextStyle(
+                            color: Color(0xFF22C55E),
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white.withValues(alpha: 0.6), size: 20),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getLocation(Pedido pedido) {
+    if (pedido.mesaNombre != null && pedido.mesaNombre!.isNotEmpty) {
+      return pedido.mesaNombre!;
+    }
+    if (pedido.clienteNombre != null && pedido.clienteNombre!.isNotEmpty) {
+      return pedido.clienteNombre!;
+    }
+    return 'Sin asignar';
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pendiente':
+        return const Color(0xFFF97316);
+      case 'preparando':
+        return const Color(0xFFF59E0B);
+      case 'terminado':
+      case 'listo':
+        return const Color(0xFF22C55E);
+      case 'entregado':
+        return const Color(0xFF38BDF8);
+      case 'pagado':
+        return const Color(0xFF8B5CF6);
+      case 'cancelado':
+        return const Color(0xFFEF4444);
+      default:
+        return const Color(0xFF6366F1);
+    }
+  }
+
+  String _formatStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pendiente':
+        return 'PENDIENTE';
+      case 'preparando':
+        return 'EN COCINA';
+      case 'terminado':
+      case 'listo':
+        return 'LISTO';
+      case 'entregado':
+        return 'ENTREGADO';
+      case 'pagado':
+        return 'PAGADO';
+      case 'cancelado':
+        return 'CANCELADO';
+      default:
+        return status.toUpperCase();
+    }
+  }
+
+  String _formatTime(DateTime? dateTime) {
+    if (dateTime == null) return 'Sin registro';
+    return DateFormat('HH:mm • dd/MM/yyyy', 'es').format(dateTime);
   }
 }
