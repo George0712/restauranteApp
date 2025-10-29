@@ -31,18 +31,30 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
-/// Extrae cada métrica de AdminDashboardModel - Solo cuenta pedidos PAGADOS
+/// Ventas totales de los últimos 7 días - Solo cuenta pedidos PAGADOS
 final totalVentasProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
     .collection('pedido')
-    .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
+    .where('status', isEqualTo: 'pagado')
     .snapshots()
     .map((snapshot) {
+      final now = DateTime.now();
+      final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+      
       int totalVentas = 0;
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        final venta = data['total']; // Ajusta el nombre del campo si es necesario
+        final createdAt = _parseTimestamp(data['createdAt']) ??
+            _parseTimestamp(data['fechaCreacion']) ??
+            _parseTimestamp(data['fecha']);
+        
+        if (createdAt == null) continue;
+        
+        final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
+        if (dayKey.isBefore(startDate)) continue;
+        
+        final venta = data['total'];
         if (venta is int) {
           totalVentas += venta;
         } else if (venta is double) {
@@ -182,7 +194,6 @@ final completedTodayProvider = StreamProvider<int>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'terminado')
       .snapshots()
       .map((snapshot) {
     final today = DateTime.now();
@@ -191,6 +202,13 @@ final completedTodayProvider = StreamProvider<int>((ref) {
     int completed = 0;
     for (final doc in snapshot.docs) {
       final data = doc.data();
+      final status = (data['status'] ?? '').toString().toLowerCase();
+      
+      // Solo contar pedidos completados (terminado, entregado o pagado)
+      if (status != 'terminado' && status != 'entregado' && status != 'pagado') {
+        continue;
+      }
+      
       final createdAt = _parseTimestamp(data['createdAt']) ??
           _parseTimestamp(data['fechaCreacion']) ??
           _parseTimestamp(data['fecha']);
@@ -212,18 +230,31 @@ final averageTicketProvider = StreamProvider<double>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
+      .where('status', isEqualTo: 'pagado')
       .snapshots()
       .map((snapshot) {
-    if (snapshot.size == 0) return 0.0;
-
+    final today = DateTime.now();
+    final todayKey = DateTime(today.year, today.month, today.day);
+    
     double totalSales = 0;
+    int count = 0;
+    
     for (final doc in snapshot.docs) {
       final data = doc.data();
+      final createdAt = _parseTimestamp(data['createdAt']) ??
+          _parseTimestamp(data['fechaCreacion']) ??
+          _parseTimestamp(data['fecha']);
+
+      if (createdAt == null) continue;
+
+      final orderDay = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      if (orderDay != todayKey) continue;
+      
       totalSales += (data['total'] as num?)?.toDouble() ?? 0;
+      count++;
     }
 
-    return snapshot.size == 0 ? 0.0 : totalSales / snapshot.size;
+    return count == 0 ? 0.0 : totalSales / count;
   });
 });
 
@@ -231,6 +262,9 @@ final orderStatusSummaryProvider = StreamProvider<List<OrderStatusMetric>>((ref)
   final firestore = ref.watch(firestoreProvider);
 
   return firestore.collection('pedido').snapshots().map((snapshot) {
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+    
     final Map<String, int> counts = {
       'pendiente': 0,
       'preparando': 0,
@@ -240,6 +274,17 @@ final orderStatusSummaryProvider = StreamProvider<List<OrderStatusMetric>>((ref)
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
+      
+      // Filtrar por últimos 7 días
+      final createdAt = _parseTimestamp(data['createdAt']) ??
+          _parseTimestamp(data['fechaCreacion']) ??
+          _parseTimestamp(data['fecha']);
+
+      if (createdAt == null) continue;
+
+      final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      if (dayKey.isBefore(startDate)) continue;
+      
       final status = (data['status'] ?? data['estado'] ?? '').toString().toLowerCase();
       if (counts.containsKey(status)) {
         counts[status] = counts[status]! + 1;
@@ -257,13 +302,27 @@ final topProductsProvider = StreamProvider<List<TopProductMetric>>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
+      .where('status', isEqualTo: 'pagado')
       .snapshots()
       .map((snapshot) {
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+    
     final Map<String, _ProductAccumulator> aggregated = {};
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
+      
+      // Filtrar por últimos 7 días
+      final createdAt = _parseTimestamp(data['createdAt']) ??
+          _parseTimestamp(data['fechaCreacion']) ??
+          _parseTimestamp(data['fecha']);
+
+      if (createdAt == null) continue;
+
+      final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      if (dayKey.isBefore(startDate)) continue;
+      
       final items = data['items'] ?? data['productos'];
 
       if (items is List) {
