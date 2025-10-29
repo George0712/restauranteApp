@@ -10,6 +10,7 @@ import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/providers/admin/permission_service.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateItemCategoryScreen extends ConsumerStatefulWidget {
@@ -50,6 +51,109 @@ class _CreateItemCategoryScreenState
         ref.read(registerCategoryControllerProvider);
     final isValid = registerCategoryController.areFieldsValid();
     ref.read(isValidFieldsProvider.notifier).state = isValid;
+  }
+
+  Future<void> _handleImageSelection() async {
+    try {
+      await PermissionService.showImageSourceDialog(context,
+          (bool fromCamera) async {
+        final imageNotifier = ref.read(profileImageProvider.notifier);
+
+        if (fromCamera) {
+          await imageNotifier.pickImageFromCamera();
+        } else {
+          await imageNotifier.pickImage();
+        }
+      });
+    } catch (e) {
+      SnackbarHelper.showError('Error al seleccionar imagen: $e');
+    }
+  }
+
+  void _showImageOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFF1A1A2E),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'Imagen de la Categoría',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Color(0xFF34D399)),
+                title: const Text('Seleccionar de Galería', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Elegir una imagen existente', style: TextStyle(color: Colors.white70)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _selectFromGallery();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF34D399)),
+                title: const Text('Tomar Foto', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Capturar con la cámara', style: TextStyle(color: Colors.white70)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _takePhoto();
+                },
+              ),
+              if (ref.watch(profileImageProvider) != null)
+                ListTile(
+                  leading: const Icon(Icons.delete, color: Color(0xFFEF4444)),
+                  title: const Text('Quitar Imagen', style: TextStyle(color: Colors.white)),
+                  subtitle: const Text('Eliminar imagen actual', style: TextStyle(color: Colors.white70)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _removeImage();
+                  },
+                ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _selectFromGallery() async {
+    try {
+      final imageNotifier = ref.read(profileImageProvider.notifier);
+      await imageNotifier.pickImage();
+    } catch (e) {
+      SnackbarHelper.showError('Error al seleccionar imagen: $e');
+    }
+  }
+
+  Future<void> _takePhoto() async {
+    try {
+      final imageNotifier = ref.read(profileImageProvider.notifier);
+      await imageNotifier.pickImageFromCamera();
+    } catch (e) {
+      SnackbarHelper.showError('Error al tomar foto: $e');
+    }
+  }
+
+  void _removeImage() {
+    final imageNotifier = ref.read(profileImageProvider.notifier);
+    imageNotifier.clearImage();
+    SnackbarHelper.showInfo('Imagen eliminada');
   }
 
   @override
@@ -113,36 +217,42 @@ class _CreateItemCategoryScreenState
 
                 // Foto de perfil (opcional)
                 Center(
-                  child: Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white.withAlpha(40),
-                        backgroundImage: profileImage != null
-                            ? FileImage(profileImage)
-                            : null,
-                        child: profileImage == null
-                            ? Icon(Icons.category,
-                                size: 50,
-                                color: theme.primaryColor.withAlpha(200))
-                            : null,
-                      ),
-                      /*Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: CircleAvatar(
-                          radius: 18,
-                          backgroundColor: theme.primaryColor,
-                          child: IconButton(
-                            icon: const Icon(Icons.camera_alt,
-                                size: 18, color: Colors.white),
-                            onPressed: () async {
-                              await imageNotifier.pickImage();
-                            },
+                  child: GestureDetector(
+                    onTap: _handleImageSelection,
+                    onLongPress: _showImageOptions,
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.white.withAlpha(40),
+                          backgroundImage: profileImage != null
+                              ? FileImage(profileImage)
+                              : null,
+                          child: profileImage == null
+                              ? Icon(Icons.category,
+                                  size: 50,
+                                  color: theme.primaryColor.withAlpha(200))
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _handleImageSelection,
+                            onLongPress: _showImageOptions,
+                            child: CircleAvatar(
+                              radius: 18,
+                              backgroundColor: theme.primaryColor,
+                              child: Icon(
+                                profileImage == null ? Icons.add_a_photo : Icons.edit,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
-                      ),*/
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
