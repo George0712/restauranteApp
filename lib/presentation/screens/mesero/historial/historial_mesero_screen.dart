@@ -25,41 +25,134 @@ class _HistorialScreenState extends State<HistorialScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: Colors.black,
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0F0F23),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           foregroundColor: Colors.white,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text('Historial de Pedidos'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'En Curso'),
-              Tab(text: 'Completados'),
-            ],
-          ),
-        ),
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF0F0F23),
-                Color(0xFF1A1A2E),
-                Color(0xFF16213E),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF1F2937),
+                  Color(0xFF111827),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
-          child: TabBarView(
-            children: [
-              _buildPedidosEnCurso(),
-              _buildPedidosCompletados(),
-            ],
-          ),
         ),
+        body: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF0F172A),
+                    Color(0xFF111827),
+                    Color(0xFF0B1120),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Text(
+                      'Historial de Pedidos',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildCustomTabBar(),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: TabBarView(
+                        physics: const BouncingScrollPhysics(),
+                        children: [
+                          _buildPedidosEnCurso(),
+                          _buildPedidosCompletados(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomTabBar() {
+    final unselectedColor = Colors.white.withValues(alpha: 0.65);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+      ),
+      child: TabBar(
+        indicator: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+        ),
+        dividerColor: Colors.transparent,
+        indicatorSize: TabBarIndicatorSize.tab,
+        labelColor: Colors.white,
+        unselectedLabelColor: unselectedColor,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+          letterSpacing: 0.2,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 13.5,
+        ),
+        tabs: const [
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('En Curso'),
+              ],
+            ),
+          ),
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Completados'),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -123,14 +216,12 @@ class _HistorialScreenState extends State<HistorialScreen> {
         // Limitar a 50 elementos para mejor rendimiento
         final limitedDocs = docs.take(50).toList();
 
-        return SafeArea(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(top: 16, bottom: 16),
-            itemCount: limitedDocs.length,
-            itemBuilder: (context, index) {
-              return _buildPedidoCard(limitedDocs[index]);
-            },
-          ),
+        return ListView.builder(
+          padding: const EdgeInsets.only(top: 8, bottom: 16),
+          itemCount: limitedDocs.length,
+          itemBuilder: (context, index) {
+            return _buildPedidoCard(limitedDocs[index]);
+          },
         );
       },
     );
@@ -195,14 +286,12 @@ class _HistorialScreenState extends State<HistorialScreen> {
         // Limitar a 100 elementos para el historial completo
         final limitedDocs = docs.take(100).toList();
 
-        return SafeArea(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(top: 16, bottom: 16),
-            itemCount: limitedDocs.length,
-            itemBuilder: (context, index) {
-              return _buildPedidoCard(limitedDocs[index]);
-            },
-          ),
+        return ListView.builder(
+          padding: const EdgeInsets.only(top: 8, bottom: 16),
+          itemCount: limitedDocs.length,
+          itemBuilder: (context, index) {
+            return _buildPedidoCard(limitedDocs[index]);
+          },
         );
       },
     );
