@@ -149,37 +149,64 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                         CustomInputField(
                           hintText: AppStrings.name,
                           controller: registerUserController.nombreController,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.words,
+                          prefixIcon: const Icon(
+                            Icons.person_outline,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) => value == null || value.isEmpty
                               ? 'Por favor ingrese un nombre'
                               : AppConstants.nameRegex.hasMatch(value)
                                   ? null
                                   : 'El nombre no es válido',
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         CustomInputField(
                           hintText: AppStrings.lastName,
                           controller: registerUserController.apellidosController,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.words,
+                          prefixIcon: const Icon(
+                            Icons.person_outline,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) => value == null || value.isEmpty
                               ? 'Por favor ingrese un apellido'
                               : AppConstants.surnameRegex.hasMatch(value)
                                   ? null
                                   : 'El apellido no es válido',
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         CustomInputField(
                           hintText: AppStrings.phone,
                           keyboardType: TextInputType.phone,
                           controller: registerUserController.telefonoController,
+                          isRequired: true,
+                          prefixIcon: const Icon(
+                            Icons.phone_outlined,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) => value == null || value.isEmpty
                               ? 'Por favor ingrese un teléfono'
                               : AppConstants.phoneRegex.hasMatch(value)
                                   ? null
                                   : 'El teléfono no es válido',
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         CustomInputField(
                           hintText: AppStrings.address,
                           controller: registerUserController.direccionController,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.words,
+                          prefixIcon: const Icon(
+                            Icons.location_on_outlined,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) => value == null || value.isEmpty
                               ? 'Ingrese una dirección'
                               : AppConstants.addressRegex.hasMatch(value)

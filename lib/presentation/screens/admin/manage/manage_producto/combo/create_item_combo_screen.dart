@@ -16,8 +16,7 @@ class CreateItemComboScreen extends ConsumerStatefulWidget {
       _CreateItemComboScreenState();
 }
 
-class _CreateItemComboScreenState
-    extends ConsumerState<CreateItemComboScreen> {
+class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
   final _formKey = GlobalKey<FormState>();
   String? selectedCategory;
   bool? isAvailable = true;
@@ -28,7 +27,8 @@ class _CreateItemComboScreenState
     final registerComboController = ref.read(registerComboControllerProvider);
     registerComboController.nombreController.addListener(_validateFields);
     registerComboController.precioController.addListener(_validateFields);
-    registerComboController.tiempoPreparacionController.addListener(_validateFields);
+    registerComboController.tiempoPreparacionController
+        .addListener(_validateFields);
   }
 
   void _validateFields() {
@@ -50,223 +50,270 @@ class _CreateItemComboScreenState
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: theme.primaryColor,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_outlined,
-              color: Colors.black54),
+              color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: SingleChildScrollView(
-          padding: isTablet
-                    ? const EdgeInsets.symmetric(vertical: 40, horizontal: 80)
-                    : const EdgeInsets.all(16), 
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                AppStrings.createNewCombo,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F0F23),
+              Color(0xFF1A1A2E),
+              Color(0xFF16213E),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: SingleChildScrollView(
+            padding: isTablet
+                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
+                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  AppStrings.createNewCombo,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppStrings.createNewComboDescription,
-                style: TextStyle(fontSize: 16, color: theme.primaryColor),
-              ),
-              const SizedBox(height: 24),
-          
-              // Foto de perfil (opcional)
-              Center(
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: theme.primaryColor.withAlpha(50),
-                      backgroundImage: profileImage != null
-                          ? FileImage(profileImage)
-                          : null,
-                      child: profileImage == null
-                          ? Iconify(Bi.box_fill,
-                              size: 50,
-                              color: theme.primaryColor.withAlpha(200))
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: theme.primaryColor,
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt,
-                              size: 18, color: Colors.white),
-                          onPressed: () async {
-                            await imageNotifier.pickImage();
+                const SizedBox(height: 8),
+                const Text(
+                  AppStrings.createNewComboDescription,
+                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                ),
+                const SizedBox(height: 24),
+
+                // Foto de perfil (opcional)
+                Center(
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.white.withAlpha(40),
+                        backgroundImage: profileImage != null
+                            ? FileImage(profileImage)
+                            : null,
+                        child: profileImage == null
+                            ? Iconify(Bi.box_fill,
+                                size: 50,
+                                color: theme.primaryColor.withAlpha(200))
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: theme.primaryColor,
+                          child: IconButton(
+                            icon: const Icon(Icons.camera_alt,
+                                size: 18, color: Colors.white),
+                            onPressed: () async {
+                              await imageNotifier.pickImage();
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Inputs de texto
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      CustomInputField(
+                          hintText: AppStrings.name,
+                          controller: registerComboController.nombreController,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.words,
+                          prefixIcon: const Icon(
+                            Icons.inventory_2_outlined,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Por favor ingrese un nombre'
+                              : AppConstants.nameRegex.hasMatch(value)
+                                  ? null
+                                  : 'El nombre no es válido'),
+                      const SizedBox(height: 16),
+                      CustomInputField(
+                        hintText: AppStrings.price,
+                        keyboardType: TextInputType.number,
+                        controller: registerComboController.precioController,
+                        isRequired: true,
+                        prefixIcon: const Icon(
+                          Icons.attach_money,
+                          color: Color(0xFF34D399),
+                          size: 22,
+                        ),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Por favor ingrese un valor'
+                            : AppConstants.priceRegex.hasMatch(value)
+                                ? null
+                                : 'Este campo no es válida',
+                      ),
+                      const SizedBox(height: 16),
+                      CustomInputField(
+                        hintText: AppStrings.timePreparation,
+                        controller:
+                            registerComboController.tiempoPreparacionController,
+                        isRequired: true,
+                        keyboardType: TextInputType.number,
+                        prefixIcon: const Icon(
+                          Icons.access_time,
+                          color: Color(0xFF34D399),
+                          size: 22,
+                        ),
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Ingrese un tiempo de preparación'
+                            : AppConstants.timePreparationRegex.hasMatch(value)
+                                ? null
+                                : 'El tiempo de preparación no es válido',
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: const Icon(Icons.add_shopping_cart,
+                              color: Colors.white),
+                          label: const Text(
+                            'Agregar Productos al Combo',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.primaryColor,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                          ),
+                          onPressed: () {
+                            context.push(
+                                '/admin/manage/combo/create-item-combo/products-item-combo');
                           },
                         ),
                       ),
-                    ),
-                  ],
+                      // Checkbox de disponibilidad
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Disponible:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Radio<bool>(
+                                        value: true,
+                                        groupValue: isAvailable,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isAvailable = value;
+                                          });
+                                        },
+                                        activeColor: Colors.green,
+                                      ),
+                                      const Text('Sí',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Row(
+                                    children: [
+                                      Radio<bool>(
+                                        value: false,
+                                        groupValue: isAvailable,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            isAvailable = value;
+                                          });
+                                        },
+                                        activeColor: Colors.red,
+                                      ),
+                                      const Text('No',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-          
-              // Inputs de texto
-              Form(
-                key: _formKey,
-                child: Column(
+
+                const SizedBox(height: 32),
+
+                // Botones
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    CustomInputField(
-                        hintText: AppStrings.name,
-                        controller: registerComboController.nombreController,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Por favor ingrese un nombre'
-                            : AppConstants.nameRegex.hasMatch(value)
-                                ? null
-                                : 'El nombre no es válido'),
-                    const SizedBox(height: 12),
-                    CustomInputField(
-                      hintText: AppStrings.price,
-                      keyboardType: TextInputType.number,
-                      controller: registerComboController.precioController,
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Por favor ingrese un valor'
-                          : AppConstants.priceRegex.hasMatch(value)
-                              ? null
-                              : 'Este campo no es válida',
-                    ),
-                    const SizedBox(height: 12),                    
-                    CustomInputField(
-                      hintText: AppStrings.timePreparation,
-                      controller: registerComboController.tiempoPreparacionController,
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Ingrese un tiempo de preparación'
-                          : AppConstants.timePreparationRegex.hasMatch(value)
-                              ? null
-                              : 'El tiempo de preparación no es válido',
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.add_shopping_cart, color: Colors.white),
-                        label: const Text(
-                          'Agregar Productos al Combo',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.primaryColor,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(32),
-                          ),
-                        ),
-                        onPressed: () {
-                          context.push('/admin/manage/combo/create-item-combo/products-item-combo');
-                        },
+                    OutlinedButton(
+                      onPressed: () {
+                        context.pop();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        side: const BorderSide(color: Colors.white),
+                      ),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    // Checkbox de disponibilidad
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Disponible:',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Row(
-                                  children: [
-                                    Radio<bool>(
-                                      value: true,
-                                      groupValue: isAvailable,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isAvailable = value;
-                                        });
-                                      },
-                                    ),
-                                    const Text('Sí'),
-                                  ],
-                                ),
-                                const SizedBox(width: 16),
-                                Row(
-                                  children: [
-                                    Radio<bool>(
-                                      value: false,
-                                      groupValue: isAvailable,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          isAvailable = value;
-                                        });
-                                      },
-                                    ),
-                                    const Text('No'),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: areFieldsValid &&
+                              (_formKey.currentState?.validate() ?? false)
+                          ? () {
+                              context
+                                  .push('/admin/manage/producto/manage-combos');
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B5CF6),
+                        disabledBackgroundColor:
+                            const Color(0xFF8B5CF6).withAlpha(100),
+                      ),
+                      child: const Text(
+                        'Continuar',
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ],
                 ),
-              ),
-          
-              const SizedBox(height: 32),
-          
-              // Botones
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      context.pop();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      side: BorderSide(color: theme.primaryColor),
-                    ),
-                    child: Text(
-                      'Cancelar',
-                      style: TextStyle(color: theme.primaryColor),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: areFieldsValid &&
-                            (_formKey.currentState?.validate() ?? false)
-                        ? () {
-                            context.push(
-                                '/admin/manage/producto/manage-combos');
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
-                    ),
-                    child: const Text(
-                      'Continuar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

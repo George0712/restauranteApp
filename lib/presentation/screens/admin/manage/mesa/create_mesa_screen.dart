@@ -99,6 +99,13 @@ class _CreateMesaScreenState extends ConsumerState<CreateMesaScreen> {
                         CustomInputField(
                             hintText: 'Número de mesa',
                             controller: mesaController.numeroMesaController,
+                            isRequired: true,
+                            keyboardType: TextInputType.number,
+                            prefixIcon: const Icon(
+                              Icons.table_restaurant,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Por favor ingrese un número de mesa';
@@ -109,10 +116,17 @@ class _CreateMesaScreenState extends ConsumerState<CreateMesaScreen> {
                               }
                               return null;
                             }),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         CustomInputField(
                           hintText: 'Capacidad de la mesa',
                           controller: mesaController.capacidadController,
+                          isRequired: true,
+                          keyboardType: TextInputType.number,
+                          prefixIcon: const Icon(
+                            Icons.people_outline,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Por favor ingrese la capacidad';

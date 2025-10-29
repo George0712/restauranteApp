@@ -124,24 +124,37 @@ class _CreateItemAdditionalScreenState
                       CustomInputField(
                         hintText: AppStrings.name,
                         controller: controller.nameController,
+                        isRequired: true,
+                        textCapitalization: TextCapitalization.words,
+                        prefixIcon: const Icon(
+                          Icons.inventory_2_outlined,
+                          color: Color(0xFF34D399),
+                          size: 22,
+                        ),
                         validator: (value) => value == null || value.isEmpty
                             ? 'Por favor ingrese un nombre'
                             : AppConstants.nameRegex.hasMatch(value)
                                 ? null
                                 : 'El nombre no es válido',
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       CustomInputField(
                         hintText: 'Precio',
                         controller: controller.priceController,
+                        isRequired: true,
                         keyboardType: TextInputType.number,
+                        prefixIcon: const Icon(
+                          Icons.attach_money,
+                          color: Color(0xFF34D399),
+                          size: 22,
+                        ),
                         validator: (value) => value == null || value.isEmpty
                             ? 'Por favor ingrese un valor'
                             : AppConstants.priceRegex.hasMatch(value)
                                 ? null
                                 : 'El campo no es válido',
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
 
                       // Checkbox de disponibilidad
                       Align(

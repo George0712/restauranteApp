@@ -156,12 +156,19 @@ class _CreateItemCategoryScreenState
                           hintText: AppStrings.name,
                           controller:
                               registerCategoryController.nombreController,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.words,
+                          prefixIcon: const Icon(
+                            Icons.shopping_bag_outlined,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) => value == null || value.isEmpty
                               ? 'Por favor ingrese un nombre'
                               : AppConstants.nameRegex.hasMatch(value)
                                   ? null
                                   : 'El nombre no es válido'),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       // Checkbox de disponibilidad
                       Align(
                         alignment: Alignment.centerLeft,

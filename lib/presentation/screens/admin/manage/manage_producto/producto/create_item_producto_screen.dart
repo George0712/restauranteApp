@@ -529,24 +529,37 @@ class _CreateItemProductScreenState
                     CustomInputField(
                       hintText: AppStrings.name,
                       controller: registerProductController.nombreController,
+                      isRequired: true,
+                      textCapitalization: TextCapitalization.words,
+                      prefixIcon: const Icon(
+                        Icons.inventory_2_outlined,
+                        color: Color(0xFF34D399),
+                        size: 22,
+                      ),
                       validator: (value) => value == null || value.isEmpty
                           ? 'Por favor ingrese un nombre'
                           : AppConstants.nameRegex.hasMatch(value)
                               ? null
                               : 'Este campo no es válido',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     CustomInputField(
                       hintText: AppStrings.price,
                       keyboardType: TextInputType.number,
                       controller: registerProductController.precioController,
+                      isRequired: true,
+                      prefixIcon: const Icon(
+                        Icons.attach_money,
+                        color: Color(0xFF34D399),
+                        size: 22,
+                      ),
                       validator: (value) => value == null || value.isEmpty
                           ? 'Por favor ingrese un valor'
                           : AppConstants.priceRegex.hasMatch(value)
                               ? null
                               : 'Este campo no es válida',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     // Categoría - Dropdown
                     categoryAsync.when(
                       data: (categories) {
@@ -597,11 +610,19 @@ class _CreateItemProductScreenState
                             return Container(
                               height: 56,
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.grey),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
                                 borderRadius: BorderRadius.circular(32),
+                                color: Colors.white.withValues(alpha: 0.08),
                               ),
-                              child: const Center(
-                                child: Text('Actualizando...'),
+                              child: Center(
+                                child: Text(
+                                  'Actualizando...',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                  ),
+                                ),
                               ),
                             );
                           }
@@ -611,22 +632,80 @@ class _CreateItemProductScreenState
                           key: ValueKey(
                               'dropdown_${categories.length}_${validatedCategory ?? "null"}'),
                           value: validatedCategory, // ✅ Usar valor validado
+                          dropdownColor: const Color(0xFF1A1A2E),
+                          style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
+                            labelText: AppStrings.category,
+                            labelStyle: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 16,
+                            ),
+                            floatingLabelStyle: const TextStyle(
+                              color: Color(0xFF34D399),
+                              fontSize: 18,
+                            ),
                             hintText: AppStrings.category,
+                            hintStyle: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.shopping_bag_outlined,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
+                            suffixText: '*',
+                            suffixStyle: const TextStyle(
+                              color: Color(0xFFEF4444),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            filled: true,
+                            fillColor: Colors.white.withValues(alpha: 0.08),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(32),
+                              borderSide: BorderSide(
+                                color: Colors.white.withValues(alpha: 0.12),
+                              ),
                             ),
-                            focusedBorder: OutlineInputBorder(
+                            enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(32),
                               borderSide: BorderSide(
-                                color: theme.primaryColor.withAlpha(200),
+                                color: Colors.white.withValues(alpha: 0.12),
                               ),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(32)),
+                              borderSide: BorderSide(
+                                color: Color(0xFF34D399),
+                                width: 2,
+                              ),
+                            ),
+                            errorBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(32)),
+                              borderSide: BorderSide(
+                                color: Color(0xFFEF4444),
+                                width: 1.5,
+                              ),
+                            ),
+                            focusedErrorBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(32)),
+                              borderSide: BorderSide(
+                                color: Color(0xFFEF4444),
+                                width: 2,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 18,
                             ),
                           ),
                           items: categories.map((category) {
                             return DropdownMenuItem<String>(
                               value: category.id,
-                              child: Text(category.name),
+                              child: Text(
+                                category.name,
+                                style: const TextStyle(color: Colors.white),
+                              ),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -644,20 +723,30 @@ class _CreateItemProductScreenState
                       loading: () => Container(
                         height: 56,
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
                           borderRadius: BorderRadius.circular(32),
+                          color: Colors.white.withValues(alpha: 0.08),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              SizedBox(
+                              const SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2)),
-                              SizedBox(width: 12),
-                              Text('Cargando categorías...'),
+                                    strokeWidth: 2,
+                                    color: Color(0xFF34D399),
+                                  )),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Cargando categorías...',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -665,41 +754,57 @@ class _CreateItemProductScreenState
                       error: (error, stack) => Container(
                         height: 56,
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red),
+                          border: Border.all(color: const Color(0xFFEF4444)),
                           borderRadius: BorderRadius.circular(32),
+                          color: Colors.white.withValues(alpha: 0.08),
                         ),
                         child: Center(
                           child: Text(
                             'Error cargando categorías: $error',
                             style: const TextStyle(
-                                color: Colors.red, fontSize: 12),
+                                color: Color(0xFFEF4444), fontSize: 12),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     CustomInputField(
                       hintText: AppStrings.timePreparation,
                       controller:
                           registerProductController.tiempoPreparacionController,
+                      isRequired: true,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: const Icon(
+                        Icons.access_time,
+                        color: Color(0xFF34D399),
+                        size: 22,
+                      ),
                       validator: (value) => value == null || value.isEmpty
                           ? 'Ingrese el tiempo de preparación'
                           : AppConstants.timePreparationRegex.hasMatch(value)
                               ? null
                               : 'Este campo no es válido',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     CustomInputField(
                       hintText: AppStrings.ingredients,
                       controller:
                           registerProductController.ingredientesController,
+                      isRequired: true,
+                      maxLines: 3,
+                      textCapitalization: TextCapitalization.sentences,
+                      prefixIcon: const Icon(
+                        Icons.description_outlined,
+                        color: Color(0xFF34D399),
+                        size: 22,
+                      ),
                       validator: (value) => value == null || value.isEmpty
                           ? 'Ingrese al menos 3 ingredientes'
                           : AppConstants.ingredientesRegex.hasMatch(value)
                               ? null
                               : 'Este campo no es válido',
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     // Checkbox de disponibilidad
                     Align(
                       alignment: Alignment.centerLeft,

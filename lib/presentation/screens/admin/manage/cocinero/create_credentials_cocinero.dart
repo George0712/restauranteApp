@@ -106,6 +106,13 @@ class _CreateCredentialsCocineroState
                         CustomInputField(
                           hintText: AppStrings.userName,
                           controller: registerUserController.userNameController,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.none,
+                          prefixIcon: const Icon(
+                            Icons.alternate_email,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) {
                             return value!.isEmpty
                                 ? AppStrings.pleaseEnterUserName
@@ -116,6 +123,14 @@ class _CreateCredentialsCocineroState
                         CustomInputField(
                           hintText: AppStrings.email,
                           controller: registerUserController.emailController,
+                          isRequired: true,
+                          keyboardType: TextInputType.emailAddress,
+                          textCapitalization: TextCapitalization.none,
+                          prefixIcon: const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) {
                             return value!.isEmpty
                                 ? AppStrings.pleaseEnterEmailAddress
@@ -128,6 +143,13 @@ class _CreateCredentialsCocineroState
                         CustomInputField(
                           hintText: AppStrings.password,
                           controller: registerUserController.passwordController,
+                          isRequired: true,
+                          obscureText: true,
+                          prefixIcon: const Icon(
+                            Icons.lock_outline,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) {
                             return value!.isEmpty
                                 ? AppStrings.pleaseEnterPassword

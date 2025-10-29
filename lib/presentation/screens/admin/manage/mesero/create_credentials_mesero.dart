@@ -115,16 +115,29 @@ class _CreateCredentialsMeseroState
                         CustomInputField(
                           hintText: AppStrings.userName,
                           controller: registerUserController.userNameController,
+                          isRequired: true,
+                          prefixIcon: const Icon(
+                            Icons.alternate_email,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) {
                             return value!.isEmpty
                                 ? AppStrings.pleaseEnterUserName
-                                : AppStrings.invalidUserName;
+                                : null;
                           },
                         ),
                         const SizedBox(height: 16),
                         CustomInputField(
                           hintText: AppStrings.email,
                           controller: registerUserController.emailController,
+                          isRequired: true,
+                          keyboardType: TextInputType.emailAddress,
+                          prefixIcon: const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF34D399),
+                            size: 22,
+                          ),
                           validator: (value) {
                             return value!.isEmpty
                                 ? AppStrings.pleaseEnterEmailAddress
@@ -139,6 +152,13 @@ class _CreateCredentialsMeseroState
                             hintText: AppStrings.password,
                             controller:
                                 registerUserController.passwordController,
+                            isRequired: true,
+                            obscureText: true,
+                            prefixIcon: const Icon(
+                              Icons.lock_outline,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
                             validator: (value) {
                               return value!.isEmpty
                                   ? AppStrings.pleaseEnterPassword
@@ -153,7 +173,13 @@ class _CreateCredentialsMeseroState
                             controller:
                                 registerUserController.passwordController,
                             obscureText: true,
-                            // No requiere validador porque está bloqueado
+                            readOnly: true,
+                            enabled: false,
+                            prefixIcon: const Icon(
+                              Icons.lock_outline,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
                           ),
                       ],
                     ),
