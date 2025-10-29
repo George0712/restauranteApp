@@ -11,6 +11,7 @@ import 'package:restaurante_app/data/models/dashboard_admin_model.dart';
 import 'package:restaurante_app/presentation/controllers/admin/manage_products_controller.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/data/models/category_model.dart';
+import 'package:restaurante_app/data/models/combo_model.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 import 'package:restaurante_app/data/models/mesa_model.dart';
 
@@ -719,6 +720,37 @@ final registerComboControllerProvider =
 final registerComboControllerNotifierProvider =
     StateNotifierProvider<RegisterComboController, void>((ref) {
   return RegisterComboController();
+});
+
+// Provider para productos seleccionados del combo (máximo 5)
+final selectedComboProductsProvider = StateProvider<List<ProductModel>>((ref) => []);
+
+// Provider para obtener todos los combos
+final combosProvider = StreamProvider<List<ComboModel>>((ref) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore.collection('combo').snapshots().map((snapshot) {
+    return snapshot.docs.map((doc) {
+      final data = doc.data();
+      // Parsear los productos desde el array de IDs o referencias
+      final productsData = data['products'] as List<dynamic>? ?? [];
+      final products = productsData.map((item) {
+        if (item is Map<String, dynamic>) {
+          return ProductModel.fromMap(item, item['id'] ?? '');
+        }
+        return null;
+      }).whereType<ProductModel>().toList();
+
+      return ComboModel(
+        id: doc.id,
+        name: data['name'] as String,
+        price: (data['price'] as num).toDouble(),
+        photo: data['photo'] as String?,
+        timePreparation: data['timePreparation'] as int? ?? 0,
+        products: products,
+        disponible: data['disponible'] as bool? ?? true,
+      );
+    }).toList();
+  });
 });
 
 //Providers Mesas

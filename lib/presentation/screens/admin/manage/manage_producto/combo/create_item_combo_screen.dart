@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/providers/admin/permission_service.dart';
+import 'package:restaurante_app/presentation/providers/images/cloudinary_service.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateItemComboScreen extends ConsumerStatefulWidget {
@@ -22,6 +25,7 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
   final _formKey = GlobalKey<FormState>();
   String? selectedCategory;
   bool? isAvailable = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -143,12 +147,79 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
     SnackbarHelper.showInfo('Imagen eliminada');
   }
 
+  Future<void> _saveCombo() async {
+    if (!_formKey.currentState!.validate()) {
+      SnackbarHelper.showWarning('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    final selectedProducts = ref.read(selectedComboProductsProvider);
+    if (selectedProducts.isEmpty) {
+      SnackbarHelper.showWarning('Debes seleccionar al menos un producto para el combo');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final registerComboController = ref.read(registerComboControllerProvider);
+      final profileImage = ref.read(profileImageProvider);
+
+      String? photoUrl;
+
+      // Si hay imagen, subirla a Cloudinary
+      if (profileImage != null) {
+        final file = File(profileImage.path);
+        if (await file.exists()) {
+          photoUrl = await CloudinaryService.uploadImage(file);
+          if (photoUrl == null) {
+            throw Exception('Error al subir la imagen');
+          }
+        }
+      }
+
+      // Registrar el combo
+      final error = await registerComboController.registrarCombo(
+        ref,
+        nombre: registerComboController.nombreController.text.trim(),
+        precio: double.parse(registerComboController.precioController.text.trim()),
+        tiempoPreparacion: int.parse(registerComboController.tiempoPreparacionController.text.trim()),
+        productos: selectedProducts,
+        disponible: isAvailable.toString(),
+        foto: photoUrl,
+      );
+
+      setState(() => _isLoading = false);
+
+      if (error == null) {
+        // Limpiar campos y productos seleccionados
+        registerComboController.nombreController.clear();
+        registerComboController.precioController.clear();
+        registerComboController.tiempoPreparacionController.clear();
+        ref.read(selectedComboProductsProvider.notifier).state = [];
+        ref.read(profileImageProvider.notifier).clearImage();
+
+        SnackbarHelper.showSuccess('Combo registrado exitosamente');
+
+        // Navegar a la pantalla de gestión de combos
+        if (mounted) {
+          // Usar pushReplacement para reemplazar la pantalla actual
+          context.pushReplacement('/admin/manage/producto/manage-combos');
+        }
+      } else {
+        SnackbarHelper.showError('Error al registrar combo: $error');
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      SnackbarHelper.showError('Error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final registerComboController = ref.watch(registerComboControllerProvider);
     final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
-    final imageNotifier = ref.read(profileImageProvider.notifier);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
@@ -321,6 +392,130 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                           },
                         ),
                       ),
+                      const SizedBox(height: 16),
+
+                      // Productos seleccionados (píldoras)
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final selectedProducts = ref.watch(selectedComboProductsProvider);
+
+                          if (selectedProducts.isEmpty) {
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.12),
+                                ),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: Colors.white70, size: 20),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'No hay productos seleccionados',
+                                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Text(
+                                    'Productos seleccionados:',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF34D399),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '${selectedProducts.length}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: selectedProducts.map((product) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF34D399).withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: const Color(0xFF34D399),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            product.name,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        GestureDetector(
+                                          onTap: () {
+                                            // Eliminar producto
+                                            ref.read(selectedComboProductsProvider.notifier).state =
+                                              selectedProducts.where((p) => p.id != product.id).toList();
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFEF4444),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.close,
+                                              size: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
                       // Checkbox de disponibilidad
                       Align(
                         alignment: Alignment.centerLeft,
@@ -405,21 +600,28 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: areFieldsValid &&
-                              (_formKey.currentState?.validate() ?? false)
-                          ? () {
-                              context
-                                  .push('/admin/manage/producto/manage-combos');
-                            }
+                              (_formKey.currentState?.validate() ?? false) &&
+                              !_isLoading
+                          ? _saveCombo
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B5CF6),
                         disabledBackgroundColor:
                             const Color(0xFF8B5CF6).withAlpha(100),
                       ),
-                      child: const Text(
-                        'Continuar',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Guardar Combo',
+                              style: TextStyle(color: Colors.white),
+                            ),
                     ),
                   ],
                 ),

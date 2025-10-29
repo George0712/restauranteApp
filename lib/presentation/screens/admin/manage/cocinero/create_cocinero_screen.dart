@@ -158,7 +158,6 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
     final registerUserController = ref.watch(registerUserControllerProvider);
     final areFieldsValid = ref.watch(isContactInfoValidProvider);
     final profileImage = ref.watch(profileImageProvider);
-    final imageNotifier = ref.read(profileImageProvider.notifier);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
