@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/combo_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
@@ -603,7 +604,7 @@ class _ComboOptionsBottomSheetState
                       color: const Color(0xFF3B82F6),
                       onTap: () {
                         Navigator.pop(context);
-                        SnackbarHelper.showInfo('Función de ver detalles en desarrollo');
+                        context.push('/admin/manage/combo/detalle/${widget.combo.id}');
                       },
                     ),
                     const SizedBox(height: 16),
@@ -615,7 +616,7 @@ class _ComboOptionsBottomSheetState
                       color: const Color(0xFF8B5CF6),
                       onTap: () {
                         Navigator.pop(context);
-                        SnackbarHelper.showInfo('Función de editar en desarrollo');
+                        context.push('/admin/manage/combo/editar/${widget.combo.id}');
                       },
                     ),
                     const SizedBox(height: 16),
@@ -633,10 +634,7 @@ class _ComboOptionsBottomSheetState
                       color: widget.combo.disponible ?? true
                           ? const Color(0xFFF59E0B)
                           : const Color(0xFF10B981),
-                      onTap: () {
-                        Navigator.pop(context);
-                        SnackbarHelper.showInfo('Función de activar/desactivar en desarrollo');
-                      },
+                      onTap: () => _toggleAvailability(context),
                     ),
                     const SizedBox(height: 16),
                     _buildOptionTile(
@@ -645,10 +643,7 @@ class _ComboOptionsBottomSheetState
                       title: 'Eliminar combo',
                       subtitle: 'Eliminar permanentemente',
                       color: const Color(0xFFEF4444),
-                      onTap: () {
-                        Navigator.pop(context);
-                        SnackbarHelper.showInfo('Función de eliminar en desarrollo');
-                      },
+                      onTap: () => _showDeleteConfirmation(context),
                     ),
                   ],
                 ),
@@ -727,5 +722,144 @@ class _ComboOptionsBottomSheetState
         ),
       ),
     );
+  }
+
+  // Función para cambiar disponibilidad
+  Future<void> _toggleAvailability(BuildContext context) async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final controller = ref.read(comboManagementControllerProvider);
+      final result = await controller.toggleComboAvailability(
+        widget.combo.id,
+        widget.combo.disponible ?? true,
+      );
+
+      if (result == null) {
+        // Éxito
+        if (mounted) {
+          Navigator.pop(context);
+        }
+
+        final message = widget.combo.disponible ?? true
+            ? 'Combo desactivado correctamente'
+            : 'Combo activado correctamente';
+
+        if (widget.combo.disponible ?? true) {
+          SnackbarHelper.showWarning(message);
+        } else {
+          SnackbarHelper.showSuccess(message);
+        }
+      } else {
+        // Error
+        SnackbarHelper.showError('Error: $result');
+      }
+    } catch (e) {
+      SnackbarHelper.showError('Error inesperado: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // Función para eliminar combo
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A2E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.red.withValues(alpha: 0.8),
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Eliminar combo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Estás seguro de que deseas eliminar "${widget.combo.name}"?',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Esta acción no se puede deshacer y se eliminará permanentemente de la base de datos.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext); // Cerrar diálogo
+              Navigator.pop(context); // Cerrar bottom sheet
+              await _deleteCombo();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Función para ejecutar la eliminación
+  Future<void> _deleteCombo() async {
+    try {
+      final controller = ref.read(comboManagementControllerProvider);
+      final result = await controller.deleteCombo(widget.combo.id);
+
+      if (result == null) {
+        // Éxito
+        SnackbarHelper.showSuccess('Combo eliminado correctamente');
+      } else {
+        // Error
+        SnackbarHelper.showError('Error al eliminar: $result');
+      }
+    } catch (e) {
+      SnackbarHelper.showError('Error inesperado: $e');
+    }
   }
 }

@@ -453,6 +453,57 @@ class ProductManagementController {
   }
 }
 
+class ComboManagementController {
+  Future<String?> toggleComboAvailability(
+      String comboId, bool currentDisponible) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('combo').doc(comboId).update({
+        'disponible': !currentDisponible,
+      });
+      return null; // Success
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> deleteCombo(String comboId) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('combo').doc(comboId).delete();
+      return null; // Success
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> updateCombo({
+    required String comboId,
+    required String nombre,
+    required double precio,
+    required int tiempoPreparacion,
+    required List<ProductModel> productos,
+    required bool disponible,
+    String? photo,
+  }) async {
+    try {
+      final db = FirebaseFirestore.instance;
+      await db.collection('combo').doc(comboId).update({
+        'name': nombre,
+        'price': precio,
+        'timePreparation': tiempoPreparacion,
+        'products': productos.map((p) => p.toMap()).toList(),
+        'disponible': disponible,
+        if (photo != null) 'photo': photo,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return null; // Success
+    } catch (e) {
+      return e.toString();
+    }
+  }
+}
+
 class EditProductController {
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController precioController = TextEditingController();
@@ -549,6 +600,141 @@ class EditProductController {
 
       final db = FirebaseFirestore.instance;
       await db.collection('producto').doc(productId).update(productoData);
+
+      onUploadProgress?.call(1.0);
+
+      return null; // Éxito
+    } catch (e) {
+      return e.toString();
+    }
+  }
+}
+
+class EditComboController extends StateNotifier<void> {
+  EditComboController() : super(null);
+
+  final TextEditingController nombreController = TextEditingController();
+  final TextEditingController precioController = TextEditingController();
+  final TextEditingController tiempoPreparacionController = TextEditingController();
+
+  final List<ProductModel> productos = [];
+
+  void addProduct(ProductModel product) {
+    if (!productos.any((p) => p.id == product.id)) {
+      productos.add(product);
+      state = null; // Trigger rebuild
+    }
+  }
+
+  void removeProduct(ProductModel product) {
+    productos.removeWhere((p) => p.id == product.id);
+    state = null; // Trigger rebuild
+  }
+
+  void clearProducts() {
+    productos.clear();
+    state = null;
+  }
+
+  void setProducts(List<ProductModel> newProducts) {
+    productos.clear();
+    productos.addAll(newProducts);
+    state = null;
+  }
+
+  List<ProductModel> get products => productos;
+
+  bool isProductSelected(ProductModel product) {
+    return productos.any((p) => p.id == product.id);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    nombreController.dispose();
+    precioController.dispose();
+    tiempoPreparacionController.dispose();
+  }
+
+  // Cargar datos del combo en los controladores
+  void loadComboData(ComboModel combo) {
+    nombreController.text = combo.name;
+    precioController.text = combo.price.toString();
+    tiempoPreparacionController.text = combo.timePreparation.toString();
+    setProducts(combo.products);
+  }
+
+  // Limpiar todos los campos
+  void clearAllFields() {
+    nombreController.clear();
+    precioController.clear();
+    tiempoPreparacionController.clear();
+    clearProducts();
+  }
+
+  bool areFieldsValid() {
+    final nombre = nombreController.text.trim();
+    final precio = precioController.text.trim();
+    final tiempoPreparacion = tiempoPreparacionController.text.trim();
+    return AppConstants.nameRegex.hasMatch(nombre) &&
+        AppConstants.priceRegex.hasMatch(precio) &&
+        AppConstants.timePreparationRegex.hasMatch(tiempoPreparacion) &&
+        productos.isNotEmpty;
+  }
+
+  Future<String?> updateCombo(
+    WidgetRef ref, {
+    required String comboId,
+    required String nombre,
+    required double precio,
+    required int tiempoPreparacion,
+    required List<ProductModel> productos,
+    required bool disponible,
+    String? newPhoto,
+    Function(double)? onUploadProgress,
+  }) async {
+    try {
+      String? photoUrl = newPhoto; // Mantener la foto actual si no hay nueva
+
+      // Si hay una nueva imagen, subirla a Cloudinary
+      if (newPhoto != null &&
+          newPhoto.isNotEmpty &&
+          !newPhoto.startsWith('http')) {
+        onUploadProgress?.call(0.1);
+
+        final file = File(newPhoto);
+
+        if (!await file.exists()) {
+          throw Exception('El archivo de imagen no existe');
+        }
+
+        // Subir nueva imagen con progreso
+        photoUrl = await CloudinaryService.uploadImage(
+          file,
+          onProgress: (progress) {
+            final mappedProgress = 0.1 + (progress * 0.7);
+            onUploadProgress?.call(mappedProgress);
+          },
+        );
+
+        if (photoUrl == null) {
+          throw Exception('Error al subir la imagen a Cloudinary');
+        }
+        onUploadProgress?.call(0.9);
+      }
+
+      final comboData = {
+        'name': nombre,
+        'price': precio,
+        'timePreparation': tiempoPreparacion,
+        'products': productos.map((p) => p.toMap()).toList(),
+        'disponible': disponible,
+        'photo': photoUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final db = FirebaseFirestore.instance;
+      await db.collection('combo').doc(comboId).update(comboData);
 
       onUploadProgress?.call(1.0);
 

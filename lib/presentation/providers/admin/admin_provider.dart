@@ -660,6 +660,11 @@ final productManagementControllerProvider =
   return ProductManagementController();
 });
 
+final comboManagementControllerProvider =
+    Provider<ComboManagementController>((ref) {
+  return ComboManagementController();
+});
+
 // Provider para obtener un producto específico por ID
 final productByIdProvider =
     StreamProvider.family<ProductModel?, String>((ref, productId) {
@@ -722,6 +727,11 @@ final registerComboControllerNotifierProvider =
   return RegisterComboController();
 });
 
+final editComboControllerProvider =
+    StateNotifierProvider<EditComboController, void>((ref) {
+  return EditComboController();
+});
+
 // Provider para productos seleccionados del combo (máximo 5)
 final selectedComboProductsProvider = StateProvider<List<ProductModel>>((ref) => []);
 
@@ -750,6 +760,40 @@ final combosProvider = StreamProvider<List<ComboModel>>((ref) {
         disponible: data['disponible'] as bool? ?? true,
       );
     }).toList();
+  });
+});
+
+// Provider para obtener un combo específico por ID
+final comboByIdProvider =
+    StreamProvider.family<ComboModel?, String>((ref, comboId) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('combo')
+      .doc(comboId)
+      .snapshots()
+      .map((snapshot) {
+    if (snapshot.exists && snapshot.data() != null) {
+      final data = snapshot.data()!;
+      // Parsear los productos desde el array
+      final productsData = data['products'] as List<dynamic>? ?? [];
+      final products = productsData.map((item) {
+        if (item is Map<String, dynamic>) {
+          return ProductModel.fromMap(item, item['id'] ?? '');
+        }
+        return null;
+      }).whereType<ProductModel>().toList();
+
+      return ComboModel(
+        id: snapshot.id,
+        name: data['name'] as String,
+        price: (data['price'] as num).toDouble(),
+        photo: data['photo'] as String?,
+        timePreparation: data['timePreparation'] as int? ?? 0,
+        products: products,
+        disponible: data['disponible'] as bool? ?? true,
+      );
+    }
+    return null;
   });
 });
 

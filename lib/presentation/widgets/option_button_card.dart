@@ -93,7 +93,7 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
                            widget.color.r.toInt(),
                            widget.color.g.toInt(),
                            widget.color.b.toInt(),
-                           0.8,
+                           0.2,
                          ),
                           widget.color,
                         ],

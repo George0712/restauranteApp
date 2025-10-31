@@ -14,7 +14,9 @@ import 'package:restaurante_app/presentation/providers/images/cloudinary_service
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
 class CreateItemComboScreen extends ConsumerStatefulWidget {
-  const CreateItemComboScreen({super.key});
+  final String? comboId;
+
+  const CreateItemComboScreen({super.key, this.comboId});
 
   @override
   ConsumerState<CreateItemComboScreen> createState() =>
@@ -26,22 +28,84 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
   String? selectedCategory;
   bool? isAvailable = true;
   bool _isLoading = false;
+  bool _isLoadingData = false;
+
+  bool get isEditMode => widget.comboId != null;
 
   @override
   void initState() {
     super.initState();
-    final registerComboController = ref.read(registerComboControllerProvider);
-    registerComboController.nombreController.addListener(_validateFields);
-    registerComboController.precioController.addListener(_validateFields);
-    registerComboController.tiempoPreparacionController
-        .addListener(_validateFields);
+
+    if (isEditMode) {
+      // Modo edición
+      final editComboController = ref.read(editComboControllerProvider.notifier);
+      editComboController.nombreController.addListener(_validateFields);
+      editComboController.precioController.addListener(_validateFields);
+      editComboController.tiempoPreparacionController.addListener(_validateFields);
+
+      // Cargar datos del combo
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadComboData();
+      });
+    } else {
+      // Modo creación
+      final registerComboController = ref.read(registerComboControllerProvider);
+      registerComboController.nombreController.addListener(_validateFields);
+      registerComboController.precioController.addListener(_validateFields);
+      registerComboController.tiempoPreparacionController.addListener(_validateFields);
+    }
+  }
+
+  Future<void> _loadComboData() async {
+    if (widget.comboId == null) return;
+
+    setState(() => _isLoadingData = true);
+
+    try {
+      final comboAsync = ref.read(comboByIdProvider(widget.comboId!));
+
+      await comboAsync.when(
+        data: (combo) async {
+          if (combo != null) {
+            final editComboController = ref.read(editComboControllerProvider.notifier);
+            editComboController.loadComboData(combo);
+
+            // Set availability
+            isAvailable = combo.disponible ?? true;
+
+            // Set selected products
+            ref.read(selectedComboProductsProvider.notifier).state = combo.products;
+
+            // If there's a photo URL, we'll keep it for reference but won't load it into the image picker
+            // Users can replace it by selecting a new image
+          }
+        },
+        loading: () async {},
+        error: (error, stack) async {
+          SnackbarHelper.showError('Error al cargar combo: $error');
+        },
+      );
+    } catch (e) {
+      SnackbarHelper.showError('Error al cargar datos del combo: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingData = false);
+      }
+    }
   }
 
   void _validateFields() {
     if (!mounted) return;
-    final registerComboController = ref.read(registerComboControllerProvider);
-    final isValid = registerComboController.areFieldsValid();
-    ref.read(isValidFieldsProvider.notifier).state = isValid;
+
+    if (isEditMode) {
+      final editComboController = ref.read(editComboControllerProvider.notifier);
+      final isValid = editComboController.areFieldsValid();
+      ref.read(isValidFieldsProvider.notifier).state = isValid;
+    } else {
+      final registerComboController = ref.read(registerComboControllerProvider);
+      final isValid = registerComboController.areFieldsValid();
+      ref.read(isValidFieldsProvider.notifier).state = isValid;
+    }
   }
 
   Future<void> _handleImageSelection() async {
@@ -162,52 +226,105 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final registerComboController = ref.read(registerComboControllerProvider);
       final profileImage = ref.read(profileImageProvider);
-
       String? photoUrl;
 
-      // Si hay imagen, subirla a Cloudinary
-      if (profileImage != null) {
-        final file = File(profileImage.path);
-        if (await file.exists()) {
-          photoUrl = await CloudinaryService.uploadImage(file);
-          if (photoUrl == null) {
-            throw Exception('Error al subir la imagen');
+      if (isEditMode) {
+        // Modo edición
+        final editComboController = ref.read(editComboControllerProvider.notifier);
+        final comboAsync = ref.read(comboByIdProvider(widget.comboId!));
+
+        // Get current photo URL if no new image selected
+        String? currentPhotoUrl;
+        await comboAsync.when(
+          data: (combo) async {
+            currentPhotoUrl = combo?.photo;
+          },
+          loading: () async {},
+          error: (_, __) async {},
+        );
+
+        // Si hay nueva imagen, subirla a Cloudinary
+        if (profileImage != null) {
+          final file = File(profileImage.path);
+          if (await file.exists()) {
+            photoUrl = await CloudinaryService.uploadImage(file);
+            if (photoUrl == null) {
+              throw Exception('Error al subir la imagen');
+            }
           }
+        } else {
+          // Mantener la foto actual si no hay nueva imagen
+          photoUrl = currentPhotoUrl;
         }
-      }
 
-      // Registrar el combo
-      final error = await registerComboController.registrarCombo(
-        ref,
-        nombre: registerComboController.nombreController.text.trim(),
-        precio: double.parse(registerComboController.precioController.text.trim()),
-        tiempoPreparacion: int.parse(registerComboController.tiempoPreparacionController.text.trim()),
-        productos: selectedProducts,
-        disponible: isAvailable.toString(),
-        foto: photoUrl,
-      );
+        // Actualizar el combo
+        final error = await editComboController.updateCombo(
+          ref,
+          comboId: widget.comboId!,
+          nombre: editComboController.nombreController.text.trim(),
+          precio: double.parse(editComboController.precioController.text.trim()),
+          tiempoPreparacion: int.parse(editComboController.tiempoPreparacionController.text.trim()),
+          productos: selectedProducts,
+          disponible: isAvailable ?? true,
+          newPhoto: photoUrl,
+        );
 
-      setState(() => _isLoading = false);
+        setState(() => _isLoading = false);
 
-      if (error == null) {
-        // Limpiar campos y productos seleccionados
-        registerComboController.nombreController.clear();
-        registerComboController.precioController.clear();
-        registerComboController.tiempoPreparacionController.clear();
-        ref.read(selectedComboProductsProvider.notifier).state = [];
-        ref.read(profileImageProvider.notifier).clearImage();
+        if (error == null) {
+          SnackbarHelper.showSuccess('Combo actualizado exitosamente');
 
-        SnackbarHelper.showSuccess('Combo registrado exitosamente');
-
-        // Navegar a la pantalla de gestión de combos
-        if (mounted) {
-          // Usar pushReplacement para reemplazar la pantalla actual
-          context.pushReplacement('/admin/manage/producto/manage-combos');
+          if (mounted) {
+            context.pushReplacement('/admin/manage/producto/manage-combos');
+          }
+        } else {
+          SnackbarHelper.showError('Error al actualizar combo: $error');
         }
       } else {
-        SnackbarHelper.showError('Error al registrar combo: $error');
+        // Modo creación
+        final registerComboController = ref.read(registerComboControllerProvider);
+
+        // Si hay imagen, subirla a Cloudinary
+        if (profileImage != null) {
+          final file = File(profileImage.path);
+          if (await file.exists()) {
+            photoUrl = await CloudinaryService.uploadImage(file);
+            if (photoUrl == null) {
+              throw Exception('Error al subir la imagen');
+            }
+          }
+        }
+
+        // Registrar el combo
+        final error = await registerComboController.registrarCombo(
+          ref,
+          nombre: registerComboController.nombreController.text.trim(),
+          precio: double.parse(registerComboController.precioController.text.trim()),
+          tiempoPreparacion: int.parse(registerComboController.tiempoPreparacionController.text.trim()),
+          productos: selectedProducts,
+          disponible: isAvailable.toString(),
+          foto: photoUrl,
+        );
+
+        setState(() => _isLoading = false);
+
+        if (error == null) {
+          // Limpiar campos y productos seleccionados
+          registerComboController.nombreController.clear();
+          registerComboController.precioController.clear();
+          registerComboController.tiempoPreparacionController.clear();
+          ref.read(selectedComboProductsProvider.notifier).state = [];
+          ref.read(profileImageProvider.notifier).clearImage();
+
+          SnackbarHelper.showSuccess('Combo registrado exitosamente');
+
+          if (mounted) {
+            context.pushReplacement('/admin/manage/producto/manage-combos');
+          }
+        } else {
+          SnackbarHelper.showError('Error al registrar combo: $error');
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -217,12 +334,49 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final registerComboController = ref.watch(registerComboControllerProvider);
+    // Use appropriate controller based on mode
+    final registerComboController = isEditMode ? null : ref.watch(registerComboControllerProvider);
+    final editComboController = isEditMode ? ref.watch(editComboControllerProvider.notifier) : null;
+
+    // Get the active controller's text controllers
+    final nombreController = isEditMode
+        ? editComboController!.nombreController
+        : registerComboController!.nombreController;
+    final precioController = isEditMode
+        ? editComboController!.precioController
+        : registerComboController!.precioController;
+    final tiempoPreparacionController = isEditMode
+        ? editComboController!.tiempoPreparacionController
+        : registerComboController!.tiempoPreparacionController;
+
     final areFieldsValid = ref.watch(isValidFieldsProvider);
     final profileImage = ref.watch(profileImageProvider);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
+
+    if (_isLoadingData) {
+      return Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0F0F23),
+                Color(0xFF1A1A2E),
+                Color(0xFF16213E),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              color: Color(0xFFF59E0B),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -257,9 +411,9 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  AppStrings.createNewCombo,
-                  style: TextStyle(
+                Text(
+                  isEditMode ? 'Editar Combo' : AppStrings.createNewCombo,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -321,7 +475,7 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                     children: [
                       CustomInputField(
                           hintText: AppStrings.name,
-                          controller: registerComboController.nombreController,
+                          controller: nombreController,
                           isRequired: true,
                           textCapitalization: TextCapitalization.words,
                           prefixIcon: const Icon(
@@ -338,7 +492,7 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                       CustomInputField(
                         hintText: AppStrings.price,
                         keyboardType: TextInputType.number,
-                        controller: registerComboController.precioController,
+                        controller: precioController,
                         isRequired: true,
                         prefixIcon: const Icon(
                           Icons.attach_money,
@@ -354,8 +508,7 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                       const SizedBox(height: 16),
                       CustomInputField(
                         hintText: AppStrings.timePreparation,
-                        controller:
-                            registerComboController.tiempoPreparacionController,
+                        controller: tiempoPreparacionController,
                         isRequired: true,
                         keyboardType: TextInputType.number,
                         prefixIcon: const Icon(
@@ -618,9 +771,9 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              'Guardar Combo',
-                              style: TextStyle(color: Colors.white),
+                          : Text(
+                              isEditMode ? 'Actualizar Combo' : 'Guardar Combo',
+                              style: const TextStyle(color: Colors.white),
                             ),
                     ),
                   ],

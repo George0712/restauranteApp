@@ -19,6 +19,7 @@ import 'package:restaurante_app/presentation/screens/admin/manage/manage_product
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/create_item_combo_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/manage_combo_screen.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/products_item_combo_screen.dart';
+import 'package:restaurante_app/presentation/screens/admin/manage/manage_producto/combo/view_detail_combo_screen.dart';
 
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_credentials_mesero.dart';
 import 'package:restaurante_app/presentation/screens/admin/manage/mesero/create_mesero_screen.dart';
@@ -258,6 +259,19 @@ final GoRouter router = GoRouter(
       path: '/admin/manage/producto/editar/:id',
       builder: (context, state) => CreateItemProductScreen(
         productId: state.pathParameters['id']!,
+      ),
+    ),
+
+    GoRoute(
+      path: '/admin/manage/combo/detalle/:id',
+      builder: (context, state) => ComboDetailScreen(
+        comboId: state.pathParameters['id']!,
+      ),
+    ),
+    GoRoute(
+      path: '/admin/manage/combo/editar/:id',
+      builder: (context, state) => CreateItemComboScreen(
+        comboId: state.pathParameters['id']!,
       ),
     ),
 
