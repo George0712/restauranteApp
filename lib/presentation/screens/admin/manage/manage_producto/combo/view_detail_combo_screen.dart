@@ -26,17 +26,10 @@ class ComboDetailScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_outlined,
+              color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: () {
-              context.push('/admin/manage/combo/editar/$comboId');
-            },
-          ),
-        ],
       ),
       body: Container(
         width: double.infinity,
@@ -119,12 +112,19 @@ class ComboDetailScreen extends ConsumerWidget {
                           bottom: 20,
                           right: 16,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: combo.disponible ?? true
-                                    ? [const Color(0xFF10B981), const Color(0xFF059669)]
-                                    : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
+                                    ? [
+                                        const Color(0xFF10B981),
+                                        const Color(0xFF059669)
+                                      ]
+                                    : [
+                                        const Color(0xFFEF4444),
+                                        const Color(0xFFDC2626)
+                                      ],
                               ),
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
@@ -147,7 +147,9 @@ class ComboDetailScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  combo.disponible ?? true ? 'Disponible' : 'No disponible',
+                                  combo.disponible ?? true
+                                      ? 'Disponible'
+                                      : 'No disponible',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,
@@ -198,7 +200,8 @@ class ComboDetailScreen extends ConsumerWidget {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
@@ -209,7 +212,8 @@ class ComboDetailScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: theme.primaryColor.withValues(alpha: 0.3),
+                                    color: theme.primaryColor
+                                        .withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -268,8 +272,7 @@ class ComboDetailScreen extends ConsumerWidget {
                         ],
 
                         // Savings section
-                        if (combo.products.isNotEmpty)
-                          _buildSavingsCard(combo),
+                        if (combo.products.isNotEmpty) _buildSavingsCard(combo),
 
                         const Spacer(),
 
@@ -281,14 +284,16 @@ class ComboDetailScreen extends ConsumerWidget {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () {
-                                    context.push('/admin/manage/combo/editar/$comboId');
+                                    context.push(
+                                        '/admin/manage/combo/editar/$comboId');
                                   },
                                   icon: const Icon(Icons.edit),
                                   label: const Text('Editar Combo'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF8B5CF6),
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -297,21 +302,25 @@ class ComboDetailScreen extends ConsumerWidget {
                               ),
                               const SizedBox(width: 12),
                               ElevatedButton.icon(
-                                onPressed: () => _toggleAvailability(context, ref, combo),
+                                onPressed: () =>
+                                    _toggleAvailability(context, ref, combo),
                                 icon: Icon(
                                   combo.disponible ?? true
                                       ? Icons.visibility_off
                                       : Icons.visibility,
                                 ),
                                 label: Text(
-                                  combo.disponible ?? true ? 'Desactivar' : 'Activar',
+                                  combo.disponible ?? true
+                                      ? 'Desactivar'
+                                      : 'Activar',
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: combo.disponible ?? true
                                       ? const Color(0xFFF59E0B)
                                       : const Color(0xFF10B981),
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16, horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -321,7 +330,8 @@ class ComboDetailScreen extends ConsumerWidget {
                           ),
                         ),
 
-                        SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
+                        SizedBox(
+                            height: MediaQuery.of(context).padding.bottom + 20),
                       ],
                     ),
                   ),
@@ -372,7 +382,8 @@ class ComboDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _buildInfoCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -489,9 +500,7 @@ class ComboDetailScreen extends ConsumerWidget {
 
   Widget _buildSavingsCard(dynamic combo) {
     final totalIndividual = combo.products.fold<double>(
-      0.0,
-      (double sum, dynamic p) => sum + (p.price as num).toDouble()
-    );
+        0.0, (double sum, dynamic p) => sum + (p.price as num).toDouble());
     final savings = totalIndividual - combo.price;
 
     return Container(
@@ -583,7 +592,7 @@ class ComboDetailScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Ahorras:',
+                'Ahorro:',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -608,7 +617,8 @@ class ComboDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _toggleAvailability(BuildContext context, WidgetRef ref, dynamic combo) async {
+  Future<void> _toggleAvailability(
+      BuildContext context, WidgetRef ref, dynamic combo) async {
     try {
       final controller = ref.read(comboManagementControllerProvider);
       await controller.toggleComboAvailability(

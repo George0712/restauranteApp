@@ -48,12 +48,30 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
         _loadComboData();
       });
     } else {
-      // Modo creación
+      // Modo creación: limpiar campos
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _clearAllFields();
+      });
+
       final registerComboController = ref.read(registerComboControllerProvider);
       registerComboController.nombreController.addListener(_validateFields);
       registerComboController.precioController.addListener(_validateFields);
       registerComboController.tiempoPreparacionController.addListener(_validateFields);
     }
+  }
+
+  // Método para limpiar todos los campos
+  void _clearAllFields() {
+    final registerComboController = ref.read(registerComboControllerProvider);
+    registerComboController.nombreController.clear();
+    registerComboController.precioController.clear();
+    registerComboController.tiempoPreparacionController.clear();
+    ref.read(selectedComboProductsProvider.notifier).state = [];
+    ref.read(profileImageProvider.notifier).clearImage();
+    ref.read(isValidFieldsProvider.notifier).state = false;
+    setState(() {
+      isAvailable = true;
+    });
   }
 
   Future<void> _loadComboData() async {
@@ -274,9 +292,9 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
 
         if (error == null) {
           SnackbarHelper.showSuccess('Combo actualizado exitosamente');
-
+      
           if (mounted) {
-            context.pushReplacement('/admin/manage/producto/manage-combos');
+            context.pop();
           }
         } else {
           SnackbarHelper.showError('Error al actualizar combo: $error');
@@ -310,17 +328,16 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
         setState(() => _isLoading = false);
 
         if (error == null) {
-          // Limpiar campos y productos seleccionados
-          registerComboController.nombreController.clear();
-          registerComboController.precioController.clear();
-          registerComboController.tiempoPreparacionController.clear();
-          ref.read(selectedComboProductsProvider.notifier).state = [];
-          ref.read(profileImageProvider.notifier).clearImage();
-
           SnackbarHelper.showSuccess('Combo registrado exitosamente');
 
+          // Limpiar campos y productos seleccionados
+          _clearAllFields();
+
+          // Esperar un momento para que se vea el mensaje
+          await Future.delayed(const Duration(milliseconds: 500));
+
           if (mounted) {
-            context.pushReplacement('/admin/manage/producto/manage-combos');
+            context.pop();
           }
         } else {
           SnackbarHelper.showError('Error al registrar combo: $error');
@@ -739,6 +756,9 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                   children: [
                     OutlinedButton(
                       onPressed: () {
+                        if (!isEditMode) {
+                          _clearAllFields();
+                        }
                         context.pop();
                       },
                       style: OutlinedButton.styleFrom(

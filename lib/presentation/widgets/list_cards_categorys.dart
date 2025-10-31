@@ -69,30 +69,57 @@ class ListCardsCategories extends ConsumerWidget {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: categoria.disponible
-                              ? Colors.green.withValues(alpha: 0.7)
-                              : Colors.red.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          categoria.disponible ? "Activo" : "Inactivo",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                    // Badge de disponibilidad
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: categoria.disponible
+                                    ? [
+                                        const Color(0xFF10B981),
+                                        const Color(0xFF059669),
+                                      ]
+                                    : [
+                                        const Color(0xFFEF4444),
+                                        const Color(0xFFDC2626),
+                                      ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (categoria.disponible
+                                          ? const Color(0xFF10B981)
+                                          : const Color(0xFFEF4444))
+                                      .withValues(alpha: 0.4),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  categoria.disponible
+                                      ? 'Disponible'
+                                      : 'No disponible',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -188,7 +215,7 @@ class _CategoryOptionsBottomSheetState
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            widget.categoria.disponible ? 'Activo' : 'Inactivo',
+                            widget.categoria.disponible ? 'Disponible' : 'No disponible',
                             style: TextStyle(
                               fontSize: 10,
                               color: widget.categoria.disponible
@@ -325,7 +352,10 @@ class _CategoryOptionsBottomSheetState
 
   Future<void> _toggleAvailability(
       BuildContext context, dynamic categoria) async {
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+
     final controller = ref.read(registerCategoryControllerProvider);
     final result = await controller.actualizarCategoria(
       ref,
@@ -334,10 +364,12 @@ class _CategoryOptionsBottomSheetState
       disponible: !categoria.disponible,
       foto: categoria.photo,
     );
-    setState(() => _isLoading = false);
+
     if (mounted) {
+      setState(() => _isLoading = false);
       Navigator.pop(context);
     }
+
     if (result == null) {
       SnackbarHelper.showSuccess(categoria.disponible
           ? 'Categoría desactivada'
@@ -398,9 +430,15 @@ class _CategoryOptionsBottomSheetState
   }
 
   Future<void> _deleteCategory(dynamic categoria) async {
-    setState(() => _isLoading = true);
+    // No llamar setState aquí porque el bottom sheet ya fue cerrado
     final controller = ref.read(registerCategoryControllerProvider);
-    await controller.eliminarCategoria(ref, id: categoria.id);
-    setState(() => _isLoading = false);
+    final result = await controller.eliminarCategoria(ref, id: categoria.id);
+
+    // Mostrar mensaje de resultado
+    if (result == null) {
+      SnackbarHelper.showSuccess('Categoría eliminada exitosamente');
+    } else {
+      SnackbarHelper.showError('Error al eliminar: $result');
+    }
   }
 }

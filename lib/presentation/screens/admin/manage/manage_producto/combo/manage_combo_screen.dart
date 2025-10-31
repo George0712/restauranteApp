@@ -69,7 +69,6 @@ class _ManageComboScreenState extends ConsumerState<ManageComboScreen> {
                 // Botones
                 ElevatedButton(
                   onPressed: () {
-                    context.pop();
                     context.push('/admin/manage/combo/create-item-combos');
                   },
                   style: ElevatedButton.styleFrom(

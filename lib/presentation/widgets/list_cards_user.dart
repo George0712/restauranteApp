@@ -215,7 +215,7 @@ class _UserOptionsBottomSheetState
             context,
             icon: Icons.edit_outlined,
             title: 'Editar usuario',
-            subtitle: 'Modificar información y configuración',
+            subtitle: 'Modificar información de contacto',
             color: const Color(0xFF8B5CF6),
             onTap: () {
               context.pop(context);

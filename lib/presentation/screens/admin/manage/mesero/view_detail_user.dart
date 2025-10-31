@@ -28,16 +28,6 @@ class UserDetailScreen extends ConsumerWidget {
               const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          userAsync.when(
-            data: (user) => IconButton(
-              icon: const Icon(Icons.edit, color: Colors.white),
-              onPressed: user == null ? null : () => context.push('/admin/manage/user/edit', extra: user),
-            ),
-            loading: () => const SizedBox(),
-            error: (_, __) => const SizedBox(),
-          ),
-        ],
       ),
       body: Container(
         width: double.infinity,
@@ -144,7 +134,9 @@ class UserDetailScreen extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: ElevatedButton.icon(
-                                onPressed: () => context.push('/admin/manage/user/edit', extra: user),
+                                onPressed: () => context.push(
+                                    '/admin/manage/user/edit',
+                                    extra: user),
                                 icon: const Icon(Icons.edit,
                                     color: Colors.white70),
                                 label: const Text(
@@ -284,7 +276,6 @@ class UserDetailScreen extends ConsumerWidget {
               Navigator.pop(
                   context); // Cierra la pantalla de detalle (opcional, si quieres regresar)
               await _deleteUser(context, rol, ref, usuario);
-
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -308,8 +299,7 @@ class UserDetailScreen extends ConsumerWidget {
 
       if (result == null) {
         if (context.mounted) {
-          ref.invalidate(
-              usersProvider(rol));
+          ref.invalidate(usersProvider(rol));
           SnackbarHelper.showSuccess('Usuario eliminado correctamente');
         }
       } else {
@@ -324,4 +314,3 @@ class UserDetailScreen extends ConsumerWidget {
     }
   }
 }
-

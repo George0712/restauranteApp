@@ -31,6 +31,14 @@ class _CreateItemAdditionalScreenState
   @override
   void initState() {
     super.initState();
+
+    // Limpiar campos al iniciar si estamos creando
+    if (widget.additional == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _clearAllFields();
+      });
+    }
+
     final controller = ref.read(registerAdditionalControllerProvider);
     controller.nameController.addListener(_validateFields);
     controller.priceController.addListener(_validateFields);
@@ -41,6 +49,17 @@ class _CreateItemAdditionalScreenState
       controller.priceController.text = widget.additional!.price.toStringAsFixed(0);
       isAvailable = widget.additional!.disponible;
     }
+  }
+
+  // Método para limpiar todos los campos
+  void _clearAllFields() {
+    final controller = ref.read(registerAdditionalControllerProvider);
+    controller.clear();
+    ref.read(profileImageProvider.notifier).clearImage();
+    ref.read(isValidFieldsProvider.notifier).state = false;
+    setState(() {
+      isAvailable = true;
+    });
   }
 
   void _validateFields() {
@@ -202,7 +221,7 @@ class _CreateItemAdditionalScreenState
                 ),
                 const SizedBox(height: 24),
 
-                // Foto de perfil (opcional) — mantén estilo si quieres
+                // Foto de perfil (opcional)
                 Center(
                   child: GestureDetector(
                     onTap: _handleImageSelection,
@@ -345,7 +364,7 @@ class _CreateItemAdditionalScreenState
                   children: [
                     OutlinedButton(
                       onPressed: () {
-                        ref.read(registerAdditionalControllerProvider).clear();
+                        _clearAllFields();
                         context.pop();
                       },
                       style: OutlinedButton.styleFrom(
@@ -380,7 +399,12 @@ class _CreateItemAdditionalScreenState
                               if (result == null) {
                                 SnackbarHelper.showSuccess(
                                     widget.additional == null ? 'Adicional agregado' : 'Adicional actualizado');
-                                context.pop();
+
+                                _clearAllFields();
+
+                                if (mounted) {
+                                  context.pop();
+                                }
                               } else {
                                 SnackbarHelper.showError('Error: $result');
                               }

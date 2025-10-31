@@ -31,17 +31,36 @@ class _CreateItemCategoryScreenState
   @override
   void initState() {
     super.initState();
+
+    // Limpiar campos al iniciar si estamos creando
+    if (widget.category == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _clearAllFields();
+      });
+    }
+
     final controller = ref.read(registerCategoryControllerProvider);
 
     if (widget.category != null) {
+      // Modo edición: cargar datos
       controller.nombreController.text = widget.category!.name;
       isAvailable = widget.category!.disponible;
-      // Si usas imagenes: inicializa tambien provider para imagen aquí si es necesario
     } else {
-      isAvailable = true; // Default para nueva categoría
+      isAvailable = true;
     }
 
     controller.nombreController.addListener(_validateFields);
+  }
+
+  // Método para limpiar todos los campos
+  void _clearAllFields() {
+    final controller = ref.read(registerCategoryControllerProvider);
+    controller.nombreController.clear();
+    ref.read(profileImageProvider.notifier).clearImage();
+    ref.read(isValidFieldsProvider.notifier).state = false;
+    setState(() {
+      isAvailable = true;
+    });
   }
   
 
@@ -349,7 +368,7 @@ class _CreateItemCategoryScreenState
                   children: [
                     OutlinedButton(
                       onPressed: () {
-                        registerCategoryController.nombreController.clear();
+                        _clearAllFields();
                         context.pop();
                       },
                       style: OutlinedButton.styleFrom(
@@ -393,7 +412,13 @@ class _CreateItemCategoryScreenState
                                     widget.category == null
                                         ? 'Categoría agregada exitosamente'
                                         : 'Categoría actualizada exitosamente');
-                                context.pop();
+
+                                _clearAllFields();
+
+                                if (mounted) {
+                                  // Volver a la pantalla anterior (gestión de categorías)
+                                  context.pop();
+                                }
                               } else {
                                 SnackbarHelper.showError('Error: $result');
                               }

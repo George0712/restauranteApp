@@ -26,7 +26,14 @@ class SnackbarHelper {
     _currentToast?.remove();
     _currentToast = null;
 
-    final overlay = Overlay.of(context);
+    // Usar maybeOf para evitar excepciones si no hay overlay disponible
+    final overlay = Overlay.maybeOf(context);
+
+    // Si no hay overlay disponible, usar el fallback
+    if (overlay == null) {
+      _showSnackBarFallback(message, type);
+      return;
+    }
 
     _currentToast = OverlayEntry(
       builder: (context) => Positioned(

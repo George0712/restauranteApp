@@ -795,7 +795,7 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline, color: const Color(0xFFEF4444)),
+                    Icon(Icons.info_outline, color: Color(0xFFEF4444)),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -1077,9 +1077,9 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
               ),
             ),
             // Title
-            Text(
+            const Text(
               'Detalles del Pedido',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -1096,9 +1096,9 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
             const SizedBox(height: 24),
             // Items list
             if (pedido.items.isNotEmpty) ...[
-              Text(
+              const Text(
                 'Productos',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -1751,7 +1751,7 @@ class _TakeawayCustomerSheetState extends ConsumerState<_TakeawayCustomerSheet> 
   final TextEditingController _notasController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  bool _submitting = false;
+  final bool _submitting = false;
   bool _showOptionalFields = false;
 
   @override

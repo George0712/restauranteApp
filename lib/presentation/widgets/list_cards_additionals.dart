@@ -70,31 +70,60 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                       child: Text(
                         additional.name,
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.black
-                        ),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Colors.black),
                         textAlign: TextAlign.center,
                       ),
                     ),
+                    // Badge de disponibilidad
                     Positioned(
                       top: 0,
                       right: 0,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: additional.disponible
-                                ? Colors.green.withValues(alpha: 0.7)
-                                : Colors.red.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(6),
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                        child: Text(
-                          additional.disponible ? "Activo" : "Inactivo",
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: additional.disponible
+                                ? [
+                                    const Color(0xFF10B981),
+                                    const Color(0xFF059669),
+                                  ]
+                                : [
+                                    const Color(0xFFEF4444),
+                                    const Color(0xFFDC2626),
+                                  ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (additional.disponible
+                                      ? const Color(0xFF10B981)
+                                      : const Color(0xFFEF4444))
+                                  .withValues(alpha: 0.4),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              additional.disponible
+                                  ? 'Disponible'
+                                  : 'No disponible',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -124,13 +153,16 @@ class AdditionalOptionsSheet extends ConsumerStatefulWidget {
   final AdditionalModel additional;
   final WidgetRef ref;
 
-  const AdditionalOptionsSheet({super.key, required this.additional, required this.ref});
+  const AdditionalOptionsSheet(
+      {super.key, required this.additional, required this.ref});
 
   @override
-  ConsumerState<AdditionalOptionsSheet> createState() => _AdditionalOptionsSheetState();
+  ConsumerState<AdditionalOptionsSheet> createState() =>
+      _AdditionalOptionsSheetState();
 }
 
-class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet> {
+class _AdditionalOptionsSheetState
+    extends ConsumerState<AdditionalOptionsSheet> {
   bool _isLoading = false;
 
   @override
@@ -165,7 +197,9 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: const Icon(Icons.category_rounded, color: Colors.white, size: 48), // Icono específico para additional
+                  child: const Icon(Icons.category_rounded,
+                      color: Colors.white,
+                      size: 48), // Icono específico para additional
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -182,16 +216,21 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: additional.disponible ? Colors.green.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
+                          color: additional.disponible
+                              ? Colors.green.withValues(alpha: 0.2)
+                              : Colors.red.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          additional.disponible ? 'Activo' : 'Inactivo',
+                          additional.disponible ? 'Disponible' : 'No disponible',
                           style: TextStyle(
                             fontSize: 10,
-                            color: additional.disponible ? Colors.green : Colors.red,
+                            color: additional.disponible
+                                ? Colors.green
+                                : Colors.red,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -223,18 +262,27 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
                     onTap: () {
                       Navigator.pop(context);
                       // Prepara el controlador para editar y navega
-                      widget.ref.read(registerAdditionalController).initializeForEditing(additional);
+                      widget.ref
+                          .read(registerAdditionalController)
+                          .initializeForEditing(additional);
                       widget.ref.read(profileImageProvider.notifier).clear();
-                      context.push('/admin/manage/additional/edit', extra: additional);
+                      context.push('/admin/manage/additional/edit',
+                          extra: additional);
                     },
                   ),
                   const SizedBox(height: 16),
                   // Activar/desactivar
                   _buildOptionTile(
                     context,
-                    icon: additional.disponible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                    title: additional.disponible ? 'Desactivar Adicional' : 'Activar Adicional',
-                    subtitle: additional.disponible ? 'Ocultar el adicional' : 'Hacer visible el adicional',
+                    icon: additional.disponible
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    title: additional.disponible
+                        ? 'Desactivar Adicional'
+                        : 'Activar Adicional',
+                    subtitle: additional.disponible
+                        ? 'Ocultar el adicional'
+                        : 'Hacer visible el adicional',
                     color: additional.disponible ? Colors.orange : Colors.green,
                     onTap: _toggleAvailability,
                   ),
@@ -291,16 +339,22 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
                   ),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7)),
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withValues(alpha: 0.7)),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
+            const Icon(Icons.arrow_forward_ios,
+                color: Colors.white54, size: 16),
           ],
         ),
       ),
@@ -308,7 +362,10 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
   }
 
   Future<void> _toggleAvailability() async {
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+
     final controller = ref.read(registerAdditionalController);
     final result = await controller.actualizarAdditional(
       ref,
@@ -318,10 +375,15 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
       disponible: !widget.additional.disponible,
       photo: widget.additional.photo,
     );
-    setState(() => _isLoading = false);
-    if (mounted) Navigator.pop(context);
+
+    if (mounted) {
+      setState(() => _isLoading = false);
+      Navigator.pop(context);
+    }
+
     if (result == null) {
-      SnackbarHelper.showSuccess(widget.additional.disponible ? "Desactivado" : "Activado");
+      SnackbarHelper.showSuccess(
+          widget.additional.disponible ? "Desactivado" : "Activado");
     } else {
       SnackbarHelper.showError(result);
     }
@@ -378,10 +440,12 @@ class _AdditionalOptionsSheetState extends ConsumerState<AdditionalOptionsSheet>
   }
 
   Future<void> _deleteAdditional() async {
-    setState(() => _isLoading = true);
+    // No llamar setState aquí porque el bottom sheet ya fue cerrado
     final controller = ref.read(registerAdditionalController);
-    final result = await controller.eliminarAdditional(ref, id: widget.additional.id);
-    setState(() => _isLoading = false);
+    final result =
+        await controller.eliminarAdditional(ref, id: widget.additional.id);
+
+    // Mostrar mensaje de resultado
     if (result == null) {
       SnackbarHelper.showSuccess('Adicional eliminado');
     } else {

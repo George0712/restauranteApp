@@ -27,17 +27,10 @@ class ProductDetailScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_outlined,
+              color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: () {
-              context.push('/admin/manage/producto/editar/$productId');
-            },
-          ),
-        ],
       ),
       body: Container(
         width: double.infinity, // 🔥 Fuerza ancho completo
@@ -73,7 +66,8 @@ class ProductDetailScreen extends ConsumerWidget {
                   floating: false,
                   backgroundColor: Colors.transparent,
                   elevation: 0,
-                  automaticallyImplyLeading: false, // Remover leading automático
+                  automaticallyImplyLeading:
+                      false, // Remover leading automático
                   flexibleSpace: FlexibleSpaceBar(
                     background: Stack(
                       fit: StackFit.expand, // 🔥 Ocupar todo el espacio
@@ -120,12 +114,19 @@ class ProductDetailScreen extends ConsumerWidget {
                           bottom: 20, // Ajustado para SliverAppBar
                           right: 16,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: producto.disponible
-                                    ? [const Color(0xFF10B981), const Color(0xFF059669)]
-                                    : [const Color(0xFFEF4444), const Color(0xFFDC2626)],
+                                    ? [
+                                        const Color(0xFF10B981),
+                                        const Color(0xFF059669)
+                                      ]
+                                    : [
+                                        const Color(0xFFEF4444),
+                                        const Color(0xFFDC2626)
+                                      ],
                               ),
                               borderRadius: BorderRadius.circular(20),
                               boxShadow: [
@@ -140,15 +141,17 @@ class ProductDetailScreen extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  producto.disponible 
-                                    ? Icons.check_circle_outline 
-                                    : Icons.cancel_outlined,
+                                  producto.disponible
+                                      ? Icons.check_circle_outline
+                                      : Icons.cancel_outlined,
                                   color: Colors.white,
                                   size: 16,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  producto.disponible ? 'Disponible' : 'No disponible',
+                                  producto.disponible
+                                      ? 'Disponible'
+                                      : 'No disponible',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,
@@ -199,7 +202,8 @@ class ProductDetailScreen extends ConsumerWidget {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
@@ -210,7 +214,8 @@ class ProductDetailScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(12),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: theme.primaryColor.withValues(alpha: 0.3),
+                                    color: theme.primaryColor
+                                        .withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -249,7 +254,7 @@ class ProductDetailScreen extends ConsumerWidget {
                               child: categoriesAsync.when(
                                 data: (categories) {
                                   final category = categories.firstWhere(
-                                    (cat) => cat.id == producto.category, 
+                                    (cat) => cat.id == producto.category,
                                     orElse: () => categories.first,
                                   );
                                   return _buildInfoCard(
@@ -281,7 +286,7 @@ class ProductDetailScreen extends ConsumerWidget {
                         // Ingredients section
                         _buildSection(
                           'Ingredientes',
-                          producto.ingredientes, 
+                          producto.ingredientes,
                           Icons.list_alt,
                         ),
 
@@ -295,14 +300,16 @@ class ProductDetailScreen extends ConsumerWidget {
                               Expanded(
                                 child: ElevatedButton.icon(
                                   onPressed: () {
-                                    context.push('/admin/manage/producto/editar/$productId');
+                                    context.push(
+                                        '/admin/manage/producto/editar/$productId');
                                   },
                                   icon: const Icon(Icons.edit),
                                   label: const Text('Editar Producto'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF8B5CF6),
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -311,21 +318,25 @@ class ProductDetailScreen extends ConsumerWidget {
                               ),
                               const SizedBox(width: 12),
                               ElevatedButton.icon(
-                                onPressed: () => _toggleAvailability(context, ref, producto),
+                                onPressed: () =>
+                                    _toggleAvailability(context, ref, producto),
                                 icon: Icon(
-                                  producto.disponible 
-                                    ? Icons.visibility_off 
-                                    : Icons.visibility,
+                                  producto.disponible
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
                                 label: Text(
-                                  producto.disponible ? 'Desactivar' : 'Activar',
+                                  producto.disponible
+                                      ? 'Desactivar'
+                                      : 'Activar',
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: producto.disponible
                                       ? const Color(0xFFF59E0B)
                                       : const Color(0xFF10B981),
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16, horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -336,7 +347,8 @@ class ProductDetailScreen extends ConsumerWidget {
                         ),
 
                         // 🔥 Padding bottom para evitar que se corte
-                        SizedBox(height: MediaQuery.of(context).padding.bottom + 20),
+                        SizedBox(
+                            height: MediaQuery.of(context).padding.bottom + 20),
                       ],
                     ),
                   ),
@@ -358,7 +370,8 @@ class ProductDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _buildInfoCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -439,14 +452,14 @@ class ProductDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _toggleAvailability(BuildContext context, WidgetRef ref, dynamic producto) async {
+  Future<void> _toggleAvailability(
+      BuildContext context, WidgetRef ref, dynamic producto) async {
     try {
       final controller = ref.read(productManagementControllerProvider);
       await controller.toggleProductAvailability(
         producto.id,
         producto.disponible,
       );
-
     } catch (e) {
       SnackbarHelper.showError('Error inesperado: $e');
     }

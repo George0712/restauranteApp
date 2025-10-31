@@ -44,10 +44,12 @@ class _CreateItemProductScreenState
   void initState() {
     super.initState();
 
-    // Limpiar datos al iniciar
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _clearAllFields();
-    });
+    // Limpiar datos al iniciar SOLO si estamos creando (no editando)
+    if (!isEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _clearAllFields();
+      });
+    }
 
     final registerProductController =
         ref.read(registerProductoControllerProvider);
@@ -155,7 +157,7 @@ class _CreateItemProductScreenState
         if (fromCamera) {
           await imageNotifier.pickImageFromCamera();
         } else {
-          await imageNotifier.pickImage(); // Método existente para galería
+          await imageNotifier.pickImage();
         }
       });
     } catch (e) {
@@ -250,7 +252,7 @@ class _CreateItemProductScreenState
     imageNotifier.clearImage();
     setState(() {
       _originalImageUrl =
-          null; // También limpiar la imagen original en modo edición
+          null;
     });
     SnackbarHelper.showInfo('Imagen eliminada');
   }
@@ -277,7 +279,7 @@ class _CreateItemProductScreenState
       final registerProductController =
           ref.read(registerProductoControllerProvider);
       final profileImage =
-          ref.watch(profileImageProvider); // ✅ Cambié read por watch
+          ref.watch(profileImageProvider); 
 
       String? imageToProcess = _originalImageUrl; // Imagen por defecto
 
@@ -289,7 +291,6 @@ class _CreateItemProductScreenState
       String? result;
 
       if (isEditing) {
-        // ✅ USAR EL MISMO CONTROLLER para actualizar
         result = await registerProductController.updateProduct(
           ref,
           productId: widget.productId!,
@@ -330,22 +331,16 @@ class _CreateItemProductScreenState
       }
 
       if (result == null) {
-        // Éxito
-        _clearAllFields();
-
         final message = isEditing
             ? 'Producto actualizado correctamente'
             : 'Producto agregado correctamente';
 
         SnackbarHelper.showSuccess(message);
 
-        await Future.delayed(const Duration(milliseconds: 500));
+        _clearAllFields();
 
         if (mounted) {
           context.pop();
-          if (!isEditing) {
-            context.push('/admin/manage/producto/productos');
-          }
         }
       } else {
         SnackbarHelper.showError('Error: $result');
@@ -563,42 +558,15 @@ class _CreateItemProductScreenState
                     // Categoría - Dropdown
                     categoryAsync.when(
                       data: (categories) {
-                        // Debug mejorado
-                        developer.log(
-                            '📋 Categorías disponibles: ${categories.length}');
-                        for (var cat in categories) {
-                          developer.log('  - ID: "${cat.id}", Nombre: ${cat.name}');
-                        }
-                        developer.log(
-                            '🔍 Categoría seleccionada: "$selectedCategory" (${selectedCategory.runtimeType})');
-
-                        // ✅ LIMPIAR VALOR VACÍO O INVÁLIDO
+                        // LIMPIAR VALOR VACÍO O INVÁLIDO
                         String? validatedCategory = selectedCategory;
 
                         if (validatedCategory != null) {
-                          // Si está vacío o solo espacios
-                          if (validatedCategory.trim().isEmpty) {
-                            developer.log(
-                                '🔧 Categoría vacía detectada en dropdown, limpiando...');
-                            validatedCategory = null;
-                          } else {
-                            // Verificar que existe en la lista
-                            final categoryExists = categories
-                                .any((cat) => cat.id == validatedCategory);
-                            developer.log(
-                                '✅ Categoría existe en lista: $categoryExists');
-
-                            if (!categoryExists) {
-                              developer.log(
-                                  '⚠️ PROBLEMA: Categoría "$validatedCategory" no existe en la lista');
-                              validatedCategory = null;
-                            }
-                          }
-
+                          
                           // Si cambió el valor, actualizar el estado
                           if (validatedCategory != selectedCategory) {
                             developer.log(
-                                '🔧 Actualizando categoría de "$selectedCategory" a "$validatedCategory"');
+                                'Actualizando categoría de "$selectedCategory" a "$validatedCategory"');
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (mounted) {
                                 setState(() {
@@ -631,7 +599,7 @@ class _CreateItemProductScreenState
                         return DropdownButtonFormField<String>(
                           key: ValueKey(
                               'dropdown_${categories.length}_${validatedCategory ?? "null"}'),
-                          value: validatedCategory, // ✅ Usar valor validado
+                          value: validatedCategory,
                           dropdownColor: const Color(0xFF1A1A2E),
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
@@ -709,8 +677,6 @@ class _CreateItemProductScreenState
                             );
                           }).toList(),
                           onChanged: (value) {
-                            developer.log(
-                                '📝 Categoría cambiada de "$selectedCategory" a "$value"');
                             setState(() {
                               selectedCategory = value;
                             });

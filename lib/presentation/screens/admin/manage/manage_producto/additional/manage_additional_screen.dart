@@ -76,7 +76,6 @@ class _ManageAdditionalScreenState
                   onPressed: () {
                     registerAdditionalController.nameController.clear();
                     registerAdditionalController.priceController.clear();
-                    context.pop();
                     context.push(
                         '/admin/manage/additional/create-item-additionals');
                   },

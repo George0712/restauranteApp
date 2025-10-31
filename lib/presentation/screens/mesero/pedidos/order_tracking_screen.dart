@@ -1261,10 +1261,10 @@ class _OrderTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stages = [
-      _TimelineStage(label: 'Pendiente', key: 'pendiente', icon: Icons.access_time),
-      _TimelineStage(label: 'Cocina', key: 'preparando', icon: Icons.restaurant),
-      _TimelineStage(label: 'Listo', key: 'terminado', icon: Icons.check_circle),
-      _TimelineStage(label: 'Entregado', key: 'entregado', icon: Icons.delivery_dining),
+      const _TimelineStage(label: 'Pendiente', key: 'pendiente', icon: Icons.access_time),
+      const _TimelineStage(label: 'Cocina', key: 'preparando', icon: Icons.restaurant),
+      const _TimelineStage(label: 'Listo', key: 'terminado', icon: Icons.check_circle),
+      const _TimelineStage(label: 'Entregado', key: 'entregado', icon: Icons.delivery_dining),
     ];
 
     final currentIndex = _getCurrentStageIndex(status);
@@ -1429,9 +1429,9 @@ class _OrderDetailsSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          const Text(
                             'Detalles del Pedido',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.w700,

@@ -274,21 +274,12 @@ class ListCardsProducts extends ConsumerWidget {
                                           : const Color(0xFFEF4444))
                                       .withValues(alpha: 0.4),
                                   blurRadius: 4,
-                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  producto.disponible
-                                      ? Icons.check_circle_outline
-                                      : Icons.cancel_outlined,
-                                  color: Colors.white,
-                                  size: 12,
-                                ),
-                                const SizedBox(width: 4),
                                 Text(
                                   producto.disponible
                                       ? 'Disponible'
@@ -531,8 +522,8 @@ class _ProductOptionsBottomSheetState
                               ),
                               child: Text(
                                 widget.producto.disponible
-                                    ? 'Activo'
-                                    : 'Inactivo',
+                                    ? 'Disponible'
+                                    : 'No disponible',
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: widget.producto.disponible

@@ -1013,9 +1013,9 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
               ),
             ),
             // Title
-            Text(
+            const Text(
               'Detalles del Pedido',
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -1032,9 +1032,9 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
             const SizedBox(height: 24),
             // Items list
             if (pedido.items.isNotEmpty) ...[
-              Text(
+              const Text(
                 'Productos',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
