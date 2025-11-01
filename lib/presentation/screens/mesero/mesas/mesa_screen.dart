@@ -117,35 +117,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                   ),
                 ),
               ),
-
-              // Overlay semi-transparente (SEPARADO del panel)
-              if (mesaSeleccionada != null)
-                Positioned.fill(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        mesaSeleccionadaId = null;
-                      });
-                    },
-                    child: Container(
-                      color: Colors.black.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ),
-
-              // Panel de acciones (ENCIMA del overlay)
-              if (mesaSeleccionada != null)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: GestureDetector(
-                    onTap: () {}, // Previene que el tap en el panel lo cierre
-                    child: Align(
-                      child: _buildAccionesRapidas(mesaSeleccionada),
-                    ),
-                  ),
-                ),
             ],
           ),
         );
@@ -455,6 +426,15 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     return null;
   }
 
+  void _mostrarOpcionesMesa(MesaModel mesa) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _buildAccionesRapidas(mesa),
+    );
+  }
+
   Widget _buildAccionesRapidas(MesaModel mesa) {
     final colorEstado = _colorPorEstado(mesa.estado);
     final iconoEstado = _iconoPorEstado(mesa.estado);
@@ -490,7 +470,11 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               CircleAvatar(
                 radius: 24,
                 backgroundColor: colorEstado.withValues(alpha: 0.18),
-                child: Icon(iconoEstado, color: colorEstado, size: 24,),
+                child: Icon(
+                  iconoEstado,
+                  color: colorEstado,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -568,10 +552,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: () => setState(() => mesaSeleccionadaId = null),
-                icon: const Icon(Icons.close, color: Colors.white54),
-              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -591,7 +571,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             icono: Icons.flash_on,
             color: const Color(0xFF8B5CF6),
             onPressed: () {
-              _crearPedidoRapido(mesa);
+              _crearPedidoRapido(mesa, closeSheet: true);
             },
           ),
           const SizedBox(height: 10),
@@ -599,7 +579,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             titulo: 'Reservar mesa',
             icono: Icons.event_available,
             onPressed: () {
-              _reservarMesa(mesa, closeSheet: false);
+              _reservarMesa(mesa, closeSheet: true);
             },
           ),
         ];
@@ -612,7 +592,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             icono: Icons.receipt_long,
             color: Colors.green,
             onPressed: () {
-              _verPedido(mesa, closeSheet: false);
+              _verPedido(mesa, closeSheet: true);
             },
           ),
           const SizedBox(height: 10),
@@ -626,7 +606,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                 icono: Icons.attach_money,
                 color: Colors.tealAccent.shade400,
                 onPressed: () {
-                  _cobrarMesa(mesa, closeSheet: false);
+                  _cobrarMesa(mesa, closeSheet: true);
                 },
               ),
             )
@@ -639,7 +619,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             icono: Icons.logout,
             color: Colors.orange,
             onPressed: () {
-              _liberarMesa(mesa, closeSheet: false);
+              _liberarMesa(mesa, closeSheet: true);
             },
           ),
         );
@@ -653,7 +633,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             icono: Icons.check_circle,
             color: Colors.green,
             onPressed: () {
-              _confirmarLlegada(mesa, closeSheet: false);
+              _confirmarLlegada(mesa, closeSheet: true);
             },
           ),
           const SizedBox(height: 10),
@@ -662,7 +642,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             icono: Icons.cancel_schedule_send,
             color: Colors.red,
             onPressed: () {
-              _cancelarReserva(mesa, closeSheet: false);
+              _cancelarReserva(mesa, closeSheet: true);
             },
           ),
         ];
@@ -696,7 +676,11 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     );
   }
 
-  Future<void> _crearPedidoRapido(MesaModel mesa) async {
+  Future<void> _crearPedidoRapido(MesaModel mesa, {bool closeSheet = true}) async {
+    if (closeSheet && mounted) {
+      Navigator.pop(context);
+    }
+
     await _crearPedidoParaMesa(
       mesa,
       clienteMesa: 'Pedido rapido',
@@ -880,7 +864,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
   void _ejecutarAccionPrincipal(MesaModel mesa) {
     switch (mesa.estado) {
       case 'disponible':
-        _crearPedidoRapido(mesa);
+        _crearPedidoRapido(mesa, closeSheet: false);
         break;
       case 'ocupada':
         _verPedido(mesa, closeSheet: false);
@@ -989,6 +973,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
           } else {
             mesaSeleccionadaId = mesa.id;
           }
+          _mostrarOpcionesMesa(mesa);
         });
       },
       onDoubleTap: () {
@@ -1534,10 +1519,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
   }
 
   Future<void> _liberarMesa(MesaModel mesa, {bool closeSheet = true}) async {
-    if (closeSheet && mounted) {
-      Navigator.pop(context);
-    }
-
     final shouldRelease = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -1558,14 +1539,14 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text(
               'Cancelar',
               style: TextStyle(color: Colors.grey),
             ),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               shape: RoundedRectangleBorder(
@@ -1581,8 +1562,10 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       ),
     );
 
-    if (shouldRelease != true || !mounted) {
-      return;
+    if (shouldRelease != true || !mounted) return;
+
+    if (closeSheet && mounted) {
+      Navigator.pop(context);
     }
 
     try {
