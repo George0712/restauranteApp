@@ -41,15 +41,67 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
       stream: pedidoStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                onPressed: () => context.pop(),
+              ),
+            ),
+            extendBodyBehindAppBar: true,
+            body: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF0F0F23),
+                    Color(0xFF1A1A2E),
+                    Color(0xFF16213E),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF8B5CF6),
+                ),
+              ),
+            ),
           );
         }
         if (!snapshot.hasData || !snapshot.data!.exists) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Ticket del pedido')),
-            body: const Center(
-              child: Text('No encontramos informacion para este pedido.'),
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                onPressed: () => context.pop(),
+              ),
+            ),
+            extendBodyBehindAppBar: true,
+            body: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF0F0F23),
+                    Color(0xFF1A1A2E),
+                    Color(0xFF16213E),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: const SafeArea(
+                child: Center(
+                  child: Text(
+                    'No encontramos información para este pedido.',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ),
             ),
           );
         }
@@ -69,73 +121,121 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Ticket del pedido'),
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _TicketHeader(
-                  pedidoId: widget.pedidoId,
-                  mesaId: widget.mesaId,
-                  mesaNombre: mesaNombreVisible,
-                  clienteNombre: clienteVisible,
-                  estado: estado,
-                  pagado: pagado,
-                  ticketNumero: ticketNumero,
-                  subtotal: subtotal,
-                  total: total,
-                  formatter: _currency,
-                ),
-                const SizedBox(height: 20),
-                _TicketItemsList(items: items, formatter: _currency),
-                const SizedBox(height: 20),
-                _TicketTotals(
-                    subtotal: subtotal, total: total, formatter: _currency),
-              ],
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+              onPressed: () => context.pop(),
+              tooltip: 'Volver',
             ),
           ),
-          bottomNavigationBar: SafeArea(
-            minimum: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (!pagado)
-                  ElevatedButton.icon(
-                    onPressed: () => _abrirPasarelaPago(context),
-                    icon: const Icon(Icons.payments),
-                    label: const Text('Registrar pago'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+          extendBodyBehindAppBar: true,
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color(0xFF0F0F23),
+                  Color(0xFF1A1A2E),
+                  Color(0xFF16213E),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Título en el cuerpo
+                    const Text(
+                      'Ticket del Pedido',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                if (!pagado) const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: () {
-                    final router = GoRouter.of(context);
-                    const fallbackRoute = '/mesero/pedidos/mesas';
-                    if (router.canPop()) {
-                      router.pop();
-                    } else {
-                      router.go(fallbackRoute);
-                    }
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Resumen completo de la orden',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.65),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                  ),
-                  child: const Text('Cerrar'),
+                    const SizedBox(height: 20),
+                    _TicketHeader(
+                      pedidoId: widget.pedidoId,
+                      mesaId: widget.mesaId,
+                      mesaNombre: mesaNombreVisible,
+                      clienteNombre: clienteVisible,
+                      estado: estado,
+                      pagado: pagado,
+                      ticketNumero: ticketNumero,
+                      subtotal: subtotal,
+                      total: total,
+                      formatter: _currency,
+                    ),
+                    const SizedBox(height: 16),
+                    _TicketItemsList(items: items, formatter: _currency),
+                    const SizedBox(height: 16),
+                    _TicketTotals(
+                        subtotal: subtotal, total: total, formatter: _currency),
+                    const SizedBox(height: 24),
+                    // Botones de acción
+                    if (!pagado) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _abrirPasarelaPago(context),
+                          icon: const Icon(Icons.payments),
+                          label: const Text('Registrar pago'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: const Color(0xFF34D399),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          final router = GoRouter.of(context);
+                          const fallbackRoute = '/mesero/pedidos/mesas';
+                          if (router.canPop()) {
+                            router.pop();
+                          } else {
+                            router.go(fallbackRoute);
+                          }
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Cerrar'),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -218,9 +318,11 @@ class _TicketHeader extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.16),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,32 +332,39 @@ class _TicketHeader extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.receipt_long, color: Colors.blue),
+                child: const Icon(Icons.receipt_long, color: Color(0xFF8B5CF6)),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Ticket',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Pedido: $shortId',
-                      style: const TextStyle(color: Colors.black54),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Ticket: $ticketNumero',
-                      style: const TextStyle(color: Colors.black54),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -272,7 +381,7 @@ class _TicketHeader extends ConsumerWidget {
           const SizedBox(height: 6),
           _InfoRow(label: 'Pago', value: pagado ? 'Pagado' : 'Pendiente'),
           const SizedBox(height: 16),
-          const Divider(),
+          Divider(color: Colors.white.withValues(alpha: 0.2)),
           const SizedBox(height: 12),
           _InfoRow(label: 'Subtotal', value: formatter.format(subtotal)),
           const SizedBox(height: 6),
@@ -321,14 +430,26 @@ class _TicketItemsList extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.blueGrey.shade50,
+          color: Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.16),
+          ),
         ),
-        child: const Column(
+        child: Column(
           children: [
-            Icon(Icons.shopping_bag_outlined, size: 40, color: Colors.blueGrey),
-            SizedBox(height: 12),
-            Text('No hay productos registrados en este ticket.'),
+            Icon(
+              Icons.shopping_bag_outlined,
+              size: 40,
+              color: Colors.white.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No hay productos registrados en este ticket.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
           ],
         ),
       );
@@ -337,16 +458,22 @@ class _TicketItemsList extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.16),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Productos',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(height: 12),
           ...List.generate(items.length, (index) {
@@ -366,7 +493,7 @@ class _TicketItemsList extends ConsumerWidget {
                       '${quantity}x',
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -379,6 +506,7 @@ class _TicketItemsList extends ConsumerWidget {
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
+                              color: Colors.white,
                             ),
                           ),
                           if (adicionales.isNotEmpty) ...[
@@ -392,8 +520,10 @@ class _TicketItemsList extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Text(
                               'Nota: $notas',
-                              style: const TextStyle(
-                                  fontSize: 12, color: Colors.black54),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withValues(alpha: 0.6),
+                              ),
                             ),
                           ],
                         ],
@@ -404,14 +534,14 @@ class _TicketItemsList extends ConsumerWidget {
                       formatter.format(price),
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
                 if (index != items.length - 1) ...[
                   const SizedBox(height: 12),
-                  Divider(color: Colors.grey.shade200),
+                  Divider(color: Colors.white.withValues(alpha: 0.2)),
                   const SizedBox(height: 12),
                 ],
               ],
@@ -457,7 +587,10 @@ class _AdicionalesList extends ConsumerWidget {
         final price = formatter.format(_toDouble(data['price']));
         return Text(
           '+ $name ($price)',
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.white.withValues(alpha: 0.6),
+          ),
         );
       }).toList(),
     );
@@ -487,8 +620,22 @@ class _TicketTotals extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F2A44),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF8B5CF6),
+            Color(0xFF6D28D9),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,8 +700,8 @@ class _InfoRow extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.black54,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 13,
           ),
         ),
@@ -566,7 +713,7 @@ class _InfoRow extends ConsumerWidget {
             style: TextStyle(
               fontSize: emphasize ? 16 : 13,
               fontWeight: emphasize ? FontWeight.w700 : FontWeight.w500,
-              color: Colors.black87,
+              color: emphasize ? Colors.white : Colors.white.withValues(alpha: 0.9),
             ),
           ),
         ),
