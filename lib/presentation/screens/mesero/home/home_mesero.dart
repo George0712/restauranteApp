@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ion.dart';
 import 'package:iconify_flutter/icons/ri.dart';
+import 'package:intl/intl.dart';
 import 'package:restaurante_app/data/models/notification_model.dart';
 import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/providers/cocina/order_provider.dart';
 import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
+import 'package:restaurante_app/presentation/providers/mesero/turno_provider.dart';
 
 class HomeMeseroScreen extends ConsumerStatefulWidget {
   const HomeMeseroScreen({super.key});
@@ -54,12 +56,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                     ],
                   ),
                   child: CircleAvatar(
-                    backgroundColor: Color.fromRGBO(
-                      theme.primaryColor.r.toInt(),
-                      theme.primaryColor.g.toInt(),
-                      theme.primaryColor.b.toInt(),
-                      0.8,
-                    ),
+                    backgroundColor: theme.primaryColor.withValues(alpha: 0.8),
                     child: const Icon(
                       Icons.person,
                       size: 28,
@@ -132,6 +129,8 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
   Widget _buildShiftOverview(bool isTablet) {
     final mesasAsync = ref.watch(mesasStreamProvider);
     final orderStats = ref.watch(orderStatsProvider);
+    final turnoAsync = ref.watch(turnoActivoProvider);
+    final turnoController = ref.watch(turnoControllerProvider);
 
     final mesasActivas = mesasAsync.when(
       data: (mesas) {
@@ -200,6 +199,135 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
       ),
     ];
 
+    return turnoAsync.when(
+      data: (turno) {
+        final bool turnoActivo = turno != null && turno.activo;
+
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isTablet ? 24 : 18,
+            vertical: isTablet ? 18 : 16,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: const Color.fromRGBO(255, 255, 255, 0.08),
+            border: Border.all(
+              color: const Color.fromRGBO(255, 255, 255, 0.12),
+              width: 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.18),
+                blurRadius: 14,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // Botón de turno
+                  InkWell(
+                    onTap: () {
+                      if (!turnoActivo) {
+                        turnoController.iniciarTurno();
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: turnoActivo
+                            ? const Color(0xFF22C55E).withValues(alpha: 0.18)
+                            : const Color(0xFFEF4444).withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: turnoActivo
+                              ? const Color(0xFF22C55E).withValues(alpha: 0.4)
+                              : const Color(0xFFEF4444).withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            size: 10,
+                            color: turnoActivo
+                                ? const Color(0xFF22C55E)
+                                : const Color(0xFFEF4444),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            turnoActivo ? 'Turno activo' : 'Iniciar turno',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    turnoActivo ? 'Turno en curso' : ' ${DateFormat('HH:mm:ss').format(DateTime.now())}',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isTablet ? 16 : 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (turno != null)
+                    Text(
+                      '${DateFormat('HH:mm').format(turno.horaInicio)} - ${DateFormat('HH:mm').format(turno.horaFinProgramada)}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.w500,
+                        fontSize: isTablet ? 16 : 14,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  for (int i = 0; i < stats.length; i++) ...[
+                    Expanded(
+                      child: _ShiftOverviewItem(
+                        stat: stats[i],
+                        isTablet: isTablet,
+                      ),
+                    ),
+                    if (i < stats.length - 1)
+                      Container(
+                        width: 1,
+                        height: isTablet ? 60 : 54,
+                        margin: EdgeInsets.symmetric(
+                          horizontal: isTablet ? 6 : 4,
+                        ),
+                        color: const Color.fromRGBO(255, 255, 255, 0.12),
+                      ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => _buildShiftOverviewSkeleton(isTablet, stats),
+      error: (_, __) => _buildShiftOverviewSkeleton(isTablet, stats),
+    );
+  }
+
+  Widget _buildShiftOverviewSkeleton(bool isTablet, List<_ShiftStat> stats) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isTablet ? 24 : 18,
@@ -226,50 +354,19 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF22C55E).withValues(alpha: 0.18),
+                  color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF22C55E).withValues(alpha: 0.4),
-                  ),
                 ),
                 child: const Row(
                   children: [
-                    Icon(
-                      Icons.circle,
-                      size: 10,
-                      color: Color(0xFF22C55E),
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Turno activo',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    SizedBox(width: 10),
+                    SizedBox(
+                      width: 80,
+                      height: 12,
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Turno en curso',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: isTablet ? 16 : 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '10:00 - 18:00',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontWeight: FontWeight.w500,
-                  fontSize: isTablet ? 16 : 14,
                 ),
               ),
             ],
