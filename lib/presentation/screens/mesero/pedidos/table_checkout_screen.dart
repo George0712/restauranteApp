@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
+import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
 import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 
 class TableCheckoutScreen extends ConsumerStatefulWidget {
@@ -134,7 +135,7 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
                                     statusColor: statusColor,
                                     isPriority: isPriority,
                                     currencyFormatter: _currencyFormatter,
-                                    onCharge: () => _handleCharge(pedido.id),
+                                    onCharge: () => _handleCharge(pedido),
                                     onViewTicket: () => _openTicket(pedido.id, pedido),
                                   ),
                                 );
@@ -518,23 +519,67 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
     return priorityLevel == 'alta';
   }
 
-  Future<void> _handleCharge(String pedidoId) async {
+  Future<void> _handleCharge(Pedido pedido) async {
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => PaymentBottomSheet(
-        pedidoId: pedidoId,
+        pedidoId: pedido.id,
         onPaid: () => SnackbarHelper.showSuccess('Pago registrado correctamente'),
       ),
     );
 
-    if (result == true) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOutCubic,
+    if (result == true && mounted) {
+      // Liberar la mesa si es un pedido de mesa
+      if (pedido.mode.toLowerCase() == 'mesa' && pedido.mesaId != null) {
+        await _liberarMesaTrasPago(pedido);
+      }
+
+      // Navegar al ticket para mostrar el comprobante
+      if (mounted) {
+        _openTicket(pedido.id, pedido);
+      }
+    }
+  }
+
+  /// Libera la mesa después de completar el pago
+  Future<void> _liberarMesaTrasPago(Pedido pedido) async {
+    try {
+      final mesaIdInt = pedido.mesaId is String
+          ? int.tryParse(pedido.mesaId.toString())
+          : (pedido.mesaId is int ? pedido.mesaId as int : null);
+
+      if (mesaIdInt == null) return;
+
+      // Buscar la mesa en el provider
+      final mesas = ref.read(mesasStreamProvider).value ?? [];
+      final mesa = mesas.firstWhere(
+        (m) => m.id == mesaIdInt,
+        orElse: () => throw Exception('Mesa no encontrada'),
       );
+
+      // Actualizar la mesa a disponible
+      final mesaActualizada = mesa.copyWith(
+        estado: 'disponible',
+        cliente: null,
+        tiempo: null,
+        pedidoId: null,
+        horaOcupacion: null,
+        total: null,
+        fechaReserva: null,
+      );
+
+      await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+
+      if (mounted) {
+        SnackbarHelper.showInfo(
+          'Mesa ${mesa.id} liberada automáticamente después del pago.',
+        );
+      }
+    } catch (e) {
+      // Silenciosamente fallar si no se puede liberar la mesa
+      debugPrint('Error al liberar mesa tras pago: $e');
     }
   }
 

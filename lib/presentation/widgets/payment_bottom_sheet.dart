@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 
@@ -442,9 +443,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
       setState(() {
         _errorMessage = 'No pudimos registrar el pago. Intenta nuevamente.';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrar pago: $e')),
-      );
+      SnackbarHelper.showError('Error al registrar pago: $e');
     } finally {
       if (mounted) {
         setState(() {

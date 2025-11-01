@@ -78,7 +78,6 @@ class _SeleccionProductosScreenState
     });
   }
 
-
   // ✅ NUEVO: Metodo para cargar el carrito desde Firestore
   Future<void> _cargarCarritoDelPedido() async {
     try {
@@ -144,10 +143,10 @@ class _SeleccionProductosScreenState
                         if (scrollInfo is ScrollUpdateNotification) {
                           final pixels = scrollInfo.metrics.pixels;
                           // Usar histéresis para evitar rebotes
-                          final shouldBeScrolled = _isScrolled 
-                              ? pixels > 20  // threshold más bajo para volver
+                          final shouldBeScrolled = _isScrolled
+                              ? pixels > 20 // threshold más bajo para volver
                               : pixels > 40; // threshold más alto para activar
-                          
+
                           if (shouldBeScrolled != _isScrolled) {
                             setState(() {
                               _isScrolled = shouldBeScrolled;
@@ -201,14 +200,15 @@ class _SeleccionProductosScreenState
     );
   }
 
-  PreferredSizeWidget _buildAnimatedAppBar(BuildContext context, List<ItemCarrito> carrito) {
+  PreferredSizeWidget _buildAnimatedAppBar(
+      BuildContext context, List<ItemCarrito> carrito) {
     return PreferredSize(
       preferredSize: Size.fromHeight(_isScrolled ? 100 : 56),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeInOutCubic,
         decoration: BoxDecoration(
-          gradient: _isScrolled 
+          gradient: _isScrolled
               ? LinearGradient(
                   colors: [
                     const Color(0xFF0F0F23).withValues(alpha: 0.96),
@@ -218,19 +218,23 @@ class _SeleccionProductosScreenState
                   end: Alignment.bottomRight,
                 )
               : null,
-          border: _isScrolled ? Border(
-            bottom: BorderSide(
-              color: Colors.white.withValues(alpha: 0.15),
-              width: 1,
-            ),
-          ) : null,
-          boxShadow: _isScrolled ? [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
-            ),
-          ] : null,
+          border: _isScrolled
+              ? Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    width: 1,
+                  ),
+                )
+              : null,
+          boxShadow: _isScrolled
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
         child: SafeArea(
           child: ClipRect(
@@ -251,8 +255,8 @@ class _SeleccionProductosScreenState
                   ),
                 );
               },
-              child: _isScrolled 
-                  ? _buildCompactAppBarContent(context, carrito) 
+              child: _isScrolled
+                  ? _buildCompactAppBarContent(context, carrito)
                   : _buildNormalAppBarContent(context, carrito),
             ),
           ),
@@ -261,7 +265,8 @@ class _SeleccionProductosScreenState
     );
   }
 
-  Widget _buildNormalAppBarContent(BuildContext context, List<ItemCarrito> carrito) {
+  Widget _buildNormalAppBarContent(
+      BuildContext context, List<ItemCarrito> carrito) {
     return Padding(
       key: const ValueKey('normal'),
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -269,7 +274,7 @@ class _SeleccionProductosScreenState
         children: [
           IconButton(
             icon: const Icon(
-              Icons.arrow_back_ios_new_outlined, 
+              Icons.arrow_back_ios_new_outlined,
               color: Colors.white,
             ),
             onPressed: () => context.pop(),
@@ -279,7 +284,7 @@ class _SeleccionProductosScreenState
             children: [
               IconButton(
                 icon: const Icon(
-                  Icons.shopping_cart_outlined, 
+                  Icons.shopping_cart_outlined,
                   color: Colors.white,
                 ),
                 onPressed: () => _mostrarCarrito(context),
@@ -309,7 +314,9 @@ class _SeleccionProductosScreenState
                       ],
                     ),
                     child: Text(
-                      carrito.fold(0, (total, item) => total + item.cantidad).toString(),
+                      carrito
+                          .fold(0, (total, item) => total + item.cantidad)
+                          .toString(),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -325,16 +332,17 @@ class _SeleccionProductosScreenState
     );
   }
 
-  Widget _buildCompactAppBarContent(BuildContext context, List<ItemCarrito> carrito) {
+  Widget _buildCompactAppBarContent(
+      BuildContext context, List<ItemCarrito> carrito) {
     final categoriasAsync = ref.watch(categoryDisponibleProvider);
-    
+
     return categoriasAsync.when(
       data: (categoriasList) {
         final nombresCategorias = [
           'Todas',
           ...categoriasList.map((c) => c.name).toList()
         ];
-        
+
         return Padding(
           key: const ValueKey('compact'),
           padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
@@ -347,7 +355,7 @@ class _SeleccionProductosScreenState
                 children: [
                   IconButton(
                     icon: const Icon(
-                      Icons.arrow_back_ios_new_outlined, 
+                      Icons.arrow_back_ios_new_outlined,
                       color: Colors.white,
                       size: 20,
                     ),
@@ -359,23 +367,24 @@ class _SeleccionProductosScreenState
                       height: 34,
                       child: TextField(
                         controller: _searchController,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 14),
                         decoration: InputDecoration(
                           hintText: 'Buscar productos...',
                           hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6), 
+                            color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 14,
                           ),
                           prefixIcon: Icon(
-                            Icons.search, 
-                            color: Colors.white.withValues(alpha: 0.7), 
+                            Icons.search,
+                            color: Colors.white.withValues(alpha: 0.7),
                             size: 20,
                           ),
                           suffixIcon: filtroTexto.isNotEmpty
                               ? IconButton(
                                   icon: Icon(
-                                    Icons.clear, 
-                                    color: Colors.white.withValues(alpha: 0.7), 
+                                    Icons.clear,
+                                    color: Colors.white.withValues(alpha: 0.7),
                                     size: 18,
                                   ),
                                   onPressed: () {
@@ -398,18 +407,19 @@ class _SeleccionProductosScreenState
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: Color(0xFF8B5CF6), 
+                              color: Color(0xFF8B5CF6),
                               width: 1.5,
                             ),
                           ),
                           filled: true,
                           fillColor: Colors.white.withValues(alpha: 0.08),
                           contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, 
+                            horizontal: 12,
                             vertical: 8,
                           ),
                         ),
-                        onChanged: (value) => setState(() => filtroTexto = value),
+                        onChanged: (value) =>
+                            setState(() => filtroTexto = value),
                       ),
                     ),
                   ),
@@ -426,7 +436,7 @@ class _SeleccionProductosScreenState
                   itemBuilder: (context, index) {
                     final categoria = nombresCategorias[index];
                     final isSelected = categoriaSeleccionada == categoria;
-                    
+
                     return GestureDetector(
                       onTap: () {
                         setState(() {
@@ -434,7 +444,8 @@ class _SeleccionProductosScreenState
                           if (index == 0) {
                             categoriaIdSeleccionada = '';
                           } else {
-                            categoriaIdSeleccionada = categoriasList[index - 1].id;
+                            categoriaIdSeleccionada =
+                                categoriasList[index - 1].id;
                           }
                         });
                       },
@@ -446,7 +457,7 @@ class _SeleccionProductosScreenState
                           right: index == nombresCategorias.length - 1 ? 0 : 6,
                         ),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 16, 
+                          horizontal: 16,
                           vertical: 6,
                         ),
                         constraints: BoxConstraints(
@@ -454,7 +465,7 @@ class _SeleccionProductosScreenState
                           maxWidth: 120,
                         ),
                         decoration: BoxDecoration(
-                          gradient: isSelected 
+                          gradient: isSelected
                               ? const LinearGradient(
                                   colors: [
                                     Color(0xFF8B5CF6),
@@ -464,35 +475,38 @@ class _SeleccionProductosScreenState
                                   end: Alignment.bottomRight,
                                 )
                               : null,
-                          color: isSelected 
-                              ? null 
+                          color: isSelected
+                              ? null
                               : Colors.white.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isSelected 
+                            color: isSelected
                                 ? Colors.transparent
                                 : Colors.white.withValues(alpha: 0.2),
                             width: 1,
                           ),
-                          boxShadow: isSelected ? [
-                            BoxShadow(
-                              color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ] : null,
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF8B5CF6)
+                                        .withValues(alpha: 0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Center(
                           child: Text(
-                            categoria.length > 9 
-                                ? '${categoria.substring(0, 8)}...' 
+                            categoria.length > 9
+                                ? '${categoria.substring(0, 8)}...'
                                 : categoria,
                             style: TextStyle(
-                              color: isSelected 
-                                  ? Colors.white 
+                              color: isSelected
+                                  ? Colors.white
                                   : Colors.white.withValues(alpha: 0.9),
-                              fontWeight: isSelected 
-                                  ? FontWeight.w700 
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
                                   : FontWeight.w500,
                               fontSize: 11,
                               letterSpacing: 0.2,
@@ -518,7 +532,7 @@ class _SeleccionProductosScreenState
           children: [
             IconButton(
               icon: const Icon(
-                Icons.arrow_back_ios_new_outlined, 
+                Icons.arrow_back_ios_new_outlined,
                 color: Colors.white,
               ),
               onPressed: () => context.pop(),
@@ -572,7 +586,8 @@ class _SeleccionProductosScreenState
               const SizedBox(width: 12),
               if (orderMode == 'mesa' && widget.mesaNombre != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(999),
@@ -591,7 +606,8 @@ class _SeleccionProductosScreenState
                 ),
               if (orderMode == 'domicilio')
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(999),
@@ -636,8 +652,10 @@ class _SeleccionProductosScreenState
             if (clienteTelefono != null && clienteTelefono.trim().isNotEmpty)
               _buildDeliveryInfoRow(Icons.phone_rounded, clienteTelefono),
             if (clienteDireccion != null && clienteDireccion.trim().isNotEmpty)
-              _buildDeliveryInfoRow(Icons.location_on_rounded, clienteDireccion),
-            if (clienteReferencia != null && clienteReferencia.trim().isNotEmpty)
+              _buildDeliveryInfoRow(
+                  Icons.location_on_rounded, clienteDireccion),
+            if (clienteReferencia != null &&
+                clienteReferencia.trim().isNotEmpty)
               _buildDeliveryInfoRow(Icons.push_pin_outlined, clienteReferencia),
           ],
           const SizedBox(height: 4),
@@ -678,10 +696,12 @@ class _SeleccionProductosScreenState
         decoration: InputDecoration(
           hintText: 'Buscar productos...',
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-          prefixIcon: Icon(Icons.search, color: Colors.white.withValues(alpha: 0.7)),
+          prefixIcon:
+              Icon(Icons.search, color: Colors.white.withValues(alpha: 0.7)),
           suffixIcon: filtroTexto.isNotEmpty
               ? IconButton(
-                  icon: Icon(Icons.clear, color: Colors.white.withValues(alpha: 0.7)),
+                  icon: Icon(Icons.clear,
+                      color: Colors.white.withValues(alpha: 0.7)),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => filtroTexto = '');
@@ -708,7 +728,6 @@ class _SeleccionProductosScreenState
     );
   }
 
-
   Widget _buildExtrasBanner() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -716,14 +735,14 @@ class _SeleccionProductosScreenState
         decoration: BoxDecoration(
           color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.3)),
+          border:
+              Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.3)),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: const Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.add_circle_outline,
-                color: Color(0xFF8B5CF6), size: 20),
+            Icon(Icons.add_circle_outline, color: Color(0xFF8B5CF6), size: 20),
             SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -796,7 +815,7 @@ class _SeleccionProductosScreenState
                         : Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(
-                      color: isSelected 
+                      color: isSelected
                           ? const Color(0xFF8B5CF6)
                           : Colors.white.withValues(alpha: 0.2),
                     ),
@@ -813,7 +832,9 @@ class _SeleccionProductosScreenState
                   child: Text(
                     categoria,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.8),
+                      color: isSelected
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.8),
                       fontWeight:
                           isSelected ? FontWeight.w600 : FontWeight.w500,
                       fontSize: 14,
@@ -829,7 +850,6 @@ class _SeleccionProductosScreenState
       error: (error, stack) => Text('Error: $error'),
     );
   }
-
 
   Widget _buildProductosGrid(List<ProductModel> productos) {
     final productosFiltrados = productos.where((producto) {
@@ -882,7 +902,6 @@ class _SeleccionProductosScreenState
     );
   }
 
-
   Widget _buildProductoCard(ProductModel producto) {
     return GestureDetector(
       onTap: () => _mostrarDetalleProducto(producto),
@@ -911,7 +930,7 @@ class _SeleccionProductosScreenState
               offset: const Offset(0, 3),
             ),
             BoxShadow(
-              color: producto.disponible 
+              color: producto.disponible
                   ? const Color(0xFF6366F1).withValues(alpha: 0.05)
                   : Colors.transparent,
               blurRadius: 15,
@@ -951,35 +970,39 @@ class _SeleccionProductosScreenState
                             if (loadingProgress == null) return child;
                             return Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
                                     ? loadingProgress.cumulativeBytesLoaded /
                                         loadingProgress.expectedTotalBytes!
                                     : null,
-                                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF6366F1)),
                                 strokeWidth: 3,
                               ),
                             );
                           },
                           errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  const Color(0xFF6366F1).withValues(alpha: 0.15),
-                                  const Color(0xFF8B5CF6).withValues(alpha: 0.08),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                            return Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xFF6366F1)
+                                        .withValues(alpha: 0.15),
+                                    const Color(0xFF8B5CF6)
+                                        .withValues(alpha: 0.08),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                               ),
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.fastfood_rounded,
-                                size: 52,
-                                color: Color(0xFF6366F1),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.fastfood_rounded,
+                                  size: 52,
+                                  color: Color(0xFF6366F1),
+                                ),
                               ),
-                            ),
-                          );
+                            );
                           },
                         ),
                       )
@@ -1041,7 +1064,8 @@ class _SeleccionProductosScreenState
                         top: 10,
                         right: 10,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: const Color(0xFF059669),
                             borderRadius: BorderRadius.circular(12),
@@ -1115,7 +1139,8 @@ class _SeleccionProductosScreenState
                         // PRECIO - Más grande y llamativo
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 colors: [
@@ -1128,7 +1153,8 @@ class _SeleccionProductosScreenState
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                                  color: const Color(0xFF6366F1)
+                                      .withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -1144,7 +1170,9 @@ class _SeleccionProductosScreenState
                                 ),
                                 Flexible(
                                   child: Text(
-                                    producto.price.toStringAsFixed(0).replaceAllMapped(
+                                    producto.price
+                                        .toStringAsFixed(0)
+                                        .replaceAllMapped(
                                           RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
                                           (Match m) => '${m[1]}.',
                                         ),
@@ -1180,7 +1208,8 @@ class _SeleccionProductosScreenState
                             boxShadow: [
                               BoxShadow(
                                 color: producto.disponible
-                                    ? const Color(0xFF059669).withValues(alpha: 0.3)
+                                    ? const Color(0xFF059669)
+                                        .withValues(alpha: 0.3)
                                     : Colors.grey.withValues(alpha: 0.2),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
@@ -1191,7 +1220,9 @@ class _SeleccionProductosScreenState
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(12),
-                              onTap: producto.disponible ? () => _mostrarDetalleProducto(producto) : null,
+                              onTap: producto.disponible
+                                  ? () => _mostrarDetalleProducto(producto)
+                                  : null,
                               child: const Padding(
                                 padding: EdgeInsets.all(10),
                                 child: Icon(
@@ -1223,12 +1254,14 @@ class _SeleccionProductosScreenState
       final precioBase = item.precioUnitario * item.cantidad;
       final precioAdicionales = item.adicionales?.fold<double>(
             0,
-            (adicionalTotal, adicional) => adicionalTotal + (adicional.price * item.cantidad),
+            (adicionalTotal, adicional) =>
+                adicionalTotal + (adicional.price * item.cantidad),
           ) ??
           0;
       return accumulator + precioBase + precioAdicionales;
     });
-    final cantidadTotal = carrito.fold(0, (total, item) => total + item.cantidad);
+    final cantidadTotal =
+        carrito.fold(0, (total, item) => total + item.cantidad);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1336,15 +1369,20 @@ class _SeleccionProductosScreenState
         onConfirmarYPagar: () => _confirmarPedidoYPagar(context),
         onConfirmarYPagarTakeaway: () => _confirmarYPagarTakeaway(context),
         onConfirmarYPagarDelivery: () => _confirmarYPagarDelivery(context),
-        onRegistrarPago: () { _registrarPago(context); },
+        onRegistrarPago: () {
+          _registrarPago(context);
+        },
         onModificarPedido: () => _modificarPedido(context),
         onCancelarPedido: () => _cancelarPedido(context),
-        onActualizarPedido: () { _actualizarPedidoExistente(context); },
+        onActualizarPedido: () {
+          _actualizarPedidoExistente(context);
+        },
         onReportIssue: () => _reportarProblema(context),
         onGenerarTicket: () => _mostrarTicketDesdeCarrito(context),
       ),
     );
   }
+
   Future<void> _confirmarPedidoSinPagar(BuildContext sheetContext) async {
     final carrito = ref.read(carritoProvider);
     if (carrito.isEmpty) {
@@ -1364,6 +1402,7 @@ class _SeleccionProductosScreenState
       _mostrarError(context, 'Error al confirmar pedido: $e');
     }
   }
+
   Future<void> _confirmarPedidoYPagar(BuildContext sheetContext) async {
     final carrito = ref.read(carritoProvider);
     if (carrito.isEmpty) {
@@ -1436,14 +1475,11 @@ class _SeleccionProductosScreenState
           const SnackBar(content: Text('Pago registrado correctamente')),
         );
 
-        // Generar y mostrar el ticket
-        final ticketInfo = await _generarTicketFactura(context, mostrarMensaje: false);
-        await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
-
-        // Volver a la pantalla anterior después de completar todo
-        if (mounted) {
-          context.pop();
-        }
+        // Generar y mostrar el ticket, reemplazando la pantalla actual
+        // para que al cerrar el ticket se vuelva a la pantalla anterior (takeaway list)
+        final ticketInfo =
+            await _generarTicketFactura(context, mostrarMensaje: false);
+        await _abrirTicketPreviewYCerrarPedido(ticketId: ticketInfo?['ticketId'] as String?);
       }
     } catch (e) {
       if (!mounted) return;
@@ -1504,7 +1540,7 @@ class _SeleccionProductosScreenState
 
         paymentData['processedBy'] = user.uid;
         paymentData['processedByName'] = processedByName;
-      
+
         await FirebaseFirestore.instance
             .collection('pedido')
             .doc(widget.pedidoId)
@@ -1519,8 +1555,8 @@ class _SeleccionProductosScreenState
 
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pedido enviado a cocina - Pago pendiente al entregar')),
+        SnackbarHelper.showInfo(
+          'Pedido enviado a cocina - Pago pendiente al entregar',
         );
 
         // Volver a la pantalla anterior
@@ -1538,7 +1574,7 @@ class _SeleccionProductosScreenState
 
         paymentData['processedBy'] = user.uid;
         paymentData['processedByName'] = processedByName;
-      
+
         await FirebaseFirestore.instance
             .collection('pedido')
             .doc(widget.pedidoId)
@@ -1554,18 +1590,15 @@ class _SeleccionProductosScreenState
 
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pedido enviado a cocina y pago registrado')),
+        SnackbarHelper.showSuccess(
+          'Pago en efectivo registrado correctamente',
         );
 
-        // Generar y mostrar el ticket
-        final ticketInfo = await _generarTicketFactura(context, mostrarMensaje: false);
-        await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
-
-        // Volver a la pantalla anterior
-        if (mounted) {
-          context.pop();
-        }
+        // Generar y mostrar el ticket, reemplazando la pantalla actual
+        // para que al cerrar el ticket se vuelva a la pantalla anterior (delivery list)
+        final ticketInfo =
+            await _generarTicketFactura(context, mostrarMensaje: false);
+        await _abrirTicketPreviewYCerrarPedido(ticketId: ticketInfo?['ticketId'] as String?);
       }
     } catch (e) {
       if (!mounted) return;
@@ -1590,15 +1623,18 @@ class _SeleccionProductosScreenState
       await _crearActualizarPedido(carrito, estadoActual, pagadoActual);
       await _cargarCarritoDelPedido();
       if (!mounted) return;
-      Navigator.of(sheetContext).pop();
+      if (sheetContext.mounted) {
+        Navigator.of(sheetContext).pop();
+      }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido actualizado y enviado a cocina')),
+      SnackbarHelper.showSuccess(
+        'Pedido actualizado y enviado a cocina',
       );
     } catch (e) {
       _mostrarError(context, 'Error al actualizar el pedido: $e');
     }
   }
+
   Future<void> _registrarPago(BuildContext sheetContext) async {
     Map<String, dynamic>? pedidoData;
     try {
@@ -1621,12 +1657,8 @@ class _SeleccionProductosScreenState
           estadoNormalizado == 'completado';
       if (!pagado && !esEstadoTerminado) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Debes marcar el pedido como terminado antes de registrar el pago.',
-            ),
-          ),
+        SnackbarHelper.showInfo(
+          'Debes marcar el pedido como terminado antes de registrar el pago.',
         );
         return;
       }
@@ -1636,7 +1668,9 @@ class _SeleccionProductosScreenState
       return;
     }
     if (!mounted) return;
-    Navigator.of(sheetContext).pop();
+    if (sheetContext.mounted) {
+      Navigator.of(sheetContext).pop();
+    }
     try {
       if (!mounted) return;
       final pagoCompletado = await showModalBottomSheet<bool>(
@@ -1651,27 +1685,22 @@ class _SeleccionProductosScreenState
       if (pagoCompletado == true) {
         await _cargarCarritoDelPedido();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago registrado correctamente.')),
+        SnackbarHelper.showSuccess(
+          'Pago registrado correctamente.',
         );
         if (!mounted) return;
         final ticketInfo =
             await _generarTicketFactura(context, mostrarMensaje: false);
-        await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
-          bool mesaLiberada = true;
-          if (widget.orderMode.toLowerCase() == 'mesa') {
-            mesaLiberada = await _liberarMesaTrasPago(pedidoData: pedidoData);
-          }
-          if (mesaLiberada && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'La mesa se liberó automaticamente después del pago.',
-              ),
-            ),
-          );
-          _volverAPantallaDeMesas();
+
+        // Liberar mesa antes de navegar al ticket
+        if (widget.orderMode.toLowerCase() == 'mesa') {
+          await _liberarMesaTrasPago(pedidoData: pedidoData);
         }
+
+        // Navegar al ticket y remover la pantalla actual del stack
+        // para que al cerrar el ticket se vuelva a mesas
+        if (!mounted) return;
+        await _abrirTicketPreviewYCerrarPedido(ticketId: ticketInfo?['ticketId'] as String?);
       }
     } catch (e) {
       if (!mounted) return;
@@ -1724,6 +1753,7 @@ class _SeleccionProductosScreenState
       return false;
     }
   }
+
   Future<MesaModel?> _obtenerMesaDesdeFirestore(int mesaId) async {
     try {
       final query = await FirebaseFirestore.instance
@@ -1750,7 +1780,9 @@ class _SeleccionProductosScreenState
       return;
     }
     if (!mounted) return;
-    Navigator.of(sheetContext).pop();
+    if (sheetContext.mounted) {
+      Navigator.of(sheetContext).pop();
+    }
     await _abrirTicketPreview(ticketId: ticketInfo['ticketId'] as String?);
   }
 
@@ -1776,6 +1808,35 @@ class _SeleccionProductosScreenState
       queryParameters: queryParams.isEmpty ? null : queryParams,
     );
     context.push(uri.toString());
+  }
+
+  /// Navega al ticket preview y cierra la pantalla actual de pedido
+  /// para que al cerrar el ticket se vuelva directamente a mesas
+  Future<void> _abrirTicketPreviewYCerrarPedido({String? ticketId}) async {
+    if (!mounted) return;
+    final queryParams = <String, String>{};
+    if (widget.mesaId != null && widget.mesaId!.isNotEmpty) {
+      queryParams['mesaId'] = widget.mesaId!;
+    }
+    final mesaNombre = _decodeIfNeeded(widget.mesaNombre);
+    final clienteNombre = _decodeIfNeeded(widget.clienteNombre);
+    if (mesaNombre != null && mesaNombre.isNotEmpty) {
+      queryParams['mesaNombre'] = mesaNombre;
+    }
+    if (clienteNombre != null && clienteNombre.isNotEmpty) {
+      queryParams['clienteNombre'] = clienteNombre;
+    }
+    if (ticketId != null && ticketId.isNotEmpty) {
+      queryParams['ticketId'] = ticketId;
+    }
+    final uri = Uri(
+      path: '/mesero/pedidos/ticket/${widget.pedidoId}',
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+
+    // Usar pushReplacement para reemplazar la pantalla actual con el ticket
+    // Así cuando se cierre el ticket, volverá a la pantalla anterior (mesas)
+    context.pushReplacement(uri.toString());
   }
 
   Future<void> _actualizarMesaTrasCancelacion({
@@ -1822,23 +1883,23 @@ class _SeleccionProductosScreenState
     }
   }
 
-  Future<Map<String, dynamic>?> _generarTicketFactura(
-      BuildContext context, {bool mostrarMensaje = true}) async {
+  Future<Map<String, dynamic>?> _generarTicketFactura(BuildContext context,
+      {bool mostrarMensaje = true}) async {
     try {
-      final pedidoRef = FirebaseFirestore.instance
-          .collection('pedido')
-          .doc(widget.pedidoId);
+      final pedidoRef =
+          FirebaseFirestore.instance.collection('pedido').doc(widget.pedidoId);
       final pedidoSnapshot = await pedidoRef.get();
       if (!pedidoSnapshot.exists) {
-        if (mostrarMensaje && mounted) {
-          _mostrarError(context, 'Aun no hay un pedido para generar un ticket.');
+        if (mostrarMensaje && context.mounted) {
+          _mostrarError(
+              context, 'Aun no hay un pedido para generar un ticket.');
         }
         return null;
       }
       final data = pedidoSnapshot.data() as Map<String, dynamic>;
       final items = (data['items'] as List?) ?? [];
       if (items.isEmpty) {
-        if (mostrarMensaje && mounted) {
+        if (mostrarMensaje && context.mounted) {
           _mostrarError(
             context,
             'Agrega productos al pedido antes de generar un ticket.',
@@ -1862,24 +1923,25 @@ class _SeleccionProductosScreenState
         'subtotal': subtotalPedido,
         'total': totalPedido,
         'pagado': pagado,
-      'paymentStatus': pagado ? 'paid' : 'pending',
+        'paymentStatus': pagado ? 'paid' : 'pending',
         'estadoPedido': estado,
         'items': items,
       };
-      final ticketRef = await pedidoRef.collection('tickets').add(ticketForFirestore);
+      final ticketRef =
+          await pedidoRef.collection('tickets').add(ticketForFirestore);
       await pedidoRef.set({
         'ultimoTicketGeneradoAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       if (mostrarMensaje && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ticket generado correctamente')),
+        SnackbarHelper.showSuccess(
+          'Ticket generado correctamente.',
         );
       }
       return {
         'ticketId': ticketRef.id,
       };
     } catch (e) {
-      if (mostrarMensaje) {
+      if (mostrarMensaje && context.mounted) {
         _mostrarError(context, 'Error al generar ticket: $e');
       } else {
         debugPrint('Error al generar ticket: $e');
@@ -1894,10 +1956,8 @@ class _SeleccionProductosScreenState
     setState(() {
       _agregandoExtras = false;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Puedes agregar o quitar productos del pedido'),
-      ),
+    SnackbarHelper.showInfo(
+      'Puedes agregar o quitar productos del pedido',
     );
   }
 
@@ -1906,7 +1966,8 @@ class _SeleccionProductosScreenState
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Cancelar Pedido'),
-        content: const Text('Estas seguro de que quieres cancelar este pedido?'),
+        content:
+            const Text('Estas seguro de que quieres cancelar este pedido?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -1960,9 +2021,10 @@ class _SeleccionProductosScreenState
         );
         if (mesaIdInt != null) {
           final nuevoPedidoId = const Uuid().v4();
-          final etiquetaMesa = (mesaNombre != null && mesaNombre.trim().isNotEmpty)
-              ? mesaNombre
-              : 'Mesa $mesaIdInt';
+          final etiquetaMesa =
+              (mesaNombre != null && mesaNombre.trim().isNotEmpty)
+                  ? mesaNombre
+                  : 'Mesa $mesaIdInt';
           final nuevoPedidoData = <String, dynamic>{
             'id': nuevoPedidoId,
             'items': const [],
@@ -1994,7 +2056,9 @@ class _SeleccionProductosScreenState
             clienteNombre: clienteNombre,
           );
           if (!mounted) return;
-          Navigator.of(sheetContext).pop();
+          if (sheetContext.mounted) {
+            Navigator.of(sheetContext).pop();
+          }
           if (!mounted) return;
           setState(() {
             _agregandoExtras = false;
@@ -2009,7 +2073,9 @@ class _SeleccionProductosScreenState
           );
         } else {
           if (!mounted) return;
-          Navigator.of(sheetContext).pop();
+          if (sheetContext.mounted) {
+            Navigator.of(sheetContext).pop();
+          }
           if (!mounted) return;
           setState(() {
             _agregandoExtras = false;
@@ -2028,7 +2094,7 @@ class _SeleccionProductosScreenState
     }
   }
 
-   Future<void> _crearActualizarPedido(
+  Future<void> _crearActualizarPedido(
       List<ItemCarrito> carrito, String status, bool pagado) async {
     final adicionalesAsync = await ref.read(additionalProvider.future);
     // Obtener informacion del mesero
@@ -2056,21 +2122,25 @@ class _SeleccionProductosScreenState
       final precioBase = item.precioUnitario * item.cantidad;
       final precioAdicionales = item.adicionales?.fold<double>(
             0,
-            (adicionalTotal, adicional) => adicionalTotal + (adicional.price * item.cantidad),
+            (adicionalTotal, adicional) =>
+                adicionalTotal + (adicional.price * item.cantidad),
           ) ??
           0;
       return accumulator + precioBase + precioAdicionales;
     });
     final orderMode = widget.orderMode.toLowerCase();
-    final mesaIdInt =
-        (orderMode == 'mesa' && widget.mesaId != null) ? int.tryParse(widget.mesaId!) : null;
+    final mesaIdInt = (orderMode == 'mesa' && widget.mesaId != null)
+        ? int.tryParse(widget.mesaId!)
+        : null;
     final mesaNombre = _decodeIfNeeded(widget.mesaNombre);
     final clienteNombre = _decodeIfNeeded(widget.clienteNombre);
     final clienteTelefono = _decodeIfNeeded(widget.clienteTelefono);
     final clienteDireccion = _decodeIfNeeded(widget.clienteDireccion);
     final clienteReferencia = _decodeIfNeeded(widget.clienteReferencia);
     final tableNumber = orderMode == 'mesa'
-        ? (mesaNombre ?? (mesaIdInt != null ? 'Mesa $mesaIdInt' : null) ?? widget.pedidoId)
+        ? (mesaNombre ??
+            (mesaIdInt != null ? 'Mesa $mesaIdInt' : null) ??
+            widget.pedidoId)
         : null;
 
     final pedidoData = <String, dynamic>{
@@ -2125,6 +2195,7 @@ class _SeleccionProductosScreenState
       pedidoConfirmado = status != 'nuevo';
     });
   }
+
   double _asDouble(dynamic value) {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0;
@@ -2150,8 +2221,8 @@ class _SeleccionProductosScreenState
 
   Future<void> _reportarProblema(BuildContext context) async {
     // TODO: Implement report issue functionality
-    SnackbarHelper.showInfo('Funcionalidad de reporte de problemas próximamente');
-   
+    SnackbarHelper.showInfo(
+        'Funcionalidad de reporte de problemas próximamente');
   }
 
   String _capitalizeFirstLetter(String text) {
@@ -2171,10 +2242,12 @@ class _DeliveryPaymentOptionsSheet extends StatefulWidget {
   });
 
   @override
-  State<_DeliveryPaymentOptionsSheet> createState() => _DeliveryPaymentOptionsSheetState();
+  State<_DeliveryPaymentOptionsSheet> createState() =>
+      _DeliveryPaymentOptionsSheetState();
 }
 
-class _DeliveryPaymentOptionsSheetState extends State<_DeliveryPaymentOptionsSheet> {
+class _DeliveryPaymentOptionsSheetState
+    extends State<_DeliveryPaymentOptionsSheet> {
   String _selectedMethod = 'cash';
 
   @override
@@ -2282,7 +2355,8 @@ class _DeliveryPaymentOptionsSheetState extends State<_DeliveryPaymentOptionsShe
                 'El pago se registra ahora y se envía a cocina',
                 style: TextStyle(color: Colors.grey.shade400),
               ),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               activeColor: const Color(0xFF22C55E),
             ),
           ),
@@ -2310,7 +2384,8 @@ class _DeliveryPaymentOptionsSheetState extends State<_DeliveryPaymentOptionsShe
                 'El cliente pagará cuando reciba el pedido',
                 style: TextStyle(color: Colors.grey.shade400),
               ),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               activeColor: const Color(0xFFF59E0B),
             ),
           ),
@@ -2365,5 +2440,3 @@ class _DeliveryPaymentOptionsSheetState extends State<_DeliveryPaymentOptionsShe
     );
   }
 }
-
-

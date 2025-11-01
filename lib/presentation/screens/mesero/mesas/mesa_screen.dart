@@ -76,8 +76,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     return mesasAsync.when(
       data: (mesas) {
         final mesasFiltradas = _filtrarMesas(mesas);
-        final mesaSeleccionada =
-            _obtenerMesaSeleccionada(mesasFiltradas, mesaSeleccionadaId);
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) {
@@ -414,16 +412,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       return mesas;
     }
     return mesas.where((m) => m.estado == filtro).toList();
-  }
-
-  MesaModel? _obtenerMesaSeleccionada(List<MesaModel> mesas, int? seleccionId) {
-    if (seleccionId == null) return null;
-    for (final mesa in mesas) {
-      if (mesa.id == seleccionId) {
-        return mesa;
-      }
-    }
-    return null;
   }
 
   void _mostrarOpcionesMesa(MesaModel mesa) {
@@ -1483,6 +1471,14 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       if (cobroCompletado == true && mounted) {
         setState(() => mesaSeleccionadaId = null);
         SnackbarHelper.showSuccess('Pago registrado correctamente.');
+
+        // Liberar la mesa después del pago
+        await _liberarMesaTrasPago(mesa, pedidoId);
+
+        // Navegar al ticket para mostrar el comprobante
+        if (mounted) {
+          _navegarAlTicket(mesa, pedidoId);
+        }
       }
     } catch (e) {
       if (!mounted) {
@@ -1668,5 +1664,57 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         ],
       ),
     );
+  }
+
+  /// Libera la mesa después de completar el pago
+  Future<void> _liberarMesaTrasPago(MesaModel mesa, String pedidoId) async {
+    try {
+      final mesaActualizada = mesa.copyWith(
+        estado: 'disponible',
+        cliente: null,
+        tiempo: null,
+        pedidoId: null,
+        horaOcupacion: null,
+        total: null,
+        fechaReserva: null,
+      );
+
+      await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
+
+      if (mounted) {
+        SnackbarHelper.showInfo(
+          'Mesa ${mesa.id} liberada automáticamente después del pago.',
+        );
+      }
+    } catch (e) {
+      developer.log('Error al liberar mesa tras pago: $e');
+    }
+  }
+
+  /// Navega a la pantalla del ticket después de completar el pago
+  void _navegarAlTicket(MesaModel mesa, String pedidoId) {
+    if (!mounted) return;
+
+    final queryParams = <String, String>{};
+
+    if (mesa.id.toString().isNotEmpty) {
+      queryParams['mesaId'] = mesa.id.toString();
+    }
+
+    final mesaNombre = 'Mesa ${mesa.id}';
+    if (mesaNombre.isNotEmpty) {
+      queryParams['mesaNombre'] = mesaNombre;
+    }
+
+    if (mesa.cliente != null && mesa.cliente!.isNotEmpty) {
+      queryParams['clienteNombre'] = mesa.cliente!;
+    }
+
+    final uri = Uri(
+      path: '/mesero/pedidos/ticket/$pedidoId',
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+
+    context.push(uri.toString());
   }
 }

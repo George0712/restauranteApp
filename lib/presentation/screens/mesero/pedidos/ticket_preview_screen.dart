@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 
 class TicketPreviewScreen extends ConsumerStatefulWidget {
@@ -21,7 +23,8 @@ class TicketPreviewScreen extends ConsumerStatefulWidget {
   final String? clienteNombre;
 
   @override
-  ConsumerState<TicketPreviewScreen> createState() => _TicketPreviewScreenState();
+  ConsumerState<TicketPreviewScreen> createState() =>
+      _TicketPreviewScreenState();
 }
 
 class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
@@ -88,7 +91,8 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
                 const SizedBox(height: 20),
                 _TicketItemsList(items: items, formatter: _currency),
                 const SizedBox(height: 20),
-                _TicketTotals(subtotal: subtotal, total: total, formatter: _currency),
+                _TicketTotals(
+                    subtotal: subtotal, total: total, formatter: _currency),
               ],
             ),
           ),
@@ -114,7 +118,15 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
                   ),
                 if (!pagado) const SizedBox(height: 12),
                 OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    final router = GoRouter.of(context);
+                    const fallbackRoute = '/mesero/pedidos/mesas';
+                    if (router.canPop()) {
+                      router.pop();
+                    } else {
+                      router.go(fallbackRoute);
+                    }
+                  },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -156,16 +168,25 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
       builder: (_) => PaymentBottomSheet(pedidoId: widget.pedidoId),
     );
     if (result == true) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pago registrado correctamente.')),
+      if (context.mounted) {
+        SnackbarHelper.showSuccess(
+          'Pago registrado correctamente.',
         );
+        final uri = Uri(
+            path: '/mesero/pedidos/ticket/${widget.pedidoId}',
+            queryParameters: {
+              'mesaId': widget.mesaId,
+              'mesaNombre': widget.mesaNombre,
+              'clienteNombre': widget.clienteNombre,
+              'ticketId': widget.ticketId,
+            }..removeWhere((_, v) => v == null));
+        context.go(uri.toString());
       }
     }
   }
 }
 
-class _TicketHeader extends StatelessWidget {
+class _TicketHeader extends ConsumerWidget {
   const _TicketHeader({
     required this.pedidoId,
     required this.mesaId,
@@ -191,7 +212,7 @@ class _TicketHeader extends StatelessWidget {
   final NumberFormat formatter;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final shortId = pedidoId.length > 8 ? pedidoId.substring(0, 8) : pedidoId;
     return Container(
       width: double.infinity,
@@ -244,7 +265,8 @@ class _TicketHeader extends StatelessWidget {
           const SizedBox(height: 20),
           _InfoRow(label: 'Mesa', value: mesaNombre ?? mesaId ?? 'Sin asignar'),
           const SizedBox(height: 6),
-          _InfoRow(label: 'Cliente', value: clienteNombre ?? 'Consumidor final'),
+          _InfoRow(
+              label: 'Cliente', value: clienteNombre ?? 'Consumidor final'),
           const SizedBox(height: 6),
           _InfoRow(label: 'Estado', value: _estadoLegible(estado)),
           const SizedBox(height: 6),
@@ -265,36 +287,35 @@ class _TicketHeader extends StatelessWidget {
   }
 }
 
-
-  String _estadoLegible(String estado) {
-    switch (estado.toLowerCase()) {
-      case 'pendiente':
-        return 'Pendiente';
-      case 'preparacion':
-      case 'preparando':
-      case 'en_preparacion':
-        return 'En preparacion';
-      case 'terminado':
-        return 'Terminado';
-      case 'listo':
-        return 'Listo';
-      case 'cancelado':
-        return 'Cancelado';
-      case 'entregado':
-        return 'Entregado';
-      default:
-        return estado.isEmpty ? 'Pendiente' : estado;
-    }
+String _estadoLegible(String estado) {
+  switch (estado.toLowerCase()) {
+    case 'pendiente':
+      return 'Pendiente';
+    case 'preparacion':
+    case 'preparando':
+    case 'en_preparacion':
+      return 'En preparacion';
+    case 'terminado':
+      return 'Terminado';
+    case 'listo':
+      return 'Listo';
+    case 'cancelado':
+      return 'Cancelado';
+    case 'entregado':
+      return 'Entregado';
+    default:
+      return estado.isEmpty ? 'Pendiente' : estado;
   }
+}
 
-class _TicketItemsList extends StatelessWidget {
+class _TicketItemsList extends ConsumerWidget {
   const _TicketItemsList({required this.items, required this.formatter});
 
   final List items;
   final NumberFormat formatter;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (items.isEmpty) {
       return Container(
         width: double.infinity,
@@ -371,7 +392,8 @@ class _TicketItemsList extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               'Nota: $notas',
-                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.black54),
                             ),
                           ],
                         ],
@@ -406,7 +428,8 @@ class _TicketItemsList extends StatelessWidget {
     final adicionales = (item['adicionales'] as List?) ?? const [];
     final adicionalesTotal = adicionales.fold<double>(
       0,
-      (total, adicional) => total + _toDouble((adicional as Map<String, dynamic>)['price']),
+      (total, adicional) =>
+          total + _toDouble((adicional as Map<String, dynamic>)['price']),
     );
     return (price + adicionalesTotal) * quantity;
   }
@@ -418,14 +441,14 @@ class _TicketItemsList extends StatelessWidget {
   }
 }
 
-class _AdicionalesList extends StatelessWidget {
+class _AdicionalesList extends ConsumerWidget {
   const _AdicionalesList({required this.adicionales, required this.formatter});
 
   final List adicionales;
   final NumberFormat formatter;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: adicionales.map((adicional) {
@@ -447,7 +470,7 @@ class _AdicionalesList extends StatelessWidget {
   }
 }
 
-class _TicketTotals extends StatelessWidget {
+class _TicketTotals extends ConsumerWidget {
   const _TicketTotals({
     required this.subtotal,
     required this.total,
@@ -459,7 +482,7 @@ class _TicketTotals extends StatelessWidget {
   final NumberFormat formatter;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -512,7 +535,7 @@ class _TicketTotals extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
+class _InfoRow extends ConsumerWidget {
   const _InfoRow({
     required this.label,
     required this.value,
@@ -524,7 +547,7 @@ class _InfoRow extends StatelessWidget {
   final bool emphasize;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

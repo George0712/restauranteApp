@@ -203,7 +203,6 @@ class CarritoBottomSheet extends ConsumerWidget {
       if (carrito.isEmpty) {
         return const SizedBox.shrink();
       }
-      // Para pedidos nuevos sin ID asignado, mostrar botones normales
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -212,13 +211,6 @@ class CarritoBottomSheet extends ConsumerWidget {
             label: 'Enviar pedido a cocina',
             onPressed: onConfirmarSinPagar,
             backgroundColor: Theme.of(context).primaryColor,
-          ),
-          const SizedBox(height: 12),
-          _PrimaryButton(
-            icon: Icons.receipt_long,
-            label: 'Enviar y generar ticket',
-            onPressed: onConfirmarYPagar,
-            backgroundColor: Colors.green,
           ),
         ],
       );
@@ -243,15 +235,8 @@ class CarritoBottomSheet extends ConsumerWidget {
                 backgroundColor: Theme.of(context).primaryColor,
               ),
               const SizedBox(height: 12),
-              _PrimaryButton(
-                icon: Icons.receipt_long,
-                label: 'Enviar y generar ticket',
-                onPressed: onConfirmarYPagar,
-                backgroundColor: Colors.green,
-              ),
-              const SizedBox(height: 6),
               Text(
-                'Generar el ticket no marca el pedido como pagado.',
+                'Al enviar el pedido, solo se podrá modificar y cancelar si aún no se encuentra en preparación.',
                 style: TextStyle(
                   fontSize: 12, 
                   color: Colors.white.withValues(alpha: 0.6),
