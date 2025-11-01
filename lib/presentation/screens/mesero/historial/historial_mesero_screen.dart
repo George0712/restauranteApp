@@ -1,27 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:restaurante_app/presentation/widgets/tab_label.dart';
+import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
-class HistorialScreen extends StatefulWidget {
+class HistorialScreen extends ConsumerStatefulWidget {
   const HistorialScreen({super.key});
 
   @override
-  State<HistorialScreen> createState() => _HistorialScreenState();
+  ConsumerState<HistorialScreen> createState() => _HistorialScreenState();
 }
 
-class _HistorialScreenState extends State<HistorialScreen> {
+class _HistorialScreenState extends ConsumerState<HistorialScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
+    final statsAsync = ref.watch(pedidosStatsProvider);
+
+    return statsAsync.when(
+      data: (stats) => _buildHistorialContent(stats),
+      loading: () => _buildLoadingScreen(),
+      error: (error, _) => _buildErrorScreen(error),
+    );
+  }
+
+  Widget _buildHistorialContent(Map<String, int> stats) {
+    final pendingCount = (stats['pendiente'] ?? 0) +
+                        (stats['preparando'] ?? 0) +
+                        (stats['en_preparacion'] ?? 0);
+    final completedCount = (stats['terminado'] ?? 0) +
+                          (stats['pagado'] ?? 0) +
+                          (stats['entregado'] ?? 0) +
+                          (stats['cancelado'] ?? 0);
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -81,7 +102,10 @@ class _HistorialScreenState extends State<HistorialScreen> {
                   const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: _buildCustomTabBar(),
+                    child: _BuildCustomTabBar(
+                      pendingCount: pendingCount,
+                      completedCount: completedCount,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Expanded(
@@ -105,54 +129,99 @@ class _HistorialScreenState extends State<HistorialScreen> {
     );
   }
 
-  Widget _buildCustomTabBar() {
-    final unselectedColor = Colors.white.withValues(alpha: 0.65);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+  Widget _buildLoadingScreen() {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF111827),
+              Color(0xFF0B1120),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Color(0xFF8B5CF6),
+          ),
+        ),
       ),
-      child: TabBar(
-        indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+    );
+  }
+
+  Widget _buildErrorScreen(Object error) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
-        dividerColor: Colors.transparent,
-        indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
-        unselectedLabelColor: unselectedColor,
-        labelStyle: const TextStyle(
-          fontWeight: FontWeight.w700,
-          fontSize: 14,
-          letterSpacing: 0.2,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 13.5,
-        ),
-        tabs: const [
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('En Curso'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF1F2937),
+                Color(0xFF111827),
               ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Completados'),
-              ],
-            ),
+        ),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF111827),
+              Color(0xFF0B1120),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                color: Colors.redAccent,
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Error al cargar estadísticas',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  'Error: $error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -2679,5 +2748,61 @@ class _HistorialScreenState extends State<HistorialScreen> {
     }
     
     return byteData.buffer.asUint8List();
+  }
+}
+
+class _BuildCustomTabBar extends ConsumerWidget {
+    final int pendingCount;
+    final int completedCount;
+    
+
+    const _BuildCustomTabBar({
+      required this.pendingCount,
+      required this.completedCount,
+    });
+
+    @override   
+    Widget build(BuildContext context, WidgetRef ref) {
+      final unselectedColor = Colors.white.withValues(alpha: 0.65);
+      final theme = Theme.of(context);
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        ),
+        child: TabBar(
+          indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+          ),
+          dividerColor: Colors.transparent,
+          indicatorSize: TabBarIndicatorSize.tab,
+          labelColor: theme.primaryColor,
+        unselectedLabelColor: unselectedColor,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+          letterSpacing: 0.2,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 13.5,
+        ),
+        tabs: [
+          TabLabel(
+            label: 'En Curso',
+            count: pendingCount,
+            color: const Color(0xFFF97316),
+          ),
+          TabLabel(
+            label: 'Completados',
+            count: completedCount,
+            color: const Color(0xFFF97316),
+          ),
+        ],
+      ),
+    );
   }
 }

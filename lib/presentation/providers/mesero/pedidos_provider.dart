@@ -182,7 +182,7 @@ final pedidoPorIdProvider = StreamProvider.family<Map<String, dynamic>?, String>
 // ✅ NUEVO: Provider para verificar si un pedido está confirmado
 final pedidoConfirmadoProvider = Provider.family<bool, String?>((ref, pedidoId) {
   if (pedidoId == null) return false;
-  
+
   final pedidoAsync = ref.watch(pedidoPorIdProvider(pedidoId));
   return pedidoAsync.when(
     data: (pedido) {
@@ -194,4 +194,33 @@ final pedidoConfirmadoProvider = Provider.family<bool, String?>((ref, pedidoId) 
     loading: () => false,
     error: (_, __) => false,
   );
+});
+
+// Provider para obtener estadísticas de pedidos por estado
+final pedidosStatsProvider = StreamProvider<Map<String, int>>((ref) {
+  return FirebaseFirestore.instance
+      .collection('pedido')
+      .snapshots()
+      .map((snapshot) {
+    final Map<String, int> stats = {
+      'pendiente': 0,
+      'preparando': 0,
+      'en_preparacion': 0,
+      'terminado': 0,
+      'pagado': 0,
+      'entregado': 0,
+      'cancelado': 0,
+    };
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final status = (data['status'] ?? 'pendiente').toString().toLowerCase();
+
+      if (stats.containsKey(status)) {
+        stats[status] = (stats[status] ?? 0) + 1;
+      }
+    }
+
+    return stats;
+  });
 });

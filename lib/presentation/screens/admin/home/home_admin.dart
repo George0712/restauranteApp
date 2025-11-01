@@ -48,6 +48,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final theme = Theme.of(context);
+    final unselectedColor = Colors.white.withValues(alpha: 0.65);
 
     return DefaultTabController(
       length: 2,
@@ -78,8 +79,8 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                 ),
                 dividerColor: Colors.transparent,
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: Colors.white,
-                unselectedLabelColor: Colors.white.withValues(alpha: 0.65),
+                labelColor: theme.primaryColor,
+                unselectedLabelColor: unselectedColor,
                 labelStyle: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
@@ -91,26 +92,10 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                 ),
                 tabs: const [
                   Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.dashboard_outlined, size: 16),
-                        SizedBox(width: 6),
-                        Text('Dashboard'),
-                      ],
-                    ),
+                    child: Text('Dashboard'),
                   ),
                   Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.settings_outlined, size: 16),
-                        SizedBox(width: 6),
-                        Text('Gestión'),
-                      ],
-                    ),
+                    child: Text('Gestión'),
                   ),
                 ],
               ),
@@ -199,12 +184,12 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // 1. VENTAS TOTALES - Métrica más importante
           _buildTopMetric(isTablet),
-          
+
           const SizedBox(height: 24),
-          
+
           // 2. MÉTRICAS DEL DÍA - Alta prioridad
           const Text(
             'Rendimiento de Hoy',
@@ -217,9 +202,9 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           ),
           const SizedBox(height: 12),
           _buildHighlightMetrics(isTablet),
-          
+
           const SizedBox(height: 28),
-          
+
           // 3. ANALÍTICA VISUAL - Media prioridad
           const Text(
             'Análisis y Tendencias',
@@ -232,9 +217,9 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           ),
           const SizedBox(height: 12),
           _buildAnalyticsSection(isTablet),
-          
+
           const SizedBox(height: 28),
-          
+
           // 4. ESTADÍSTICAS GENERALES - Baja prioridad
           const Text(
             'Estadísticas Generales',
@@ -247,7 +232,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           ),
           const SizedBox(height: 12),
           _buildGeneralStats(isTablet),
-          
+
           const SizedBox(height: 32),
         ],
       ),
@@ -284,25 +269,29 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                 onTap: () => context.push('/admin/manage/manage-productos'),
               ),
               OptionButtonCard(
-                icon: const Iconify(Ri.user_line, size: 32, color: Color(0xFF3B82F6)),
+                icon: const Iconify(Ri.user_line,
+                    size: 32, color: Color(0xFF3B82F6)),
                 text: AppStrings.waitersTitle,
                 color: const Color(0xFF3B82F6),
                 onTap: () => context.push('/admin/manage/mesero'),
               ),
               OptionButtonCard(
-                icon: const Iconify(Ri.user_line, size: 32, color: Color(0xFF10B981)),
+                icon: const Iconify(Ri.user_line,
+                    size: 32, color: Color(0xFF10B981)),
                 text: AppStrings.cooksTitle,
                 color: const Color(0xFF10B981),
                 onTap: () => context.push('/admin/manage/cocinero'),
               ),
               OptionButtonCard(
-                icon: const Iconify(Ic.outline_table_restaurant, size: 32, color: Color(0xFFF59E0B)),
+                icon: const Iconify(Ic.outline_table_restaurant,
+                    size: 32, color: Color(0xFFF59E0B)),
                 text: 'Mesas',
                 color: const Color(0xFFF59E0B),
                 onTap: () => context.push('/admin/manage/mesas'),
               ),
               OptionButtonCard(
-                icon: const Icon(Icons.report_problem_rounded, size: 32, color: Color(0xFFEF4444)),
+                icon: const Icon(Icons.report_problem_rounded,
+                    size: 32, color: Color(0xFFEF4444)),
                 text: 'Incidencias',
                 color: const Color(0xFFEF4444),
                 onTap: () => context.push('/admin/manage/incidencias'),

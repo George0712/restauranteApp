@@ -9,6 +9,7 @@ import 'package:restaurante_app/data/models/notification_model.dart';
 import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/widgets/pedido_cards.dart';
 import 'package:restaurante_app/presentation/widgets/order_notification_banner.dart';
+import 'package:restaurante_app/presentation/widgets/tab_label.dart';
 
 class HomeCocineroScreen extends ConsumerWidget {
   const HomeCocineroScreen({super.key});
@@ -354,7 +355,7 @@ class _CardStackViewState extends State<_CardStackView> {
   }
 }
 
-class _KitchenTabBar extends StatelessWidget {
+class _KitchenTabBar extends ConsumerWidget {
   final int pendingCount;
   final int completedCount;
 
@@ -364,7 +365,7 @@ class _KitchenTabBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final unselectedColor = Colors.white.withValues(alpha: 0.65);
     final theme = Theme.of(context);
 
@@ -382,7 +383,7 @@ class _KitchenTabBar extends StatelessWidget {
         ),
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
+        labelColor: theme.primaryColor,
         unselectedLabelColor: unselectedColor,
         labelStyle: const TextStyle(
           fontWeight: FontWeight.w700,
@@ -394,61 +395,16 @@ class _KitchenTabBar extends StatelessWidget {
           fontSize: 13.5,
         ),
         tabs: [
-          _TabLabel(
+          TabLabel(
             label: 'Pendientes',
             count: pendingCount,
             color: const Color(0xFFF97316),
           ),
-          _TabLabel(
+          TabLabel(
             label: 'Terminados',
             count: completedCount,
             color: const Color(0xFF10B981),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabLabel extends StatelessWidget {
-  final String label;
-  final int count;
-  final Color color;
-
-  const _TabLabel({
-    required this.label,
-    required this.count,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final showBadge = count > 0;
-
-    return Tab(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          if (showBadge) ...[
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Text(
-                '$count',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
