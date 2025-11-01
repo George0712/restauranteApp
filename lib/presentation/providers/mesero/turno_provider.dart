@@ -12,6 +12,31 @@ final currentUserProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
 });
 
+/// Provider para obtener el rol del usuario actual
+final userRoleProvider = StreamProvider<String?>((ref) {
+  final userAsync = ref.watch(currentUserProvider);
+
+  return userAsync.when(
+    data: (user) {
+      if (user == null) {
+        return Stream.value(null);
+      }
+
+      return FirebaseFirestore.instance
+          .collection('usuario')
+          .doc(user.uid)
+          .snapshots()
+          .map((doc) {
+        if (!doc.exists) return null;
+        final data = doc.data();
+        return data?['rol']?.toString().toLowerCase();
+      });
+    },
+    loading: () => Stream.value(null),
+    error: (_, __) => Stream.value(null),
+  );
+});
+
 /// Provider para obtener el turno activo del usuario actual
 final turnoActivoProvider = StreamProvider<TurnoModel?>((ref) {
   final userAsync = ref.watch(currentUserProvider);
