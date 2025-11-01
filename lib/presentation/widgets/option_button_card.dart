@@ -60,24 +60,7 @@ class _OptionButtonCardState extends ConsumerState<OptionButtonCard> {
         ),
         child: Stack(
           children: [
-            // Decoración de fondo
-            Positioned(
-              top: -30,
-              right: -30,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Color.fromRGBO(
-                    widget.color.r.toInt(),
-                    widget.color.g.toInt(),
-                    widget.color.b.toInt(),
-                    0.1,
-                  ),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
+           
             // Contenido
             Padding(
               padding: const EdgeInsets.all(20),

@@ -82,7 +82,7 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                   mainAxisSpacing: 12,
                   children: [
                     OptionButtonCard(
-                      icon: const Iconify(Bi.box, size: 42),
+                      icon: const Iconify(Bi.box, size: 42, color: Color(0xFF8B5CF6)),
                       text: AppStrings.productsTitle,
                       color: const Color(0xFF8B5CF6),
                       onTap: () {
@@ -90,7 +90,7 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                       },
                     ),
                     OptionButtonCard(
-                      icon: const Iconify(Bx.category, size: 40),
+                      icon: const Iconify(Bx.category, size: 40, color: Color(0xFF3B82F6)),
                       text: AppStrings.categorysTitle,
                       color: const Color(0xFF3B82F6),
                       onTap: () {
@@ -98,7 +98,7 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                       },
                     ),
                     OptionButtonCard(
-                      icon: const Iconify(Mdi.burger_plus, size: 40),
+                      icon: const Iconify(Mdi.burger_plus, size: 40, color: Color(0xFF10B981)),
                       text: AppStrings.additionalsTitle,
                       color: const Color(0xFF10B981),
                       onTap: () {
@@ -108,7 +108,7 @@ class _ManageProductoScreenState extends ConsumerState<ManageProductoScreen> {
                     ),
                     // Botón de combos deshabilitado
                     OptionButtonCard(
-                      icon: const Iconify(Ion.fast_food, size: 40),
+                      icon: const Iconify(Ion.fast_food, size: 40, color: Color(0xFFF59E0B)),
                       text: AppStrings.combosTitle,
                       color: const Color(0xFFF59E0B),
                       onTap: () {

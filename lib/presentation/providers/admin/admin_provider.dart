@@ -37,24 +37,25 @@ final totalVentasProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
     .collection('pedido')
-    .where('status', isEqualTo: 'pagado')
+    .where('pagado', isEqualTo: true)
     .snapshots()
     .map((snapshot) {
       final now = DateTime.now();
       final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
-      
+
       int totalVentas = 0;
       for (final doc in snapshot.docs) {
         final data = doc.data();
+
         final createdAt = _parseTimestamp(data['createdAt']) ??
             _parseTimestamp(data['fechaCreacion']) ??
             _parseTimestamp(data['fecha']);
-        
+
         if (createdAt == null) continue;
-        
+
         final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
         if (dayKey.isBefore(startDate)) continue;
-        
+
         final venta = data['total'];
         if (venta is int) {
           totalVentas += venta;
@@ -123,7 +124,7 @@ final weeklySalesProvider = StreamProvider<List<SalesPoint>>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
+      .where('pagado', isEqualTo: true)
       .snapshots()
       .map((snapshot) {
     final now = DateTime.now();
@@ -133,6 +134,7 @@ final weeklySalesProvider = StreamProvider<List<SalesPoint>>((ref) {
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
+
       final createdAt = _parseTimestamp(data['createdAt']) ??
           _parseTimestamp(data['fechaCreacion']) ??
           _parseTimestamp(data['fecha']);
@@ -166,7 +168,7 @@ final todaySalesProvider = StreamProvider<double>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'pagado') // Cambio: solo pedidos pagados
+      .where('pagado', isEqualTo: true)
       .snapshots()
       .map((snapshot) {
     final today = DateTime.now();
@@ -175,6 +177,7 @@ final todaySalesProvider = StreamProvider<double>((ref) {
     double totalSales = 0;
     for (final doc in snapshot.docs) {
       final data = doc.data();
+
       final createdAt = _parseTimestamp(data['createdAt']) ??
           _parseTimestamp(data['fechaCreacion']) ??
           _parseTimestamp(data['fecha']);
@@ -231,17 +234,18 @@ final averageTicketProvider = StreamProvider<double>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'pagado')
+      .where('pagado', isEqualTo: true)
       .snapshots()
       .map((snapshot) {
     final today = DateTime.now();
     final todayKey = DateTime(today.year, today.month, today.day);
-    
+
     double totalSales = 0;
     int count = 0;
-    
+
     for (final doc in snapshot.docs) {
       final data = doc.data();
+
       final createdAt = _parseTimestamp(data['createdAt']) ??
           _parseTimestamp(data['fechaCreacion']) ??
           _parseTimestamp(data['fecha']);
@@ -250,7 +254,7 @@ final averageTicketProvider = StreamProvider<double>((ref) {
 
       final orderDay = DateTime(createdAt.year, createdAt.month, createdAt.day);
       if (orderDay != todayKey) continue;
-      
+
       totalSales += (data['total'] as num?)?.toDouble() ?? 0;
       count++;
     }
@@ -303,17 +307,17 @@ final topProductsProvider = StreamProvider<List<TopProductMetric>>((ref) {
 
   return firestore
       .collection('pedido')
-      .where('status', isEqualTo: 'pagado')
+      .where('pagado', isEqualTo: true)
       .snapshots()
       .map((snapshot) {
     final now = DateTime.now();
     final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
-    
+
     final Map<String, _ProductAccumulator> aggregated = {};
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
-      
+
       // Filtrar por últimos 7 días
       final createdAt = _parseTimestamp(data['createdAt']) ??
           _parseTimestamp(data['fechaCreacion']) ??
@@ -323,7 +327,7 @@ final topProductsProvider = StreamProvider<List<TopProductMetric>>((ref) {
 
       final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
       if (dayKey.isBefore(startDate)) continue;
-      
+
       final items = data['items'] ?? data['productos'];
 
       if (items is List) {

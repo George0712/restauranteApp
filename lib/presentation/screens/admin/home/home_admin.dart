@@ -163,12 +163,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               ],
             ),
             child: CircleAvatar(
-              backgroundColor: Color.fromRGBO(
-                theme.primaryColor.r.toInt(),
-                theme.primaryColor.g.toInt(),
-                theme.primaryColor.b.toInt(),
-                0.8,
-              ),
+              backgroundColor: theme.primaryColor.withValues(alpha: 0.8),
               child: const Icon(
                 Icons.person,
                 size: 28,
@@ -283,31 +278,31 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             mainAxisSpacing: 12,
             children: [
               OptionButtonCard(
-                icon: const Iconify(Bi.box, size: 32),
+                icon: const Iconify(Bi.box, size: 32, color: Color(0xFF8B5CF6)),
                 text: AppStrings.productsTitle,
                 color: const Color(0xFF8B5CF6),
                 onTap: () => context.push('/admin/manage/manage-productos'),
               ),
               OptionButtonCard(
-                icon: const Iconify(Ri.user_line, size: 32),
+                icon: const Iconify(Ri.user_line, size: 32, color: Color(0xFF3B82F6)),
                 text: AppStrings.waitersTitle,
                 color: const Color(0xFF3B82F6),
                 onTap: () => context.push('/admin/manage/mesero'),
               ),
               OptionButtonCard(
-                icon: const Iconify(Ri.user_line, size: 32),
+                icon: const Iconify(Ri.user_line, size: 32, color: Color(0xFF10B981)),
                 text: AppStrings.cooksTitle,
                 color: const Color(0xFF10B981),
                 onTap: () => context.push('/admin/manage/cocinero'),
               ),
               OptionButtonCard(
-                icon: const Iconify(Ic.outline_table_restaurant, size: 32),
+                icon: const Iconify(Ic.outline_table_restaurant, size: 32, color: Color(0xFFF59E0B)),
                 text: 'Mesas',
                 color: const Color(0xFFF59E0B),
                 onTap: () => context.push('/admin/manage/mesas'),
               ),
               OptionButtonCard(
-                icon: const Icon(Icons.report_problem_rounded, size: 32),
+                icon: const Icon(Icons.report_problem_rounded, size: 32, color: Color(0xFFEF4444)),
                 text: 'Incidencias',
                 color: const Color(0xFFEF4444),
                 onTap: () => context.push('/admin/manage/incidencias'),
@@ -1008,7 +1003,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
       color: const Color(0xFF0D1117),
       borderRadius: BorderRadius.circular(20),
       border: Border.all(
-        color: Color.fromRGBO(accent.r.toInt(), accent.g.toInt(), accent.b.toInt(), 0.28),
+        color: accent.withValues(alpha: 0.28),
         width: 1,
       ),
     );
