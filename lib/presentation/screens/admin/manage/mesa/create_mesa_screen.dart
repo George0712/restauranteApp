@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:restaurante_app/core/constants/app_strings.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/custom_input_field.dart';
 
@@ -178,15 +179,12 @@ class _CreateMesaScreenState extends ConsumerState<CreateMesaScreen> {
                                 if (!mounted) return;
                                 if (error == null) {
                                   mesaController.limpiarFormulario();
-                                  context.pop();
+                                  if (context.mounted) {
+                                    context.pop();
+                                  }
                                 } else {
                                   // Mostrar error
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(error),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
+                                  SnackbarHelper.showError(error);
                                 }
                               }
                             : null,

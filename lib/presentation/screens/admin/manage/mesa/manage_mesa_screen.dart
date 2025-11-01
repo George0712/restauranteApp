@@ -1,9 +1,8 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/mesa_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 
@@ -572,19 +571,16 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
             _mostrarError(error);
             return;
           }
-          Navigator.of(context).pop(); 
+          if (context.mounted) {
+            context.pop();
+          }
         },
       ),
     );
   }
 
   void _mostrarError(String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(mensaje),
-        backgroundColor: Colors.red,
-      ),
-    );
+    SnackbarHelper.showError(mensaje);
   }
 
   void _confirmarEliminacion(MesaModel mesa) {
@@ -655,7 +651,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
             child: const Text(
               'Cancelar',
               style: TextStyle(color: Colors.white70),
@@ -670,7 +666,9 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
                 _mostrarError(error);
                 return;
               }
-              Navigator.pop(context); // Cierra confirmación
+              if (context.mounted) {
+                context.pop(); 
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -884,7 +882,7 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
       );
 
       widget.onGuardar(mesa);
-      Navigator.of(context).pop();
+      context.pop();
     }
   }
 }

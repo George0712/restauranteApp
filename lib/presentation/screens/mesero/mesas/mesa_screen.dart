@@ -5,8 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
-import 'package:restaurante_app/presentation/widgets/dialog_ocupar_mesa.dart';
-import 'package:restaurante_app/presentation/widgets/dialog_reservar_mesa.dart';
 import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:uuid/uuid.dart';
 import 'package:go_router/go_router.dart';
@@ -67,7 +65,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       ref.invalidate(mesasStreamProvider);
       await ref.read(mesasStreamProvider.future);
     } catch (_) {
-      // Silenciamos errores de refresh para no interrumpir la animación.
+      // Ignorar errores de refresco
     }
   }
 
@@ -284,7 +282,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               ),
               const SizedBox(width: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(999),
@@ -369,10 +368,12 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    final backgroundColor =
-        selected ? color.withValues(alpha: 0.16) : Colors.white.withValues(alpha: 0.08);
-    final borderColor =
-        selected ? color.withValues(alpha: 0.65) : Colors.white.withValues(alpha: 0.14);
+    final backgroundColor = selected
+        ? color.withValues(alpha: 0.16)
+        : Colors.white.withValues(alpha: 0.08);
+    final borderColor = selected
+        ? color.withValues(alpha: 0.65)
+        : Colors.white.withValues(alpha: 0.14);
     final valueColor = selected ? Colors.white : color;
     final iconColor = selected ? Colors.white : color;
 
@@ -401,7 +402,9 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: selected ? color.withValues(alpha: 0.4) : color.withValues(alpha: 0.18),
+                color: selected
+                    ? color.withValues(alpha: 0.4)
+                    : color.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: iconColor, size: 18),
@@ -421,7 +424,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: selected ? 0.9 : 0.65),
+                    color:
+                        Colors.white.withValues(alpha: selected ? 0.9 : 0.65),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -457,10 +461,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     final estadoTexto = _estadoCapitalizado(mesa.estado);
 
     return Container(
-      key:
-          ValueKey('acciones-${mesa.id}-${mesa.estado}-${mesa.pedidoId ?? ''}'),
-      width: double.infinity,
-      padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 0),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -472,16 +472,25 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         ),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      padding: const EdgeInsets.all(24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white70,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
                 radius: 24,
                 backgroundColor: colorEstado.withValues(alpha: 0.18),
-                child: Icon(iconoEstado, color: colorEstado),
+                child: Icon(iconoEstado, color: colorEstado, size: 24,),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -752,10 +761,10 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     if (mesaSeleccionadaId == mesa.id) {
       setState(() => mesaSeleccionadaId = null);
     }
-    
+
     // Navegamos inmediatamente para evitar ver cambios de UI
     _irADetallePedido(mesaActualizada, pedidoId, clienteVisible);
-    
+
     // Luego actualizamos el estado en segundo plano
     // Usamos addPostFrameCallback para asegurar que la navegación ya inició
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -829,7 +838,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          side: BorderSide(color: borderColor.withValues(alpha: 0.8), width: 1.5),
+          side:
+              BorderSide(color: borderColor.withValues(alpha: 0.8), width: 1.5),
           foregroundColor: Colors.white,
         ),
       ),
@@ -947,9 +957,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
             )
           : GridView.builder(
               controller: _scrollController,
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
-              ),
+              shrinkWrap: true,
+              physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
               itemCount: mesas.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -973,7 +982,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     final estadoTexto = _estadoCapitalizado(mesa.estado);
 
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
       onTap: () {
         setState(() {
           if (isSelected) {
@@ -987,9 +995,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
         setState(() => mesaSeleccionadaId = mesa.id);
         _ejecutarAccionPrincipal(mesa);
       },
-      onLongPress: () => _mostrarOpcionesMesa(mesa),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: isSelected ? 0.2 : 0.12),
@@ -1019,7 +1026,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
                   decoration: BoxDecoration(
                     color: colorEstado.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: colorEstado.withValues(alpha: 0.35)),
+                    border:
+                        Border.all(color: colorEstado.withValues(alpha: 0.35)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1425,225 +1433,15 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
     }
   }
 
-  void _mostrarOpcionesMesa(MesaModel mesa) {
-    setState(() => mesaSeleccionadaId = mesa.id);
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => _buildOpcionesBottomSheet(mesa),
-    );
-  }
-
-  Widget _buildOpcionesBottomSheet(MesaModel mesa) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF1A1A2E),
-            Color(0xFF14162B),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Mesa ${mesa.id}',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          Text(
-            '${mesa.capacidad} personas',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withValues(alpha: 0.6),
-            ),
-          ),
-          if (mesa.cliente != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              mesa.cliente!,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-          const SizedBox(height: 24),
-          ...(_buildOpcionesSegunEstado(mesa)),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildOpcionesSegunEstado(MesaModel mesa) {
-    switch (mesa.estado) {
-      case 'disponible':
-        return [
-          _buildBotonOpcion(
-            'Ocupar Mesa',
-            Icons.people,
-            Colors.green,
-            () => _ocuparMesa(mesa),
-          ),
-          const SizedBox(height: 12),
-          _buildBotonOpcion(
-            'Reservar',
-            Icons.event,
-            Colors.blue,
-            () => _reservarMesa(mesa),
-          ),
-        ];
-
-      case 'ocupada':
-        final puedeCobrar = _puedeCobrarMesa(mesa);
-        final opciones = <Widget>[
-          _buildBotonOpcion(
-            'Ver Pedido',
-            Icons.receipt_long,
-            const Color(0xFF8B5CF6),
-            () => _verPedido(mesa),
-          ),
-          const SizedBox(height: 12),
-        ];
-
-        if (puedeCobrar) {
-          opciones
-            ..add(
-              _buildBotonOpcion(
-                'Cobrar Mesa',
-                Icons.attach_money,
-                Colors.teal,
-                () => _cobrarMesa(mesa),
-              ),
-            )
-            ..add(const SizedBox(height: 12));
-        }
-
-        opciones.add(
-          _buildBotonOpcion(
-            'Liberar Mesa',
-            Icons.logout,
-            Colors.orange,
-            () {
-              _liberarMesa(mesa);
-            },
-          ),
-        );
-
-        return opciones;
-
-      case 'reservada':
-        return [
-          _buildBotonOpcion(
-            'Confirmar Llegada',
-            Icons.check_circle,
-            Colors.green,
-            () {
-              _confirmarLlegada(mesa);
-            },
-          ),
-          const SizedBox(height: 12),
-          _buildBotonOpcion(
-            'Cancelar Reserva',
-            Icons.cancel,
-            Colors.red,
-            () => _cancelarReserva(mesa),
-          ),
-        ];
-
-      default:
-        return [];
-    }
-  }
-
-  Widget _buildBotonOpcion(
-      String texto, IconData icono, Color color, VoidCallback onPressed) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icono, size: 20),
-        label: Text(texto),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0,
-        ),
-      ),
-    );
-  }
-
-  void _ocuparMesa(MesaModel mesa, {bool closeSheet = true}) {
-    if (closeSheet) {
-      Navigator.pop(context);
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => OcuparMesaDialog(
-        mesa: mesa,
-        onOcupar: (cliente) async {
-          await _crearPedidoParaMesa(
-            mesa,
-            clienteMesa: cliente,
-            etiquetaPedido: cliente,
-          );
-        },
-      ),
-    );
-  }
-
   void _reservarMesa(MesaModel mesa, {bool closeSheet = true}) {
     if (closeSheet) {
-      Navigator.pop(context);
+      context.pop();
     }
-
-    showDialog(
-      context: context,
-      builder: (context) => ReservarMesaDialog(
-        mesa: mesa,
-        onReservar: (cliente, fecha, hora) async {
-          final mesaActualizada = mesa.copyWith(
-            estado: 'reservada',
-            cliente: cliente,
-            fechaReserva: fecha,
-            tiempo: hora,
-          );
-          await ref
-              .read(mesasMeseroProvider.notifier)
-              .editarMesa(mesaActualizada);
-        },
-      ),
-    );
   }
 
   void _verPedido(MesaModel mesa, {bool closeSheet = true}) {
     if (closeSheet) {
-      Navigator.pop(context);
+      context.pop();
     }
     if (mesa.pedidoId != null && mounted) {
       context.push('/mesero/pedidos/detalle/${mesa.id}/${mesa.pedidoId}');
@@ -1652,7 +1450,7 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
 
   Future<void> _cobrarMesa(MesaModel mesa, {bool closeSheet = true}) async {
     if (closeSheet && mounted) {
-      Navigator.pop(context);
+      context.pop();
     }
 
     final pedidoId = mesa.pedidoId;
