@@ -54,35 +54,30 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
   }
 
   void _actualizarEstadoTurnoAutomatico() {
-    final now = DateTime
-        .now(); // Hora local directamente
+  final now = DateTime.now();
 
-    final today =
-        DateTime(now.year, now.month, now.day); // Fecha local sin tiempo
-    final turnoInicio = DateTime(
-        today.year, today.month, today.day, 18, 0, 0); // 18:00 local hoy
-    final turnoFin = DateTime(today.year, today.month, today.day + 1, 0, 0,
-        0); // Medianoche siguiente día
+  final today = DateTime(now.year, now.month, now.day);
+  final turnoInicio = DateTime(today.year, today.month, today.day, 18, 0, 0);
+  final turnoFin = DateTime(today.year, today.month, today.day + 1, 0, 0, 0);
 
-    bool activo = now.isAfter(turnoInicio) && now.isBefore(turnoFin);
+  bool activo = now.compareTo(turnoInicio) >= 0 && now.isBefore(turnoFin);
 
-    Duration tiempoParaInicio;
-    if (activo) {
-      tiempoParaInicio = Duration.zero;
-    } else {
-      // Siguiente inicio será hoy a las 18:00 si no pasó, si pasó será mañana 18:00
-      final nextInicio = now.isBefore(turnoInicio) ? turnoInicio : turnoInicio.add( const Duration(days: 1));
+  Duration tiempoParaInicio;
+  if (activo) {
+    tiempoParaInicio = Duration.zero;
+  } else {
+    final nextInicio = now.isBefore(turnoInicio) ? turnoInicio : turnoInicio.add(const Duration(days: 1));
     tiempoParaInicio = nextInicio.difference(now);
-    }
-
-    if (_turnoActivoAutomatico != activo ||
-        _tiempoParaSiguienteTurno != tiempoParaInicio) {
-      setState(() {
-        _turnoActivoAutomatico = activo;
-        _tiempoParaSiguienteTurno = tiempoParaInicio;
-      });
-    }
   }
+
+  if (_turnoActivoAutomatico != activo || _tiempoParaSiguienteTurno != tiempoParaInicio) {
+    setState(() {
+      _turnoActivoAutomatico = activo;
+      _tiempoParaSiguienteTurno = tiempoParaInicio;
+    });
+  }
+}
+
 
   Future<void> _playNotificationSound() async {
     try {
@@ -174,7 +169,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
               child: Opacity(
                 opacity: 0.15,
                 child: Image.asset(
-                  'assets/bg-mesero.png',
+                  'assets/images/bg-mesero.png',
                   fit: BoxFit.cover,
                 ),
               ),
@@ -281,7 +276,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
 
     return turnoAsync.when(
       data: (turno) {
-        final bool turnoActivo = turno != null && turno.activo;
+        final bool turnoActivo = _turnoActivoAutomatico;
 
         return Container(
           padding: EdgeInsets.symmetric(
@@ -360,7 +355,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                   const Spacer(),
                   if (turnoActivo)
                     Text(
-                      'Turno en Curso ${DateFormat('HH:mm:ss').format(DateTime.now())}',
+                      DateFormat('HH:mm:ss').format(DateTime.now()),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w500,

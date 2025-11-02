@@ -569,7 +569,8 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
               children: [
                 Center(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(
                         Icons.table_restaurant_outlined,

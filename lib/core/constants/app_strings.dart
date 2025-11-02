@@ -19,10 +19,10 @@ class AppStrings {
   static const register = 'Regístrate';
 
   //home admin screen
-  static const dashboard = 'VISTA GENERAL';
-  static const keyStats = 'INDICADORES CLAVE';
-  static const analitics = 'ANALÍTICA DEL RESTAURANTE';
-  static const otherOptions = 'OTRAS OPCIONES';
+  static const dashboard = 'Vista General';
+  static const keyStats = 'Indicadores Clave';
+  static const analitics = 'Analítica del Restaurante';
+  static const otherOptions = 'Otras Opciones';
   static const productsTitle = 'Productos';
   static const waitersTitle = 'Meseros';
   static const cooksTitle = 'Cocineros';

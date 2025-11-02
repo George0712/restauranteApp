@@ -288,7 +288,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'CENTRO DE GESTIÓN',
+            'Centro de Gestión',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -350,7 +350,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
     return buildNeonStatCard(
       ref,
       'Ventas Totales',
-      'Total de ventas registradas',
+      'Total de ventas registradas en la semana',
       totalVentasProvider,
       const Color(0xFF00D4AA),
       Icons.monetization_on,
@@ -407,7 +407,7 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
             child: _buildAsyncMetricCard<double>(
               asyncValue: todaySalesAsync,
               title: 'Ventas de hoy',
-              subtitle: 'Ingresos generados',
+              subtitle: 'Ingresos generados hoy',
               icon: Icons.stacked_line_chart,
               color: const Color(0xFF38BDF8),
               formatter: (value) => _currencyFormat.format(value),
@@ -715,8 +715,11 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
               showTitles: true,
               getTitlesWidget: (value, meta) {
                 return Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  value.toInt().toStringAsFixed(0).replaceAllMapped(
+                        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                        (Match m) => '${m[1]}.',
+                      ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 10),
                 );
               },
             ),

@@ -570,26 +570,20 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                           final selectedProducts = ref.watch(selectedComboProductsProvider);
 
                           if (selectedProducts.isEmpty) {
-                            return Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.12),
-                                ),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.info_outline, color: Colors.white70, size: 20),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 16),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.info_outline, color: Colors.white70, size: 20),
+                                    SizedBox(width: 12),
+                                    Text(
                                       'No hay productos seleccionados',
                                       style: TextStyle(color: Colors.white70, fontSize: 14),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             );
                           }

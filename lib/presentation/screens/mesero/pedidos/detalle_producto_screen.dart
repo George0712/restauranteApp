@@ -424,17 +424,16 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade800.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Text(
-              'No hay adicionales disponibles en este momento.',
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 14,
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'No hay adicionales disponibles en este momento.',
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
           ),

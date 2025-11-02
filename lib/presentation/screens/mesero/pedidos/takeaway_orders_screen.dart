@@ -1639,50 +1639,47 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        color: Colors.black.withValues(alpha: 0.28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            hasOrders ? Icons.filter_alt_off_rounded : Icons.shopping_bag_outlined,
-            color: Colors.white.withValues(alpha: 0.35),
-            size: 52,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            hasOrders ? 'Sin resultados para la busqueda' : 'Aun no hay pedidos para llevar',
-            style: textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              hasOrders ? Icons.filter_alt_off_rounded : Icons.shopping_bag_outlined,
+              color: Colors.white.withValues(alpha: 0.35),
+              size: 52,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hasOrders
-                ? 'Ajusta los filtros o busca con otro dato del cliente.'
-                : 'Crea tu primer pedido para llevar para iniciar.',
-            style: textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.6),
-              height: 1.4,
+            const SizedBox(height: 12),
+            Text(
+              hasOrders ? 'Sin resultados para la busqueda' : 'Aun no hay pedidos para llevar',
+              style: textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          if (hasOrders) ...[
-            const SizedBox(height: 18),
-            TextButton.icon(
-              onPressed: onClear,
-              icon: const Icon(Icons.clear_all_rounded, color: Colors.white),
-              label: const Text('Limpiar filtros', style: TextStyle(color: Colors.white)),
+            const SizedBox(height: 8),
+            Text(
+              hasOrders
+                  ? 'Ajusta los filtros o busca con otro dato del cliente.'
+                  : 'Crea tu primer pedido para llevar para iniciar.',
+              style: textTheme.bodyMedium?.copyWith(
+                color: Colors.white.withValues(alpha: 0.6),
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
             ),
+            if (hasOrders) ...[
+              const SizedBox(height: 18),
+              TextButton.icon(
+                onPressed: onClear,
+                icon: const Icon(Icons.clear_all_rounded, color: Colors.white),
+                label: const Text('Limpiar filtros', style: TextStyle(color: Colors.white)),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

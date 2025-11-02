@@ -466,7 +466,7 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
         // Mantener fecha actual si hay error
       }
       
-      final String displayTitle = mode == 'mesa' ? 'Mesa $tableNumber' : customerName;
+      final String displayTitle = mode == 'mesa' ? '$tableNumber' : customerName;
       
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -599,7 +599,7 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
                   if (pedidoId.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'ID: ${pedidoId.length > 8 ? pedidoId.substring(0, 8) : pedidoId}...',
+                      'ID: ${pedidoId.length > 14 ? pedidoId.substring(0, 14) : pedidoId}...',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.4),
                         fontSize: 11,
