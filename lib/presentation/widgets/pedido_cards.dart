@@ -1122,7 +1122,8 @@ class PedidoCard extends ConsumerWidget {
 
   String _getTimeDisplay() {
     final now = DateTime.now();
-    final reference = pedido.updatedAt ?? pedido.createdAt ?? now;
+    // Usar SOLO createdAt para mantener el tiempo de llegada original
+    final reference = pedido.createdAt ?? now;
     final difference = now.difference(reference);
 
     if (difference.inMinutes < 1) {

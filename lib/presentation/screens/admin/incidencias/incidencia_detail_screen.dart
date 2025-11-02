@@ -94,14 +94,6 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
                 onPressed: () => Navigator.of(context).maybePop(),
                 tooltip: 'Volver',
               ),
-              title: const Text(
-                'Detalle de incidencia',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
             body: Stack(
               children: [
@@ -128,15 +120,33 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const Text(
+                          'Detalle de incidencia',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Gestiona el seguimiento y resolución de la incidencia.',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
                         _buildStatusHeader(incidencia),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                         _buildInfoSection(incidencia),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                         _buildDescriptionSection(incidencia),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                         if (incidencia.resolucion != null)
                           _buildResolutionSection(incidencia),
-                        if (incidencia.resolucion != null) const SizedBox(height: 24),
+                        if (incidencia.resolucion != null) const SizedBox(height: 20),
                         if (incidencia.estado != 'cerrada') _buildActionsSection(incidencia),
                         const SizedBox(height: 24),
                       ],
@@ -156,6 +166,7 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
     final categoriaColor = _categoriaColors[incidencia.categoria.toLowerCase()] ?? const Color(0xFF71717A);
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -242,6 +253,7 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
     final tipoColor = _tipoColors[incidencia.tipo.toLowerCase()] ?? const Color(0xFF6366F1);
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -305,6 +317,7 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
 
   Widget _buildDescriptionSection(Incidencia incidencia) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -338,6 +351,7 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
 
   Widget _buildResolutionSection(Incidencia incidencia) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -380,73 +394,71 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
   }
 
   Widget _buildActionsSection(Incidencia incidencia) {
-    final canResolve = incidencia.estado != 'resuelta' && incidencia.estado != 'cerrada';
-
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Acciones',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        if (incidencia.estado == 'pendiente')
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading ? null : () => _updateEstado(incidencia, 'en_revision'),
-              icon: const Icon(Icons.rate_review_rounded),
-              label: const Text('Marcar en revisión'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF59E0B),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+        // Botón principal según el estado
+        if (incidencia.estado == 'pendiente') ...[
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : () => _updateEstado(incidencia, 'en_revision'),
+            icon: const Icon(Icons.rate_review_rounded, size: 20),
+            label: const Text('Marcar en revisión', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF59E0B),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
+              elevation: 0,
             ),
           ),
-        if (incidencia.estado == 'pendiente') const SizedBox(height: 12),
-        if (canResolve)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading ? null : () => _openResolverDialog(incidencia),
-              icon: const Icon(Icons.check_circle_rounded),
-              label: const Text('Marcar como resuelta'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF22C55E),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : () => _openResolverDialog(incidencia),
+            icon: const Icon(Icons.check_circle_rounded, size: 20),
+            label: const Text('Marcar como resuelta', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF22C55E),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
+              elevation: 0,
             ),
           ),
-        if (canResolve) const SizedBox(height: 12),
-        if (incidencia.estado == 'resuelta')
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isLoading ? null : () => _updateEstado(incidencia, 'cerrada'),
-              icon: const Icon(Icons.lock_rounded),
-              label: const Text('Cerrar incidencia'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF71717A),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+        ] else if (incidencia.estado == 'en_revision') ...[
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : () => _openResolverDialog(incidencia),
+            icon: const Icon(Icons.check_circle_rounded, size: 20),
+            label: const Text('Marcar como resuelta', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF22C55E),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
+              elevation: 0,
             ),
           ),
+        ] else if (incidencia.estado == 'resuelta') ...[
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : () => _updateEstado(incidencia, 'cerrada'),
+            icon: const Icon(Icons.lock_rounded, size: 20),
+            label: const Text('Cerrar incidencia', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF71717A),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0,
+            ),
+          ),
+        ],
       ],
     );
   }

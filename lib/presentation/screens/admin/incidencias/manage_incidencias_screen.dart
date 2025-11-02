@@ -34,12 +34,6 @@ class _ManageIncidenciasScreenState extends ConsumerState<ManageIncidenciasScree
     'otra': Color(0xFF71717A),
   };
 
-  static const Map<String, Color> _categoriaColors = {
-    'urgente': Color(0xFFEF4444),
-    'normal': Color(0xFFF59E0B),
-    'baja': Color(0xFF22C55E),
-  };
-
   @override
   void dispose() {
     _scrollController.dispose();
@@ -73,14 +67,6 @@ class _ManageIncidenciasScreenState extends ConsumerState<ManageIncidenciasScree
                 onPressed: () => Navigator.of(context).maybePop(),
                 tooltip: 'Volver',
               ),
-              title: const Text(
-                'Gestión de incidencias',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
             ),
             body: Stack(
               children: [
@@ -110,11 +96,11 @@ class _ManageIncidenciasScreenState extends ConsumerState<ManageIncidenciasScree
                         SliverToBoxAdapter(
                           child: _buildHeader(isTablet, stats),
                         ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                        const SliverToBoxAdapter(child: SizedBox(height: 16)),
                         SliverToBoxAdapter(
                           child: _buildStats(isTablet, stats),
                         ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                        const SliverToBoxAdapter(child: SizedBox(height: 16)),
                         SliverToBoxAdapter(
                           child: _buildFilters(isTablet),
                         ),
@@ -176,12 +162,44 @@ class _ManageIncidenciasScreenState extends ConsumerState<ManageIncidenciasScree
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Row(
+          children: [
+            const Text(
+              'Gestión de incidencias',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.16),
+                ),
+              ),
+              child: Text(
+                '${stats['total']} reportadas',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
         Text(
           'Administra y responde a las incidencias reportadas por el equipo.',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.85),
-            fontSize: isTablet ? 18 : 16,
-            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.65),
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ],
@@ -189,93 +207,136 @@ class _ManageIncidenciasScreenState extends ConsumerState<ManageIncidenciasScree
   }
 
   Widget _buildStats(bool isTablet, Map<String, int> stats) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: const Color(0xFF121429),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Row(
+    return Column(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
-              Icon(Icons.analytics_rounded, color: Color(0xFF6366F1), size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Estadísticas',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              _buildStatChipFilter(
+                label: 'Todas',
+                value: stats['total']!,
+                color: const Color(0xFF6366F1),
+                icon: Icons.analytics_rounded,
+                selected: _estadoFilter == 'all',
+                onTap: () => setState(() => _estadoFilter = 'all'),
+              ),
+              const SizedBox(width: 10),
+              _buildStatChipFilter(
+                label: 'Pendientes',
+                value: stats['pendiente']!,
+                color: _estadoColors['pendiente']!,
+                icon: Icons.pending_actions,
+                selected: _estadoFilter == 'pendiente',
+                onTap: () => setState(() => _estadoFilter = 'pendiente'),
+              ),
+              const SizedBox(width: 10),
+              _buildStatChipFilter(
+                label: 'En revisión',
+                value: stats['en_revision']!,
+                color: _estadoColors['en_revision']!,
+                icon: Icons.rate_review_outlined,
+                selected: _estadoFilter == 'en_revision',
+                onTap: () => setState(() => _estadoFilter = 'en_revision'),
+              ),
+              const SizedBox(width: 10),
+              _buildStatChipFilter(
+                label: 'Resueltas',
+                value: stats['resuelta']!,
+                color: _estadoColors['resuelta']!,
+                icon: Icons.check_circle_outline,
+                selected: _estadoFilter == 'resuelta',
+                onTap: () => setState(() => _estadoFilter = 'resuelta'),
+              ),
+              const SizedBox(width: 10),
+              _buildStatChipFilter(
+                label: 'Cerradas',
+                value: stats['cerrada']!,
+                color: _estadoColors['cerrada']!,
+                icon: Icons.cancel_outlined,
+                selected: _estadoFilter == 'cerrada',
+                onTap: () => setState(() => _estadoFilter = 'cerrada'),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _CompactStat(
-                  label: 'Total',
-                  value: stats['total'].toString(),
-                  color: const Color(0xFF6366F1),
-                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatChipFilter({
+    required String label,
+    required int value,
+    required Color color,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final backgroundColor = selected
+        ? color.withValues(alpha: 0.16)
+        : Colors.white.withValues(alpha: 0.08);
+    final borderColor = selected
+        ? color.withValues(alpha: 0.65)
+        : Colors.white.withValues(alpha: 0.14);
+    final valueColor = selected ? Colors.white : color;
+    final iconColor = selected ? Colors.white : color;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: borderColor),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.28),
+                    blurRadius: 8,
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: selected
+                    ? color.withValues(alpha: 0.4)
+                    : color.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _CompactStat(
-                  label: 'Pendientes',
-                  value: stats['pendiente'].toString(),
-                  color: _estadoColors['pendiente']!,
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value.toString(),
+                  style: TextStyle(
+                    color: valueColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _CompactStat(
-                  label: 'Revisión',
-                  value: stats['en_revision'].toString(),
-                  color: _estadoColors['en_revision']!,
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: selected ? 0.9 : 0.65),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _CompactStat(
-                  label: 'Resueltas',
-                  value: stats['resuelta'].toString(),
-                  color: _estadoColors['resuelta']!,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _CompactStat(
-                  label: 'Urgentes',
-                  value: stats['urgente'].toString(),
-                  color: _categoriaColors['urgente']!,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _CompactStat(
-                  label: 'Cerradas',
-                  value: stats['cerrada'].toString(),
-                  color: _estadoColors['cerrada']!,
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -309,43 +370,11 @@ class _ManageIncidenciasScreenState extends ConsumerState<ManageIncidenciasScree
           ),
         ),
         const SizedBox(height: 12),
-        Text(
-          'Estado',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.9),
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Row(
-            children: [
-              _buildFilterChip('Todos', 'all', _estadoFilter, const Color(0xFF71717A), isEstado: true),
-              _buildFilterChip('Pendiente', 'pendiente', _estadoFilter, _estadoColors['pendiente']!, isEstado: true),
-              _buildFilterChip('En revisión', 'en_revision', _estadoFilter, _estadoColors['en_revision']!, isEstado: true),
-              _buildFilterChip('Resuelta', 'resuelta', _estadoFilter, _estadoColors['resuelta']!, isEstado: true),
-              _buildFilterChip('Cerrada', 'cerrada', _estadoFilter, _estadoColors['cerrada']!, isEstado: true),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'Tipo',
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.9),
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildFilterChip('Todos', 'all', _tipoFilter, const Color(0xFF71717A), isTipo: true),
+              _buildFilterChip('Todas', 'all', _tipoFilter, const Color(0xFF71717A), isTipo: true),
               _buildFilterChip('Cocina', 'cocina', _tipoFilter, _tipoColors['cocina']!, isTipo: true),
               _buildFilterChip('Administración', 'administracion', _tipoFilter, _tipoColors['administracion']!, isTipo: true),
               _buildFilterChip('Técnica', 'tecnica', _tipoFilter, _tipoColors['tecnica']!, isTipo: true),
@@ -484,55 +513,8 @@ class _ManageIncidenciasScreenState extends ConsumerState<ManageIncidenciasScree
   }
 }
 
-class _CompactStat extends StatelessWidget {
-  const _CompactStat({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
 
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _IncidenciaCard extends StatelessWidget {
+class _IncidenciaCard extends ConsumerWidget {
   const _IncidenciaCard({
     required this.incidencia,
     required this.isTablet,
@@ -557,7 +539,7 @@ class _IncidenciaCard extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final estadoColor = _estadoColors[incidencia.estado.toLowerCase()] ?? const Color(0xFF6366F1);
     final categoriaColor = _categoriaColors[incidencia.categoria.toLowerCase()] ?? const Color(0xFF71717A);
 
@@ -602,6 +584,8 @@ class _IncidenciaCard extends StatelessWidget {
                       Wrap(
                         spacing: 8,
                         runSpacing: 6,
+                        direction: Axis.horizontal,
+                        crossAxisAlignment: WrapCrossAlignment.start,
                         children: [
                           _ChipInfo(
                             icon: Icons.priority_high_rounded,

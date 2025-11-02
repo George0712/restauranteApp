@@ -93,7 +93,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
               child: Opacity(
                 opacity: 0.15,
                 child: Image.asset(
-                  'lib/core/assets/bg-mesero.png',
+                  'assets/bg-mesero.png',
                   fit: BoxFit.cover,
                 ),
               ),

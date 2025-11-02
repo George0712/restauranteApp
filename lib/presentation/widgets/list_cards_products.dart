@@ -132,7 +132,9 @@ class ListCardsProducts extends ConsumerWidget {
                                       child: const Center(
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Color(0xFF6366F1)),
                                         ),
                                       ),
                                     ),
@@ -142,8 +144,10 @@ class ListCardsProducts extends ConsumerWidget {
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                            const Color(0xFF6366F1).withValues(alpha: 0.2),
-                            const Color(0xFF6366F1).withValues(alpha: 0.1),
+                                            const Color(0xFF6366F1)
+                                                .withValues(alpha: 0.2),
+                                            const Color(0xFF6366F1)
+                                                .withValues(alpha: 0.1),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -152,7 +156,8 @@ class ListCardsProducts extends ConsumerWidget {
                                       child: Icon(
                                         Icons.fastfood_rounded,
                                         size: 80,
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.8),
+                                        color: const Color(0xFF6366F1)
+                                            .withValues(alpha: 0.8),
                                       ),
                                     ),
                                   ),
@@ -171,7 +176,7 @@ class ListCardsProducts extends ConsumerWidget {
                                           end: Alignment.bottomCenter,
                                           colors: [
                                             Colors.transparent,
-                            Colors.black.withValues(alpha: 0.3),
+                                            Colors.black.withValues(alpha: 0.3),
                                           ],
                                         ),
                                       ),
@@ -210,7 +215,8 @@ class ListCardsProducts extends ConsumerWidget {
                                         gradient: LinearGradient(
                                           colors: [
                                             const Color(0xFF6366F1),
-                            const Color(0xFF6366F1).withValues(alpha: 0.8),
+                                            const Color(0xFF6366F1)
+                                                .withValues(alpha: 0.8),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -219,7 +225,7 @@ class ListCardsProducts extends ConsumerWidget {
                                         boxShadow: [
                                           BoxShadow(
                                             color: const Color(0xFF6366F1)
-                                .withValues(alpha: 0.3),
+                                                .withValues(alpha: 0.3),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),

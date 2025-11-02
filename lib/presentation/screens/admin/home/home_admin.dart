@@ -17,6 +17,7 @@ import 'package:restaurante_app/data/models/notification_model.dart';
 import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/widgets/dashboard_card.dart';
 import 'package:restaurante_app/presentation/widgets/option_button_card.dart';
+import 'package:restaurante_app/presentation/widgets/tab_label.dart';
 
 class HomeAdminScreen extends ConsumerStatefulWidget {
   const HomeAdminScreen({super.key});
@@ -64,40 +65,48 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
           actions: [_buildNotificationButton()],
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(80),
-            child: Container(
-              margin: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-              ),
-              child: TabBar(
-                indicator: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: theme.primaryColor.withValues(alpha: 0.12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
                 ),
-                dividerColor: Colors.transparent,
-                indicatorSize: TabBarIndicatorSize.tab,
-                labelColor: theme.primaryColor,
-                unselectedLabelColor: unselectedColor,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  letterSpacing: 0.2,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 13.5,
-                ),
-                tabs: const [
-                  Tab(
-                    child: Text('Dashboard'),
+                child: TabBar(
+                  splashFactory: NoSplash.splashFactory,
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
+                  indicator: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: theme.primaryColor.withValues(alpha: 0.12),
                   ),
-                  Tab(
-                    child: Text('Gestión'),
+                  dividerColor: Colors.transparent,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelColor: theme.primaryColor,
+                  unselectedLabelColor: unselectedColor,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    letterSpacing: 0.2,
                   ),
-                ],
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13.5,
+                  ),
+                  tabs: [
+                    TabLabel(
+                      label: 'Dashboard',
+                      count: 0,
+                      color: theme.primaryColor,
+                    ),
+                    TabLabel(
+                      label: 'Gestión',
+                      count: 0,
+                      color: theme.primaryColor,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

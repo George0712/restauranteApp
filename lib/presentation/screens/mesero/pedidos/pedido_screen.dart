@@ -1548,7 +1548,7 @@ class _SeleccionProductosScreenState
           'pagado': false,
           'paymentStatus': 'pending',
           'payment': paymentData,
-          'updatedAt': FieldValue.serverTimestamp(),
+          // NO actualizar updatedAt para mantener el orden de llegada
         });
 
         await _cargarCarritoDelPedido();
@@ -1583,7 +1583,7 @@ class _SeleccionProductosScreenState
           'paymentStatus': 'paid',
           'paidAt': FieldValue.serverTimestamp(),
           'payment': paymentData,
-          'updatedAt': FieldValue.serverTimestamp(),
+          // NO actualizar updatedAt para mantener el orden de llegada
         });
 
         await _cargarCarritoDelPedido();
@@ -1998,8 +1998,8 @@ class _SeleccionProductosScreenState
           'status': 'cancelado',
           'pagado': false,
           'paymentStatus': 'void',
-          'updatedAt': FieldValue.serverTimestamp(),
           'cancelledAt': FieldValue.serverTimestamp(),
+          // NO actualizar updatedAt para mantener el orden de llegada
         };
         if (user != null) {
           updateData['cancelledBy'] = user.uid;
@@ -2143,6 +2143,13 @@ class _SeleccionProductosScreenState
             widget.pedidoId)
         : null;
 
+    // Verificar si el pedido ya existe para no sobrescribir createdAt
+    final pedidoRef = FirebaseFirestore.instance
+        .collection('pedido')
+        .doc(widget.pedidoId);
+    final pedidoExistente = await pedidoRef.get();
+    final esNuevo = !pedidoExistente.exists;
+
     final pedidoData = <String, dynamic>{
       'id': widget.pedidoId,
       'items': items,
@@ -2156,9 +2163,14 @@ class _SeleccionProductosScreenState
       'meseroNombre': user != null
           ? '${user.nombre} ${user.apellidos}'
           : 'Mesero desconocido',
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
     };
+
+    // Solo agregar timestamps si es un pedido nuevo
+    if (esNuevo) {
+      pedidoData['createdAt'] = FieldValue.serverTimestamp();
+      pedidoData['updatedAt'] = FieldValue.serverTimestamp();
+    }
+    // Si ya existe, NO actualizar updatedAt para mantener el orden de llegada
     if (tableNumber != null) {
       pedidoData['tableNumber'] = tableNumber;
     }
@@ -2187,10 +2199,7 @@ class _SeleccionProductosScreenState
       }
     }
 
-    await FirebaseFirestore.instance
-        .collection('pedido')
-        .doc(widget.pedidoId)
-        .set(pedidoData, SetOptions(merge: true));
+    await pedidoRef.set(pedidoData, SetOptions(merge: true));
     setState(() {
       pedidoConfirmado = status != 'nuevo';
     });

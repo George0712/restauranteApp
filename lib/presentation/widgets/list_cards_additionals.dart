@@ -198,8 +198,7 @@ class _AdditionalOptionsSheetState
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: const Icon(Icons.category_rounded,
-                      color: Colors.white,
-                      size: 48), // Icono específico para additional
+                      color: Colors.white, size: 48),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -214,26 +213,43 @@ class _AdditionalOptionsSheetState
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: additional.disponible
-                              ? Colors.green.withValues(alpha: 0.2)
-                              : Colors.red.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          additional.disponible ? 'Disponible' : 'No disponible',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: additional.disponible
-                                ? Colors.green
-                                : Colors.red,
-                            fontWeight: FontWeight.bold,
+                      Row(
+                        children: [
+                          Text(
+                            '\$${widget.additional.price.toStringAsFixed(0).replaceAllMapped(
+                                  RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                  (Match m) => '${m[1]}.',
+                                )}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Color(0xFF10B981),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: widget.additional.disponible
+                                  ? Colors.green.withValues(alpha: 0.2)
+                                  : Colors.red.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              widget.additional.disponible
+                                  ? 'Disponible'
+                                  : 'No disponible',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: widget.additional.disponible
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

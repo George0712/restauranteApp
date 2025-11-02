@@ -102,10 +102,11 @@ class NotificationController extends StateNotifier<NotificationState> {
     final friendlyId = _friendlyId(pedido.id);
     final mesa = _mesaLabel(pedido);
     final createdAt = pedido.createdAt ?? DateTime.now();
+    final timestamp = createdAt.millisecondsSinceEpoch;
 
     return <AppNotification>[
       _buildNotification(
-        id: 'kitchen-${pedido.id}-created',
+        id: 'kitchen-${pedido.id}-created-$timestamp',
         role: NotificationRole.kitchen,
         title: 'Nuevo pedido recibido',
         message: 'El pedido #$friendlyId $mesa espera confirmacion en cocina.',
@@ -114,7 +115,7 @@ class NotificationController extends StateNotifier<NotificationState> {
         navigationRoute: '/cocina',
       ),
       _buildNotification(
-        id: 'admin-${pedido.id}-created',
+        id: 'admin-${pedido.id}-created-$timestamp',
         role: NotificationRole.admin,
         title: 'Se registro un nuevo pedido',
         message:

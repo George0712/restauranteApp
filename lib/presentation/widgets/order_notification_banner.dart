@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum NotificationType {
   newOrder,
@@ -8,23 +9,25 @@ enum NotificationType {
   orderUpdated,
 }
 
-class OrderNotificationBanner extends StatefulWidget {
+class OrderNotificationBanner extends ConsumerStatefulWidget {
   final NotificationType type;
   final String message;
   final VoidCallback onDismiss;
+  final bool shouldPlaySound;
 
   const OrderNotificationBanner({
     super.key,
     required this.type,
     required this.message,
     required this.onDismiss,
+    this.shouldPlaySound = true,
   });
 
   @override
-  State<OrderNotificationBanner> createState() => _OrderNotificationBannerState();
+  ConsumerState<OrderNotificationBanner> createState() => _OrderNotificationBannerState();
 }
 
-class _OrderNotificationBannerState extends State<OrderNotificationBanner>
+class _OrderNotificationBannerState extends ConsumerState<OrderNotificationBanner>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _slideAnimation;
@@ -57,7 +60,11 @@ class _OrderNotificationBannerState extends State<OrderNotificationBanner>
     ));
 
     _controller.forward();
-    _playSound();
+
+    // Solo reproducir sonido si shouldPlaySound es true
+    if (widget.shouldPlaySound) {
+      _playSound();
+    }
 
     // Auto-dismiss after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {

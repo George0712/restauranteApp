@@ -6,19 +6,44 @@ import 'package:restaurante_app/data/models/pedido.dart';
 // Provider para filtrar por estado
 final pedidoStatusFilterProvider = StateProvider<String>((ref) => 'all');
 
+// Clase para manejar notificaciones con timestamp único
+class OrderNotification {
+  final String message;
+  final int timestamp;
+
+  OrderNotification({
+    required this.message,
+    required this.timestamp,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OrderNotification &&
+          runtimeType == other.runtimeType &&
+          timestamp == other.timestamp;
+
+  @override
+  int get hashCode => timestamp.hashCode;
+}
+
 // Provider para notificaciones de nuevos pedidos
-final newOrderNotificationProvider = StateProvider<String?>((ref) => null);
+final newOrderNotificationProvider = StateProvider<OrderNotification?>((ref) => null);
 
 // Provider para notificaciones de pedidos completados
-final completedOrderNotificationProvider = StateProvider<String?>((ref) => null);
+final completedOrderNotificationProvider = StateProvider<OrderNotification?>((ref) => null);
 
 // Provider para notificaciones de pedidos actualizados/modificados
-final updatedOrderNotificationProvider = StateProvider<String?>((ref) => null);
+final updatedOrderNotificationProvider = StateProvider<OrderNotification?>((ref) => null);
+
+// Map para rastrear pedidos previos y detectar cambios
+final Map<String, String> _previousPedidosStatus = {};
+final Set<String> _seenPedidoIds = {};
 
 // StreamProvider para obtener pedidos en tiempo real
 final pedidosStreamProvider = StreamProvider<List<Pedido>>((ref) {
   developer.log("INICIANDO pedidosStreamProvider");
-  
+
   return FirebaseFirestore.instance
       .collection('pedido')
       .orderBy('createdAt', descending: true)
@@ -27,6 +52,37 @@ final pedidosStreamProvider = StreamProvider<List<Pedido>>((ref) {
     final pedidos = <Pedido>[];
     final autoCancelFutures = <Future<void>>[];
     final now = DateTime.now();
+
+    // Detectar nuevos pedidos y cambios de estado
+    for (final doc in snapshot.docs) {
+      try {
+        final pedidoId = doc.id;
+        final data = doc.data();
+        final currentStatus = data['status'] as String? ?? 'pendiente';
+
+        // Detectar nuevo pedido
+        if (!_seenPedidoIds.contains(pedidoId) && currentStatus == 'pendiente') {
+          _seenPedidoIds.add(pedidoId);
+          Future.microtask(() {
+            ref.read(newOrderNotificationProvider.notifier).state =
+                OrderNotification(
+                  message: 'Pedido #${pedidoId.substring(0, 8).toUpperCase()}',
+                  timestamp: DateTime.now().millisecondsSinceEpoch,
+                );
+
+            Future.delayed(const Duration(milliseconds: 3500), () {
+              ref.read(newOrderNotificationProvider.notifier).state = null;
+            });
+          });
+        }
+
+        // Solo actualizar el estado previo para tracking, sin notificar
+        _previousPedidosStatus[pedidoId] = currentStatus;
+
+      } catch (e) {
+        developer.log('Error procesando cambio de pedido ${doc.id}: $e', error: e);
+      }
+    }
 
     for (final doc in snapshot.docs) {
       try {
@@ -173,10 +229,13 @@ class CocinaNotifier extends StateNotifier<bool> {
       });
       developer.log("Pedido $pedidoId marcado como 'terminado'");
 
-      // Activar notificación de pedido completado
+      // Activar notificación de pedido completado con timestamp único
       Future.microtask(() {
         ref.read(completedOrderNotificationProvider.notifier).state =
-            'Pedido #${pedidoId.substring(0, 8).toUpperCase()}';
+            OrderNotification(
+              message: 'Pedido #${pedidoId.substring(0, 8).toUpperCase()}',
+              timestamp: DateTime.now().millisecondsSinceEpoch,
+            );
 
         // Auto-limpiar después de 3.5 segundos
         Future.delayed(const Duration(milliseconds: 3500), () {

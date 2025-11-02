@@ -18,8 +18,10 @@ class HomeCocineroScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(pedidoStatsProvider);
     final newOrderNotification = ref.watch(newOrderNotificationProvider);
-    final completedOrderNotification = ref.watch(completedOrderNotificationProvider);
-    final updatedOrderNotification = ref.watch(updatedOrderNotificationProvider);
+    final completedOrderNotification =
+        ref.watch(completedOrderNotificationProvider);
+    final updatedOrderNotification =
+        ref.watch(updatedOrderNotificationProvider);
 
     return statsAsync.when(
       data: (stats) {
@@ -57,31 +59,18 @@ class HomeCocineroScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Notification banners
-                        if (newOrderNotification != null)
-                          OrderNotificationBanner(
-                            type: NotificationType.newOrder,
-                            message: newOrderNotification,
-                            onDismiss: () {
-                              ref.read(newOrderNotificationProvider.notifier).state = null;
-                            },
+                        const Padding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          child: Text(
+                            'Gestión de Cocina',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        if (completedOrderNotification != null)
-                          OrderNotificationBanner(
-                            type: NotificationType.orderCompleted,
-                            message: completedOrderNotification,
-                            onDismiss: () {
-                              ref.read(completedOrderNotificationProvider.notifier).state = null;
-                            },
-                          ),
-                        if (updatedOrderNotification != null)
-                          OrderNotificationBanner(
-                            type: NotificationType.orderUpdated,
-                            message: updatedOrderNotification,
-                            onDismiss: () {
-                              ref.read(updatedOrderNotificationProvider.notifier).state = null;
-                            },
-                          ),
+                        ),
                         const SizedBox(height: 8),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -103,6 +92,51 @@ class HomeCocineroScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  // Notification banners como overlay flotante
+                  SafeArea(
+                    child: Column(
+                      children: [
+                        if (newOrderNotification != null)
+                          OrderNotificationBanner(
+                            key: ValueKey(newOrderNotification.timestamp),
+                            type: NotificationType.newOrder,
+                            message: newOrderNotification.message,
+                            shouldPlaySound: true, // Sonido habilitado en cocina
+                            onDismiss: () {
+                              ref
+                                  .read(newOrderNotificationProvider.notifier)
+                                  .state = null;
+                            },
+                          ),
+                        if (completedOrderNotification != null)
+                          OrderNotificationBanner(
+                            key: ValueKey(completedOrderNotification.timestamp),
+                            type: NotificationType.orderCompleted,
+                            message: completedOrderNotification.message,
+                            shouldPlaySound: true, // Sonido habilitado en cocina
+                            onDismiss: () {
+                              ref
+                                  .read(completedOrderNotificationProvider
+                                      .notifier)
+                                  .state = null;
+                            },
+                          ),
+                        if (updatedOrderNotification != null)
+                          OrderNotificationBanner(
+                            key: ValueKey(updatedOrderNotification.timestamp),
+                            type: NotificationType.orderUpdated,
+                            message: updatedOrderNotification.message,
+                            shouldPlaySound: true, // Sonido habilitado en cocina
+                            onDismiss: () {
+                              ref
+                                  .read(
+                                      updatedOrderNotificationProvider.notifier)
+                                  .state = null;
+                            },
+                          ),
                       ],
                     ),
                   ),
@@ -187,11 +221,10 @@ class HomeCocineroScreen extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 // -------------------- Vista de Mazo de Cartas para Móviles --------------------
-class _CardStackView extends StatefulWidget {
+class _CardStackView extends ConsumerStatefulWidget {
   final List pedidos;
   final Color emptyStateColor;
 
@@ -201,10 +234,10 @@ class _CardStackView extends StatefulWidget {
   });
 
   @override
-  State<_CardStackView> createState() => _CardStackViewState();
+  ConsumerState<_CardStackView> createState() => _CardStackViewState();
 }
 
-class _CardStackViewState extends State<_CardStackView> {
+class _CardStackViewState extends ConsumerState<_CardStackView> {
   late PageController _pageController;
   int currentIndex = 0;
 
@@ -265,24 +298,23 @@ class _CardStackViewState extends State<_CardStackView> {
 
     return Stack(
       children: [
-        // Contador simple de pedidos - centrado y sin caja
+        // Contador simple de pedidos
         Positioned(
-          top: 8,
+          top: 0,
           left: 0,
           right: 0,
           child: Center(
             child: Text(
               '${currentIndex + 1} / ${widget.pedidos.length}',
               style: TextStyle(
-                color: widget.emptyStateColor,
-                fontSize: 16,
+                color: widget.emptyStateColor.withValues(alpha: 0.6),
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
                 shadows: [
                   Shadow(
                     color: Colors.black.withValues(alpha: 0.6),
                     blurRadius: 8,
-                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -304,7 +336,7 @@ class _CardStackViewState extends State<_CardStackView> {
           itemBuilder: (context, index) {
             final pedido = widget.pedidos[index];
             return Padding(
-              padding: const EdgeInsets.fromLTRB(8, 40, 8, 16),
+              padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
               child: Hero(
                 tag: 'pedido_${pedido.id}',
                 child: PedidoCard(pedido: pedido),
@@ -324,13 +356,11 @@ class _CardStackViewState extends State<_CardStackView> {
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+                    blurRadius: 6,
                   ),
                   BoxShadow(
                     color: widget.emptyStateColor.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    blurRadius: 8,
                   ),
                 ],
               ),
@@ -459,35 +489,62 @@ class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               ref.read(newOrderNotificationProvider.notifier).state =
-                  'Pedido #${newOrder.id.substring(0, 8).toUpperCase()}';
+                  OrderNotification(
+                    message: 'Pedido #${newOrder.id.substring(0, 8).toUpperCase()}',
+                    timestamp: DateTime.now().millisecondsSinceEpoch,
+                  );
+
+              // Auto-limpiar después de 3.5 segundos
+              Future.delayed(const Duration(milliseconds: 3500), () {
+                if (mounted) {
+                  ref.read(newOrderNotificationProvider.notifier).state = null;
+                }
+              });
             }
           });
         }
       }
 
-      // Detectar pedidos MODIFICADOS (cambió cantidad de items)
+      // Detectar pedidos MODIFICADOS (cambió la cantidad de items)
       for (final order in currentOrders) {
         final orderId = order.id;
         final currentItemCount = order.items.length;
         final previousItemCount = _orderItemCounts[orderId];
 
-        if (previousItemCount != null && currentItemCount != previousItemCount) {
-          // Se modificó el pedido (agregaron o eliminaron items)
+        // Solo notificar si:
+        // 1. El pedido ya existía
+        // 2. Cambió la cantidad de items (agregaron o quitaron productos)
+        // 3. El pedido sigue en estado pendiente
+        if (previousItemCount != null &&
+            currentItemCount != previousItemCount &&
+            order.status == 'pendiente') {
+
           String notificationMessage;
 
           if (currentItemCount > previousItemCount) {
-            // Se agregaron items
             final itemsAdded = currentItemCount - previousItemCount;
-            notificationMessage = 'Pedido #${orderId.substring(0, 8).toUpperCase()} - +$itemsAdded items';
+            notificationMessage =
+                'Pedido #${orderId.substring(0, 8).toUpperCase()} modificado (+$itemsAdded productos)';
           } else {
-            // Se eliminaron items
             final itemsRemoved = previousItemCount - currentItemCount;
-            notificationMessage = 'Pedido #${orderId.substring(0, 8).toUpperCase()} - -$itemsRemoved items';
+            notificationMessage =
+                'Pedido #${orderId.substring(0, 8).toUpperCase()} modificado (-$itemsRemoved productos)';
           }
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              ref.read(updatedOrderNotificationProvider.notifier).state = notificationMessage;
+              ref.read(updatedOrderNotificationProvider.notifier).state =
+                  OrderNotification(
+                    message: notificationMessage,
+                    timestamp: DateTime.now().millisecondsSinceEpoch,
+                  );
+
+              // Auto-limpiar después de 3.5 segundos
+              Future.delayed(const Duration(milliseconds: 3500), () {
+                if (mounted) {
+                  ref.read(updatedOrderNotificationProvider.notifier).state = null;
+                }
+              });
             }
           });
         }
@@ -570,11 +627,17 @@ class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
 }
 
 // -------------------- Pestana Completados --------------------
-class _CompletedOrdersTab extends ConsumerWidget {
+class _CompletedOrdersTab extends ConsumerStatefulWidget {
   const _CompletedOrdersTab();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CompletedOrdersTab> createState() =>
+      _CompletedOrdersTabState();
+}
+
+class _CompletedOrdersTabState extends ConsumerState<_CompletedOrdersTab> {
+  @override
+  Widget build(BuildContext context) {
     final completedOrdersAsync = ref.watch(completedPedidosProvider);
 
     return completedOrdersAsync.when(
