@@ -1,14 +1,20 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:go_router/go_router.dart';
+
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/ion.dart';
 import 'package:iconify_flutter/icons/ri.dart';
+
 import 'package:intl/intl.dart';
+
 import 'package:restaurante_app/data/models/notification_model.dart';
 import 'package:restaurante_app/presentation/providers/notification/notification_provider.dart';
 import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
@@ -27,6 +33,10 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
   StreamSubscription<AppNotification>? _notificationSubscription;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  Timer? _timer;
+  bool _turnoActivoAutomatico = false;
+  Duration _tiempoParaSiguienteTurno = Duration.zero;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +46,42 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
         .listen((notification) {
       _playNotificationSound();
     });
+
+    _actualizarEstadoTurnoAutomatico();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      _actualizarEstadoTurnoAutomatico();
+    });
+  }
+
+  void _actualizarEstadoTurnoAutomatico() {
+    final now = DateTime
+        .now(); // Hora local directamente
+
+    final today =
+        DateTime(now.year, now.month, now.day); // Fecha local sin tiempo
+    final turnoInicio = DateTime(
+        today.year, today.month, today.day, 18, 0, 0); // 18:00 local hoy
+    final turnoFin = DateTime(today.year, today.month, today.day + 1, 0, 0,
+        0); // Medianoche siguiente día
+
+    bool activo = now.isAfter(turnoInicio) && now.isBefore(turnoFin);
+
+    Duration tiempoParaInicio;
+    if (activo) {
+      tiempoParaInicio = Duration.zero;
+    } else {
+      // Siguiente inicio será hoy a las 18:00 si no pasó, si pasó será mañana 18:00
+      final nextInicio = now.isBefore(turnoInicio) ? turnoInicio : turnoInicio.add( const Duration(days: 1));
+    tiempoParaInicio = nextInicio.difference(now);
+    }
+
+    if (_turnoActivoAutomatico != activo ||
+        _tiempoParaSiguienteTurno != tiempoParaInicio) {
+      setState(() {
+        _turnoActivoAutomatico = activo;
+        _tiempoParaSiguienteTurno = tiempoParaInicio;
+      });
+    }
   }
 
   Future<void> _playNotificationSound() async {
@@ -49,6 +95,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _notificationSubscription?.cancel();
     _audioPlayer.dispose();
     super.dispose();
@@ -164,7 +211,6 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
     final mesasAsync = ref.watch(mesasStreamProvider);
     final orderStats = ref.watch(orderStatsProvider);
     final turnoAsync = ref.watch(turnoActivoProvider);
-    final turnoController = ref.watch(turnoControllerProvider);
 
     final mesasActivas = mesasAsync.when(
       data: (mesas) {
@@ -262,57 +308,49 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
             children: [
               Row(
                 children: [
-                  // Botón de turno
-                  InkWell(
-                    onTap: () {
-                      if (!turnoActivo) {
-                        turnoController.iniciarTurno();
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
+                  // Mostrar indicador visual de turno activo o no, sin botón
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: turnoActivo
+                          ? const Color(0xFF22C55E).withValues(alpha: 0.18)
+                          : const Color(0xFFEF4444).withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
                         color: turnoActivo
-                            ? const Color(0xFF22C55E).withValues(alpha: 0.18)
-                            : const Color(0xFFEF4444).withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
+                            ? const Color(0xFF22C55E).withValues(alpha: 0.4)
+                            : const Color(0xFFEF4444).withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.circle,
+                          size: 10,
                           color: turnoActivo
-                              ? const Color(0xFF22C55E).withValues(alpha: 0.4)
-                              : const Color(0xFFEF4444).withValues(alpha: 0.4),
+                              ? const Color(0xFF22C55E)
+                              : const Color(0xFFEF4444),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.circle,
-                            size: 10,
-                            color: turnoActivo
-                                ? const Color(0xFF22C55E)
-                                : const Color(0xFFEF4444),
+                        const SizedBox(width: 6),
+                        Text(
+                          turnoActivo ? 'Turno activo' : 'Turno inactivo',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            turnoActivo ? 'Turno activo' : 'Iniciar turno',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     turnoActivo
                         ? 'Turno en curso'
-                        : ' ${DateFormat('HH:mm:ss').format(DateTime.now())}',
+                        : 'Siguiente turno en ${_formatearDuracion(_tiempoParaSiguienteTurno)}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: isTablet ? 16 : 14,
@@ -320,9 +358,9 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                     ),
                   ),
                   const Spacer(),
-                  if (turno != null)
+                  if (turnoActivo)
                     Text(
-                      '${DateFormat('HH:mm').format(turno.horaInicio)} - ${DateFormat('HH:mm').format(turno.horaFinProgramada)}',
+                      'Turno en Curso ${DateFormat('HH:mm:ss').format(DateTime.now())}',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w500,
@@ -361,6 +399,13 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
       loading: () => _buildShiftOverviewSkeleton(isTablet, stats),
       error: (_, __) => _buildShiftOverviewSkeleton(isTablet, stats),
     );
+  }
+
+  String _formatearDuracion(Duration duracion) {
+    final horas = duracion.inHours.toString().padLeft(2, '0');
+    final minutos = (duracion.inMinutes % 60).toString().padLeft(2, '0');
+    final segundos = (duracion.inSeconds % 60).toString().padLeft(2, '0');
+    return '$horas:$minutos:$segundos';
   }
 
   Widget _buildShiftOverviewSkeleton(bool isTablet, List<_ShiftStat> stats) {
