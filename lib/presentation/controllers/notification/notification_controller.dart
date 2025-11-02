@@ -37,6 +37,15 @@ class NotificationController extends StateNotifier<NotificationState> {
   bool _hydrated = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  final Map<NotificationRole, StreamController<AppNotification>>
+      _newNotificationControllers = {};
+
+  Stream<AppNotification> streamForRole(NotificationRole role) {
+    _newNotificationControllers.putIfAbsent(
+        role, () => StreamController<AppNotification>.broadcast());
+    return _newNotificationControllers[role]!.stream;
+  }
+
   void _onPedidosChanged(
     AsyncValue<List<Pedido>>? _,
     AsyncValue<List<Pedido>> next,
@@ -312,7 +321,7 @@ class NotificationController extends StateNotifier<NotificationState> {
 
     _emittedNotifications.add(key);
     _addNotifications(<AppNotification>[notification]);
-    _playAlert(<AppNotification>[notification]);
+    // _playAlert(<AppNotification>[notification]);
   }
 
   void _addNotifications(List<AppNotification> notifications) {
@@ -346,6 +355,12 @@ class NotificationController extends StateNotifier<NotificationState> {
             admin.removeRange(_maxNotificationsPerRole, admin.length);
           }
           break;
+      }
+
+      // Emitir evento a la escucha del rol
+      if (_newNotificationControllers.containsKey(notification.role) &&
+          !_newNotificationControllers[notification.role]!.isClosed) {
+        _newNotificationControllers[notification.role]!.add(notification);
       }
     }
 
@@ -467,7 +482,7 @@ class NotificationController extends StateNotifier<NotificationState> {
     }
 
     _addNotifications(notifications);
-    _playAlert(notifications);
+    // _playAlert(notifications);
   }
 
   void _playAlert(List<AppNotification> notifications) {

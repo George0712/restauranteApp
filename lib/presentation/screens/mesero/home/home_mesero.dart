@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +10,7 @@ import 'package:iconify_flutter/icons/ion.dart';
 import 'package:iconify_flutter/icons/ri.dart';
 import 'package:intl/intl.dart';
 import 'package:restaurante_app/data/models/notification_model.dart';
+import 'package:restaurante_app/presentation/providers/notification/notification_provider.dart';
 import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/providers/cocina/order_provider.dart';
 import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
@@ -20,6 +24,36 @@ class HomeMeseroScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
+  StreamSubscription<AppNotification>? _notificationSubscription;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    final controller = ref.read(notificationCenterProvider.notifier);
+    _notificationSubscription = controller
+        .streamForRole(NotificationRole.waiter)
+        .listen((notification) {
+      _playNotificationSound();
+    });
+  }
+
+  Future<void> _playNotificationSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('sounds/new_order.mp3'));
+    } catch (_) {
+      HapticFeedback.heavyImpact();
+      SystemSound.play(SystemSoundType.alert);
+    }
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -276,7 +310,9 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    turnoActivo ? 'Turno en curso' : ' ${DateFormat('HH:mm:ss').format(DateTime.now())}',
+                    turnoActivo
+                        ? 'Turno en curso'
+                        : ' ${DateFormat('HH:mm:ss').format(DateTime.now())}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: isTablet ? 16 : 14,
@@ -354,7 +390,8 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),

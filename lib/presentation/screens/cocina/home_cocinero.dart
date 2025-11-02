@@ -1,4 +1,7 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,16 +9,52 @@ import 'package:restaurante_app/data/models/pedido.dart';
 
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 import 'package:restaurante_app/data/models/notification_model.dart';
+import 'package:restaurante_app/presentation/providers/notification/notification_provider.dart';
 import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/widgets/pedido_cards.dart';
 import 'package:restaurante_app/presentation/widgets/order_notification_banner.dart';
 import 'package:restaurante_app/presentation/widgets/tab_label.dart';
 
-class HomeCocineroScreen extends ConsumerWidget {
+class HomeCocineroScreen extends ConsumerStatefulWidget {
   const HomeCocineroScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeCocineroScreen> createState() => _HomeCocineroScreenState();
+}
+
+class _HomeCocineroScreenState extends ConsumerState<HomeCocineroScreen> {
+  StreamSubscription<AppNotification>? _notificationSubscription;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    final controller = ref.read(notificationCenterProvider.notifier);
+    _notificationSubscription = controller
+        .streamForRole(NotificationRole.kitchen)
+        .listen((notification) {
+      _playNotificationSound();
+    });
+  }
+
+  Future<void> _playNotificationSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('sounds/new_order.mp3'));
+    } catch (_) {
+      HapticFeedback.heavyImpact();
+      SystemSound.play(SystemSoundType.alert);
+    }
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final statsAsync = ref.watch(pedidoStatsProvider);
     final newOrderNotification = ref.watch(newOrderNotificationProvider);
     final completedOrderNotification =
@@ -104,7 +143,8 @@ class HomeCocineroScreen extends ConsumerWidget {
                             key: ValueKey(newOrderNotification.timestamp),
                             type: NotificationType.newOrder,
                             message: newOrderNotification.message,
-                            shouldPlaySound: true, // Sonido habilitado en cocina
+                            shouldPlaySound:
+                                true, // Sonido habilitado en cocina
                             onDismiss: () {
                               ref
                                   .read(newOrderNotificationProvider.notifier)
@@ -116,7 +156,8 @@ class HomeCocineroScreen extends ConsumerWidget {
                             key: ValueKey(completedOrderNotification.timestamp),
                             type: NotificationType.orderCompleted,
                             message: completedOrderNotification.message,
-                            shouldPlaySound: true, // Sonido habilitado en cocina
+                            shouldPlaySound:
+                                true, // Sonido habilitado en cocina
                             onDismiss: () {
                               ref
                                   .read(completedOrderNotificationProvider
@@ -129,7 +170,8 @@ class HomeCocineroScreen extends ConsumerWidget {
                             key: ValueKey(updatedOrderNotification.timestamp),
                             type: NotificationType.orderUpdated,
                             message: updatedOrderNotification.message,
-                            shouldPlaySound: true, // Sonido habilitado en cocina
+                            shouldPlaySound:
+                                true, // Sonido habilitado en cocina
                             onDismiss: () {
                               ref
                                   .read(
@@ -451,7 +493,8 @@ class _PendingOrdersTab extends ConsumerStatefulWidget {
 
 class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
   Set<String> _knownOrderIds = {};
-  Map<String, int> _orderItemCounts = {}; // Rastrear cantidad de items por pedido
+  Map<String, int> _orderItemCounts =
+      {}; // Rastrear cantidad de items por pedido
 
   @override
   void initState() {
@@ -490,9 +533,9 @@ class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
             if (mounted) {
               ref.read(newOrderNotificationProvider.notifier).state =
                   OrderNotification(
-                    message: 'Pedido #${newOrder.id.substring(0, 8).toUpperCase()}',
-                    timestamp: DateTime.now().millisecondsSinceEpoch,
-                  );
+                message: 'Pedido #${newOrder.id.substring(0, 8).toUpperCase()}',
+                timestamp: DateTime.now().millisecondsSinceEpoch,
+              );
 
               // Auto-limpiar después de 3.5 segundos
               Future.delayed(const Duration(milliseconds: 3500), () {
@@ -518,7 +561,6 @@ class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
         if (previousItemCount != null &&
             currentItemCount != previousItemCount &&
             order.status == 'pendiente') {
-
           String notificationMessage;
 
           if (currentItemCount > previousItemCount) {
@@ -535,14 +577,15 @@ class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
             if (mounted) {
               ref.read(updatedOrderNotificationProvider.notifier).state =
                   OrderNotification(
-                    message: notificationMessage,
-                    timestamp: DateTime.now().millisecondsSinceEpoch,
-                  );
+                message: notificationMessage,
+                timestamp: DateTime.now().millisecondsSinceEpoch,
+              );
 
               // Auto-limpiar después de 3.5 segundos
               Future.delayed(const Duration(milliseconds: 3500), () {
                 if (mounted) {
-                  ref.read(updatedOrderNotificationProvider.notifier).state = null;
+                  ref.read(updatedOrderNotificationProvider.notifier).state =
+                      null;
                 }
               });
             }

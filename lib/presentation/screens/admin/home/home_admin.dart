@@ -1,5 +1,7 @@
-﻿import 'dart:math' as math;
+﻿import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/data/models/notification_model.dart';
+import 'package:restaurante_app/presentation/providers/notification/notification_provider.dart';
 import 'package:restaurante_app/presentation/widgets/notification_bell.dart';
 import 'package:restaurante_app/presentation/widgets/dashboard_card.dart';
 import 'package:restaurante_app/presentation/widgets/option_button_card.dart';
@@ -27,6 +30,8 @@ class HomeAdminScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
+  StreamSubscription<AppNotification>? _notificationSubscription;
+  final AudioPlayer _audioPlayer = AudioPlayer();
   final NumberFormat _currencyFormat =
       NumberFormat.currency(locale: 'es_CO', symbol: '\$');
 
@@ -43,6 +48,33 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
     'terminado': Color(0xFF34D399),
     'cancelado': Color(0xFFF87171),
   };
+
+  @override
+  void initState() {
+    super.initState();
+    final controller = ref.read(notificationCenterProvider.notifier);
+    _notificationSubscription =
+        controller.streamForRole(NotificationRole.admin).listen((notification) {
+      _playNotificationSound();
+    });
+  }
+
+  Future<void> _playNotificationSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('sounds/new_order.mp3'));
+    } catch (_) {
+      // Fallback si ocurre error
+      HapticFeedback.heavyImpact();
+      SystemSound.play(SystemSoundType.alert);
+    }
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription?.cancel();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +104,8 @@ class _HomeAdminScreenState extends ConsumerState<HomeAdminScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.07)),
                 ),
                 child: TabBar(
                   splashFactory: NoSplash.splashFactory,
