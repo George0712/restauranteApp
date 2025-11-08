@@ -466,7 +466,7 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
         // Mantener fecha actual si hay error
       }
       
-      final String displayTitle = mode == 'mesa' ? '$tableNumber' : customerName;
+      final String displayTitle = mode == 'mesa' ? tableNumber : customerName;
       
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

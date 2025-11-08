@@ -412,10 +412,10 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     
     if (disponibles.isEmpty) {
-      return Column(
+      return const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Adicionales',
             style: TextStyle(
               fontSize: 18,
@@ -423,8 +423,8 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 12),
-          const Center(
+          SizedBox(height: 12),
+          Center(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Text(
