@@ -45,7 +45,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isPasswordVisible = ref.watch(passwordVisibilityProvider);
     final isFieldsValid = ref.watch(fieldsValidProvider);
 
-    const String assetName = 'assets/icon/cover.png';
+    const String assetName = 'assets/icon/cover-2.png';
+    // icon designer: Gregor Cresnar
+    // icon designer link: /creator/grega.cresnar/
+    // font author: Impallari Type
+    // font author site: www.impallari.com
 
     return Scaffold(
       body: Container(

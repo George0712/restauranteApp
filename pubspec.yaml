@@ -91,6 +91,7 @@ flutter:
     - assets/icon/default-monochrome-black.svg
     - assets/icon/default-monochrome-white.svg
     - assets/icon/cover.png
+    - assets/icon/cover-2.png
     - assets/images/bg-mesero.png
     - assets/sounds/new_order.mp3
     - assets/sounds/order_complete.mp3

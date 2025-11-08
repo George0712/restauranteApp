@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 import 'package:restaurante_app/presentation/screens/splash/splah_loading_screen.dart';
@@ -15,6 +16,8 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _redirected = false;
+
   @override
   Widget build(BuildContext context) {
     final userModelAsync = ref.watch(userModelProvider);
@@ -23,10 +26,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       loading: () => const SplashLoadingScreen(),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (user) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _redirectByRole(context, user);
-        });
-        return const SizedBox(); // Evita renderizar widgets por ahora
+        if (!_redirected) {
+          _redirected = true;
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) _redirectByRole(context, user);
+          });
+        }
+        return const SplashLoadingScreen();
       },
     );
   }
@@ -44,8 +50,6 @@ void _redirectByRole(BuildContext context, UserModel user) {
       context.go('/cocinero/home');
       break;
     default:
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Rol desconocido: ${user.rol}')),
-      );
+      SnackbarHelper.showInfo('Rol desconocido: ${user.rol}');
   }
 }
