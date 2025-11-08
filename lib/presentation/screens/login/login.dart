@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_constants.dart';
-import 'package:restaurante_app/core/constants/app_strings.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/login/login_provider.dart';
 import 'package:restaurante_app/presentation/widgets/app_text_form_field.dart';
-import 'package:restaurante_app/presentation/widgets/gradient_background.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -41,148 +40,188 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // final theme = Theme.of(context);
     final loginController = ref.watch(loginControllerProvider);
     final isPasswordVisible = ref.watch(passwordVisibilityProvider);
     final isFieldsValid = ref.watch(fieldsValidProvider);
 
+    const String assetName = 'assets/icon/cover.png';
+
     return Scaffold(
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          GradientBackground(
-            children: [
-              Text(
-                AppStrings.signInToYourNAccount,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(AppStrings.signInToYourAccount,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white70,
-                  )),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Form(
-            key: _formKey,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0F0F23),
+              Color(0xFF1A1A2E),
+              Color(0xFF16213E),
+            ],          
+          ),          
+        ),
+        child: Center(
+          child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 24),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AppTextFormField(
-                    controller: loginController.emailController,
-                    labelText: AppStrings.email,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    onChanged: (_) => _formKey.currentState?.validate(),
-                    validator: (value) {
-                      return value!.isEmpty
-                          ? AppStrings.pleaseEnterEmailAddress
-                          : AppConstants.emailRegex.hasMatch(value)
-                              ? null
-                              : AppStrings.invalidEmailAddress;
-                    },
-                  ),
-                  AppTextFormField(
-                    obscureText: isPasswordVisible,
-                    controller: loginController.passwordController,
-                    labelText: AppStrings.password,
-                    textInputAction: TextInputAction.done,
-                    keyboardType: TextInputType.visiblePassword,
-                    onChanged: (_) => _formKey.currentState?.validate(),
-                    validator: (value) {
-                      return value!.isEmpty
-                          ? AppStrings.pleaseEnterPassword
-                          : AppConstants.passwordRegex.hasMatch(value)
-                              ? null
-                              : AppStrings.invalidPassword;
-                    },
-                    suffixIcon: IconButton(
-                      onPressed: () => ref
-                          .read(passwordVisibilityProvider.notifier)
-                          .state = !isPasswordVisible,
-                      style: IconButton.styleFrom(
-                        minimumSize: const Size.square(48),
-                      ),
-                      icon: Icon(
-                        isPasswordVisible
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
-                        size: 20,
-                        color: Colors.black54,
-                      ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 24),
+                    child: Image.asset(
+                      assetName,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      AppStrings.forgotPassword, 
-                      style: TextStyle(
-                        color: theme.primaryColor.withAlpha(200)
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: isFieldsValid
-                          ? () async {
-                              final success = await loginController.login(ref);
-                              if (success) {
-                                if (context.mounted) {
-                                  context.go(
-                                      '/splash-screen');
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Text(
+                        //   "Iniciar Sesión",
+                        //   textAlign: TextAlign.center,
+                        //   style: theme.textTheme.titleLarge?.copyWith(
+                        //   color: Colors.white,
+                        //   fontWeight: FontWeight.w700,
+                        //   ),
+                        // ),
+                        const SizedBox(height: 16),
+                        AppTextFormField(
+                          controller: loginController.emailController,
+                          labelText: "Correo o usuario",
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Ingresa tu correo o usuario',
+                            filled: true,
+                            fillColor: Colors.white12,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            prefixIcon: const Icon(Icons.person_outline,
+                                color: Colors.white54),
+                          ),
+                          validator: (value) {
+                            return value!.isEmpty
+                                ? "Ingresa correo"
+                                : AppConstants.emailRegex.hasMatch(value)
+                                    ? null
+                                    : "Correo no válido";
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        AppTextFormField(
+                          obscureText: isPasswordVisible,
+                          controller: loginController.passwordController,
+                          labelText: "Contraseña",
+                          textInputAction: TextInputAction.done,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: '••••••••',
+                            filled: true,
+                            fillColor: Colors.white12,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            labelStyle: const TextStyle(color: Colors.white70),
+                            prefixIcon: const Icon(Icons.lock_outline,
+                                color: Colors.white54),
+                            suffixIcon: IconButton(
+                              onPressed: () => ref
+                                  .read(passwordVisibilityProvider.notifier)
+                                  .state = !isPasswordVisible,
+                              icon: Icon(
+                                isPasswordVisible
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: isPasswordVisible
+                                    ? Colors.white54
+                                    : const Color(
+                                    0xFFDA3276),
+                              ),
+                            ),
+                          ),
+                          validator: (value) {
+                            return value!.isEmpty
+                                ? "Ingresa contraseña"
+                                : AppConstants.passwordRegex.hasMatch(value)
+                                    ? null
+                                    : "Contraseña no válida";
+                          },
+                          keyboardType: TextInputType.visiblePassword,
+                        ),
+                        // TextButton(
+                        //   onPressed: () {},
+                        //   child: const Text(
+                        //     "¿Olvidaste tu contraseña?",
+                        //     style: TextStyle(
+                        //       color: Color(0xFFDA3276), // rosa degradado
+                        //     ),
+                        //   ),
+                        // ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: isFieldsValid
+                              ? () async {
+                                  final success =
+                                      await loginController.login(ref);
+                                  if (success) {
+                                    if (context.mounted) {
+                                      context.go('/splash-screen');
+                                    }
+                                  } else {
+                                    if (context.mounted) {
+                                      SnackbarHelper.showError(
+                                          "Inicio de sesión fallido");
+                                    }
+                                  }
                                 }
-                              } else {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Inicio de sesión fallido'),
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-                          : null,
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all(
-                          const EdgeInsets.symmetric(vertical: 25),
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14)),
+                            backgroundColor: isFieldsValid
+                                ? const Color(
+                                    0xFFDA3276)
+                                : Colors
+                                    .white24, 
+                          ),
+                          child: const Text(
+                            "Entrar",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
+                            ),
+                          ),
                         ),
-                        textStyle: WidgetStateProperty.all(
-                          const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        backgroundColor:
-                            WidgetStateProperty.resolveWith((states) {
-                          if (states.contains(WidgetState.disabled)) {
-                            return theme.primaryColor.withAlpha(200);
-                          }
-                          return theme.primaryColor;
-                        }),
-                        foregroundColor: WidgetStateProperty.all(
-                          theme.colorScheme.onPrimary,
-                        ),
-                        shape: WidgetStateProperty.all(
-                          RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      child: const Text(AppStrings.login),
+                        const SizedBox(height: 12),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.center,
+                        //   children: [
+                        //     Checkbox(
+                        //       value: "Recordar sesión" == "Recordar sesión",
+                        //       activeColor: const Color(0xFF8846E8),
+                        //       onChanged: (value) => (),
+                        //     ),
+                        //     const Text("Recordar sesión",
+                        //         style: TextStyle(color: Colors.white54)),
+                        //   ],
+                        // ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

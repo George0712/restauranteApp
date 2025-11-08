@@ -10,10 +10,17 @@ class AppTextFormField extends StatelessWidget {
     this.onChanged,
     this.validator,
     this.obscureText,
+    this.prefixIcon,
     this.suffixIcon,
     this.onEditingComplete,
     this.autofocus,
     this.focusNode,
+    this.decoration,
+    this.style,
+    this.labelStyle,
+    this.fillColor,
+    this.filled,
+    this.border,
   });
 
   final void Function(String)? onChanged;
@@ -22,11 +29,19 @@ class AppTextFormField extends StatelessWidget {
   final TextInputType keyboardType;
   final TextEditingController controller;
   final bool? obscureText;
+  final Widget? prefixIcon;
   final Widget? suffixIcon;
   final String labelText;
   final bool? autofocus;
   final FocusNode? focusNode;
   final void Function()? onEditingComplete;
+
+  final InputDecoration? decoration;
+  final TextStyle? style;
+  final TextStyle? labelStyle;
+  final Color? fillColor;
+  final bool? filled;
+  final InputBorder? border;
 
   @override
   Widget build(BuildContext context) {
@@ -41,18 +56,24 @@ class AppTextFormField extends StatelessWidget {
         autofocus: autofocus ?? false,
         validator: validator,
         obscureText: obscureText ?? false,
-        obscuringCharacter: '*',
+        obscuringCharacter: '•',
         onEditingComplete: onEditingComplete,
-        decoration: InputDecoration(
-          suffixIcon: suffixIcon,
-          labelText: labelText,
-          floatingLabelBehavior: FloatingLabelBehavior.always,
-        ),
-        onTapOutside: (event) => FocusScope.of(context).unfocus(),
-        style: TextStyle(
+        style: style ?? TextStyle(
           fontWeight: FontWeight.w500,
           color: Theme.of(context).colorScheme.onSurface,
         ),
+        decoration: decoration ??
+            InputDecoration(
+              suffixIcon: suffixIcon,
+              prefixIcon: prefixIcon,
+              labelText: labelText,
+              labelStyle: labelStyle,
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              filled: filled,
+              fillColor: fillColor,
+              border: border,
+            ),
+        onTapOutside: (event) => FocusScope.of(context).unfocus(),
       ),
     );
   }
