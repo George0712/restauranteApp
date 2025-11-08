@@ -124,7 +124,7 @@ class _CreateCredentialsMeseroState
                           validator: (value) {
                             return value!.isEmpty
                                 ? AppStrings.pleaseEnterUserName
-                                : null;
+                                : AppStrings.invalidUserName;
                           },
                         ),
                         const SizedBox(height: 16),

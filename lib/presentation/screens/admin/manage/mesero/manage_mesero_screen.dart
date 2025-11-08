@@ -27,7 +27,8 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_outlined,
+              color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
@@ -45,7 +46,7 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
           ),
         ),
         child: Align(
-          alignment: Alignment.topCenter,
+          alignment: Alignment.topLeft,
           child: SingleChildScrollView(
             padding: isTablet
                 ? const EdgeInsets.symmetric(vertical: 100, horizontal: 80)
@@ -83,7 +84,8 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -101,7 +103,7 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                ListCardsUsers( rol: rol),
+                ListCardsUsers(rol: rol),
               ],
             ),
           ),

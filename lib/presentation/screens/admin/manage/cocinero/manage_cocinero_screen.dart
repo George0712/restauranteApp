@@ -9,7 +9,8 @@ class ManageCocineroScreen extends ConsumerStatefulWidget {
   const ManageCocineroScreen({super.key});
 
   @override
-  ConsumerState<ManageCocineroScreen> createState() => _ManageCocineroScreenState();
+  ConsumerState<ManageCocineroScreen> createState() =>
+      _ManageCocineroScreenState();
 }
 
 class _ManageCocineroScreenState extends ConsumerState<ManageCocineroScreen> {
@@ -27,7 +28,8 @@ class _ManageCocineroScreenState extends ConsumerState<ManageCocineroScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_outlined,
+              color: Colors.white),
           onPressed: () => context.pop(),
         ),
       ),
@@ -37,7 +39,6 @@ class _ManageCocineroScreenState extends ConsumerState<ManageCocineroScreen> {
           gradient: LinearGradient(
             colors: [
               Color(0xFF0F0F23),
-              Color(0xFF1A1A2E),
               Color(0xFF16213E),
             ],
             begin: Alignment.topLeft,
@@ -45,10 +46,10 @@ class _ManageCocineroScreenState extends ConsumerState<ManageCocineroScreen> {
           ),
         ),
         child: Align(
-          alignment: Alignment.topCenter,
+          alignment: Alignment.topLeft,
           child: SingleChildScrollView(
             padding: isTablet
-                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
+                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 80)
                 : const EdgeInsets.fromLTRB(16, 100, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,7 +81,8 @@ class _ManageCocineroScreenState extends ConsumerState<ManageCocineroScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
