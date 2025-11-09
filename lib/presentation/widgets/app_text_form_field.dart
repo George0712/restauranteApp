@@ -21,6 +21,7 @@ class AppTextFormField extends StatelessWidget {
     this.fillColor,
     this.filled,
     this.border,
+    this.autovalidateMode,
   });
 
   final void Function(String)? onChanged;
@@ -42,6 +43,7 @@ class AppTextFormField extends StatelessWidget {
   final Color? fillColor;
   final bool? filled;
   final InputBorder? border;
+  final AutovalidateMode? autovalidateMode;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,7 @@ class AppTextFormField extends StatelessWidget {
         onChanged: onChanged,
         autofocus: autofocus ?? false,
         validator: validator,
+        autovalidateMode: autovalidateMode ?? AutovalidateMode.disabled,
         obscureText: obscureText ?? false,
         obscuringCharacter: '•',
         onEditingComplete: onEditingComplete,

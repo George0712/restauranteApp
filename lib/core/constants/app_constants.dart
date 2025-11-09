@@ -7,7 +7,7 @@ class AppConstants {
   static final RegExp nameRegex = RegExp(r'^[A-Za-zÀ-ÖØ-öø-ÿ0-9\s]{3,}$');
   static final RegExp surnameRegex = RegExp(r'^[A-Za-zÀ-ÖØ-öø-ÿ\s]{3,}$');
   static final RegExp phoneRegex = RegExp(r'^\+?[1-9]\d{9,14}$');
-  static final RegExp addressRegex = RegExp(r'^[a-zA-Z0-9\s#,.°\-\/]*$');
+ static final RegExp addressRegex = RegExp(r'^[a-zA-Z]+\s?\d*\s?#\d+[a-zA-Z]?-\d+$', caseSensitive: false);
 
   static final RegExp priceRegex = RegExp(r'^\d{1,7}(,\d{1,2})?$');
   static final RegExp timePreparationRegex = RegExp(r'^\d+$');

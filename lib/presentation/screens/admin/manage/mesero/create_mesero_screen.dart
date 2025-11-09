@@ -27,6 +27,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
   @override
   void initState() {
     super.initState();
+    _clearFormFields();
     final controller = ref.read(registerUserControllerProvider);
 
     controller.nombreController.addListener(_validateFields);
@@ -42,6 +43,17 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
       controller.telefonoController.text = widget.user!.telefono;
       controller.direccionController.text = widget.user!.direccion;
     }
+  }
+
+  void _clearFormFields() {
+    final controller = ref.read(registerUserControllerProvider);
+    controller.nombreController.clear();
+    controller.apellidosController.clear();
+    controller.telefonoController.clear();
+    controller.direccionController.clear();
+    controller.userNameController.clear();
+    controller.emailController.clear();
+    controller.passwordController.clear();
   }
 
   void _validateFields() {
@@ -355,13 +367,6 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                       children: [
                         OutlinedButton(
                           onPressed: () {
-                            registerUserController.nombreController.clear();
-                            registerUserController.apellidosController.clear();
-                            registerUserController.telefonoController.clear();
-                            registerUserController.direccionController.clear();
-                            registerUserController.userNameController.clear();
-                            registerUserController.emailController.clear();
-                            registerUserController.passwordController.clear();
                             context.pop();
                           },
                           style: OutlinedButton.styleFrom(
@@ -398,7 +403,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                                     if (res == null) {
                                       SnackbarHelper.showSuccess(
                                           'Mesero actualizado exitosamente');
-                                      context.pop();
+                                          if(context.mounted) context.pop();
                                     } else {
                                       SnackbarHelper.showError('Error: $res');
                                     }

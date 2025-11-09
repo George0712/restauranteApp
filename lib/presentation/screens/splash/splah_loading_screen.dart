@@ -30,8 +30,8 @@ class SplashLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SvgPicture.asset(
-      'assets/icon/default-monochrome-white.svg', // Asegúrate que la ruta y asset están en pubspec.yaml
-      width: 130, // Ajusta el tamaño según prefieras
+      'assets/icon/default-monochrome-white.svg', 
+      width: 130, 
     );
   }
 }

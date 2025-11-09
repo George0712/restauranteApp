@@ -52,6 +52,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // font author site: www.impallari.com
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -110,6 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             prefixIcon: const Icon(Icons.person_outline,
                                 color: Colors.white54),
                           ),
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: (value) {
                             return value!.isEmpty
                                 ? "Ingresa correo"
@@ -150,6 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ),
                           ),
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           validator: (value) {
                             return value!.isEmpty
                                 ? "Ingresa contraseña"
@@ -170,7 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // ),
                         const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: isFieldsValid
+                          onPressed: isFieldsValid && (_formKey.currentState?.validate() ?? false)
                               ? () async {
                                   final success =
                                       await loginController.login(ref);

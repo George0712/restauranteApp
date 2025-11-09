@@ -115,7 +115,8 @@ class _CreateCredentialsMeseroState
                         children: [
                           CustomInputField(
                             hintText: AppStrings.userName,
-                            controller: registerUserController.userNameController,
+                            controller:
+                                registerUserController.userNameController,
                             isRequired: true,
                             prefixIcon: const Icon(
                               Icons.alternate_email,
@@ -125,7 +126,9 @@ class _CreateCredentialsMeseroState
                             validator: (value) {
                               return value!.isEmpty
                                   ? AppStrings.pleaseEnterUserName
-                                  : AppStrings.invalidUserName;
+                                  : AppConstants.usernameRegex.hasMatch(value)
+                                      ? null
+                                      : AppStrings.invalidUserName;
                             },
                           ),
                           const SizedBox(height: 16),
@@ -207,49 +210,40 @@ class _CreateCredentialsMeseroState
                           onPressed: areFieldsValid &&
                                   (_formKey.currentState?.validate() ?? false)
                               ? () async {
+                                  const rutaDestino = "/admin/manage/mesero";
                                   if (tempUser == null) {
                                     SnackbarHelper.showWarning(
                                         'Falta información de contacto');
                                     return;
                                   }
-                                if (widget.user == null) {
-                                  final res = await registerUserController.registrarUsuario(
-                                    ref,
-                                    nombre: tempUser.nombre,
-                                    apellidos: tempUser.apellidos,
-                                    telefono: tempUser.telefono,
-                                    direccion: tempUser.direccion,
-                                    username: registerUserController.userNameController.text.trim(),
-                                    email: registerUserController.emailController.text.trim(),
-                                    password: registerUserController.passwordController.text.trim(),
-                                    rol: tempUser.rol,
-                                  );
-                                  if (res == null) {
-                                    SnackbarHelper.showSuccess('Usuario creado correctamente');
-                                    ref.read(userTempProvider.notifier).state = null;
-                                    context.pop();
-                                    context.push('/admin/manage/mesero');
-                                  } else {
-                                    SnackbarHelper.showError('Error: $res');
-                                  }
-                                } else {
-                                    // EDICIÓN - solo actualizar username y email
-                                    final controller =
-                                        ref.read(registerUserControllerProvider);
-                                    final res =
-                                        await controller.updateUserAccessInfo(
-                                      uid: widget.user!.uid,
-                                      email: registerUserController
-                                          .emailController.text
-                                          .trim(),
+                                  if (widget.user == null) {
+                                    final res = await registerUserController
+                                        .registrarUsuario(
+                                      ref,
+                                      nombre: tempUser.nombre,
+                                      apellidos: tempUser.apellidos,
+                                      telefono: tempUser.telefono,
+                                      direccion: tempUser.direccion,
                                       username: registerUserController
                                           .userNameController.text
                                           .trim(),
+                                      email: registerUserController
+                                          .emailController.text
+                                          .trim(),
+                                      password: registerUserController
+                                          .passwordController.text
+                                          .trim(),
+                                      rol: tempUser.rol,
                                     );
                                     if (res == null) {
                                       SnackbarHelper.showSuccess(
-                                          'Credenciales actualizadas con éxito');
-                                      context.go('/admin/manage/mesero');
+                                          'Usuario creado correctamente');
+                                      ref
+                                          .read(userTempProvider.notifier)
+                                          .state = null;
+                                      context.pop();
+                                      context.pop();
+                                      context.pushReplacement(rutaDestino);
                                     } else {
                                       SnackbarHelper.showError('Error: $res');
                                     }

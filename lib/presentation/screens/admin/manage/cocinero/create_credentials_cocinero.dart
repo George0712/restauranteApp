@@ -106,8 +106,10 @@ class _CreateCredentialsCocineroState
                         children: [
                           CustomInputField(
                             hintText: AppStrings.userName,
-                            controller: registerUserController.userNameController,
+                            controller:
+                                registerUserController.userNameController,
                             isRequired: true,
+                            keyboardType: TextInputType.text,
                             textCapitalization: TextCapitalization.none,
                             prefixIcon: const Icon(
                               Icons.alternate_email,
@@ -117,7 +119,9 @@ class _CreateCredentialsCocineroState
                             validator: (value) {
                               return value!.isEmpty
                                   ? AppStrings.pleaseEnterUserName
-                                  : AppStrings.invalidUserName;
+                                  : AppConstants.usernameRegex.hasMatch(value)
+                                      ? null
+                                      : AppStrings.invalidUserName;
                             },
                           ),
                           const SizedBox(height: 16),
@@ -143,7 +147,8 @@ class _CreateCredentialsCocineroState
                           const SizedBox(height: 16),
                           CustomInputField(
                             hintText: AppStrings.password,
-                            controller: registerUserController.passwordController,
+                            controller:
+                                registerUserController.passwordController,
                             isRequired: true,
                             obscureText: true,
                             prefixIcon: const Icon(
@@ -190,7 +195,8 @@ class _CreateCredentialsCocineroState
                                     return;
                                   }
                                   try {
-                                    await registerUserController.registrarUsuario(
+                                    await registerUserController
+                                        .registrarUsuario(
                                       ref,
                                       nombre: tempUser.nombre,
                                       apellidos: tempUser.apellidos,
@@ -209,7 +215,10 @@ class _CreateCredentialsCocineroState
                                     );
                                     SnackbarHelper.showSuccess(
                                         'Cocinero registrado con éxito');
-                                    context.go('/admin/manage/cocinero');
+                                    context.pop();
+                                    context.pop();
+                                    context.pushReplacement(
+                                        '/admin/manage/cocinero');
                                   } catch (e) {
                                     SnackbarHelper.showError(
                                         'Error: ${e.toString()}');

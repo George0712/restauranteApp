@@ -23,8 +23,7 @@ class ListCardsUsers extends ConsumerWidget {
     return usersAsync.when(
       data: (usuarios) {
         if (usuarios.isEmpty) {
-          return Text('No hay usuarios con rol "$rol" registrados.',
-              style: const TextStyle(color: Colors.white70));
+          return _buildEmptyState(context);
         }
 
         return GridView.builder(
@@ -103,8 +102,37 @@ class ListCardsUsers extends ConsumerWidget {
     );
   }
 
-  void _showUserOptions(
-      BuildContext context, WidgetRef ref, UserModel usuario) {
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).padding.top + 200),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.04),
+            ),
+            child: const Icon(Icons.people_alt_outlined,
+                size: 46, color: Color(0xFF6366F1)),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No hay cocineros registrados',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showUserOptions(BuildContext context, WidgetRef ref, UserModel usuario) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,

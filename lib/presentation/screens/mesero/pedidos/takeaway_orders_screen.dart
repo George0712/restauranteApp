@@ -93,16 +93,6 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                 ),
               ),
             ),
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.12,
-                child: Image.asset(
-                  'lib/core/assets/bg-mesero.png',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                ),
-              ),
-            ),
             SafeArea(
               child: pedidosAsync.when(
                 data: (pedidos) {

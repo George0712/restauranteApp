@@ -26,6 +26,7 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
   @override
   void initState() {
     super.initState();
+    _clearFormFields();
     final controller = ref.read(registerUserControllerProvider);
 
     controller.nombreController.addListener(_validateFields);
@@ -41,6 +42,17 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
       controller.telefonoController.text = widget.user!.telefono;
       controller.direccionController.text = widget.user!.direccion;
     }
+  }
+
+  void _clearFormFields() {
+    final controller = ref.read(registerUserControllerProvider);
+    controller.nombreController.clear();
+    controller.apellidosController.clear();
+    controller.telefonoController.clear();
+    controller.direccionController.clear();
+    controller.userNameController.clear();
+    controller.emailController.clear();
+    controller.passwordController.clear();
   }
 
   void _validateFields() {
@@ -223,7 +235,7 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                           const TextStyle(fontSize: 16, color: Colors.white70),
                     ),
                     const SizedBox(height: 24),
-
+                            
                     // Foto perfil
                     Center(
                       child: GestureDetector(
@@ -267,7 +279,7 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
+                            
                     // Inputs de texto
                     Form(
                       key: _formKey,
@@ -331,7 +343,7 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                             controller:
                                 registerUserController.direccionController,
                             isRequired: true,
-                            textCapitalization: TextCapitalization.sentences,
+                            textCapitalization: TextCapitalization.words,
                             prefixIcon: const Icon(
                               Icons.location_on_outlined,
                               color: Color(0xFF34D399),
@@ -347,20 +359,13 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
+                            
                     // Botones
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         OutlinedButton(
                           onPressed: () {
-                            registerUserController.nombreController.clear();
-                            registerUserController.apellidosController.clear();
-                            registerUserController.telefonoController.clear();
-                            registerUserController.direccionController.clear();
-                            registerUserController.userNameController.clear();
-                            registerUserController.emailController.clear();
-                            registerUserController.passwordController.clear();
                             context.pop();
                           },
                           style: OutlinedButton.styleFrom(
@@ -393,6 +398,7 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                                             .trim(),
                                       ),
                                     );
+                                    if (!mounted) return;
                                     if (res == null) {
                                       SnackbarHelper.showSuccess(
                                           'Cocinero actualizado exitosamente');
@@ -422,6 +428,7 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                                     );
                                     ref.read(userTempProvider.notifier).state =
                                         partialUser;
+                                    if (!mounted) return;
                                     context.push(
                                         '/admin/manage/cocinero/create-credentials');
                                   }
