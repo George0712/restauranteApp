@@ -46,6 +46,7 @@ class _CreateMesaScreenState extends ConsumerState<CreateMesaScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_outlined,
               color: Colors.white),
@@ -67,140 +68,146 @@ class _CreateMesaScreenState extends ConsumerState<CreateMesaScreen> {
         ),
         child: Align(
           alignment: Alignment.topCenter,
-          child: SingleChildScrollView(
-            child: Container(
-              width: isTablet ? 500 : double.infinity,
-              padding: isTablet
-                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
-                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    AppStrings.manageTable,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32 : 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      AppStrings.manageTable,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    AppStrings.manageTableDescription,
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 24),
-
-                  
-                  // Inputs de texto
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        CustomInputField(
-                            hintText: 'Número de mesa',
-                            controller: mesaController.numeroMesaController,
+                    const SizedBox(height: 8),
+                    const Text(
+                      AppStrings.manageTableDescription,
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 24),
+                
+                    // Inputs de texto
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          CustomInputField(
+                              hintText: 'Número de mesa',
+                              controller: mesaController.numeroMesaController,
+                              isRequired: true,
+                              keyboardType: TextInputType.number,
+                              prefixIcon: const Icon(
+                                Icons.table_restaurant,
+                                color: Color(0xFF34D399),
+                                size: 22,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Por favor ingrese un número de mesa';
+                                }
+                                final numeroMesaRegex = RegExp(r'^[1-9]\d*$');
+                                if (!numeroMesaRegex.hasMatch(value)) {
+                                  return 'El número de mesa debe ser un número válido';
+                                }
+                                return null;
+                              }),
+                          const SizedBox(height: 16),
+                          CustomInputField(
+                            hintText: 'Capacidad de la mesa',
+                            controller: mesaController.capacidadController,
                             isRequired: true,
                             keyboardType: TextInputType.number,
                             prefixIcon: const Icon(
-                              Icons.table_restaurant,
+                              Icons.people_outline,
                               color: Color(0xFF34D399),
                               size: 22,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Por favor ingrese un número de mesa';
+                                return 'Por favor ingrese la capacidad';
                               }
-                              final numeroMesaRegex = RegExp(r'^[1-9]\d*$');
-                              if (!numeroMesaRegex.hasMatch(value)) {
-                                return 'El número de mesa debe ser un número válido';
+                              final capacidadRegex =
+                                  RegExp(r'^([1-9]|1[0-9]|20)$');
+                              if (!capacidadRegex.hasMatch(value)) {
+                                return 'La capacidad debe ser entre 1 y 20 personas';
                               }
                               return null;
-                            }),
-                        const SizedBox(height: 16),
-                        CustomInputField(
-                          hintText: 'Capacidad de la mesa',
-                          controller: mesaController.capacidadController,
-                          isRequired: true,
-                          keyboardType: TextInputType.number,
-                          prefixIcon: const Icon(
-                            Icons.people_outline,
-                            color: Color(0xFF34D399),
-                            size: 22,
+                            },
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Por favor ingrese la capacidad';
-                            }
-                            final capacidadRegex = RegExp(r'^([1-9]|1[0-9]|20)$');
-                            if (!capacidadRegex.hasMatch(value)) {
-                              return 'La capacidad debe ser entre 1 y 20 personas';
-                            }
-                            return null;
+                        ],
+                      ),
+                    ),
+                
+                    const SizedBox(height: 32),
+                
+                    // Botones
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () {
+                            mesaController.limpiarFormulario();
+                            context.pop();
                           },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            side: const BorderSide(color: Colors.white),
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: areFieldsValid &&
+                                  (_formKey.currentState?.validate() ?? false)
+                              ? () async {
+                                  final numeroMesa = int.parse(mesaController
+                                      .numeroMesaController.text
+                                      .trim());
+                                  final capacidad = int.parse(mesaController
+                                      .capacidadController.text
+                                      .trim());
+                
+                                  final error =
+                                      await mesaController.crearMesa(
+                                    numeroMesa: numeroMesa,
+                                    capacidad: capacidad,
+                                  );
+                
+                                  if (!mounted) return;
+                                  if (error == null) {
+                                    mesaController.limpiarFormulario();
+                                    if (context.mounted) {
+                                      context.pop();
+                                    }
+                                  } else {
+                                    // Mostrar error
+                                    SnackbarHelper.showError(error);
+                                  }
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B5CF6),
+                            disabledBackgroundColor:
+                                const Color(0xFF8B5CF6).withAlpha(100),
+                          ),
+                          child: const Text(
+                            'Agregar',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Botones
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      OutlinedButton(
-                        onPressed: () {
-                          mesaController.limpiarFormulario();
-                          context.pop();
-                        },
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          side: const BorderSide(color: Colors.white),
-                        ),
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: areFieldsValid &&
-                                (_formKey.currentState?.validate() ?? false)
-                            ? () async {
-                                final numeroMesa = int.parse(mesaController.numeroMesaController.text.trim());
-                                final capacidad = int.parse(mesaController.capacidadController.text.trim());
-                                
-                                final error = await mesaController.crearMesa(
-                                  numeroMesa: numeroMesa,
-                                  capacidad: capacidad,
-                                );
-                                
-                                if (!mounted) return;
-                                if (error == null) {
-                                  mesaController.limpiarFormulario();
-                                  if (context.mounted) {
-                                    context.pop();
-                                  }
-                                } else {
-                                  // Mostrar error
-                                  SnackbarHelper.showError(error);
-                                }
-                              }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8B5CF6),
-                          disabledBackgroundColor:
-                              const Color(0xFF8B5CF6).withAlpha(100),
-                        ),
-                        child: const Text(
-                          'Agregar',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -41,6 +41,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.white,
             elevation: 0,
+            scrolledUnderElevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_outlined,
                   color: Colors.white),
@@ -62,56 +63,61 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
             ),
             child: Align(
               alignment: Alignment.topCenter,
-              child: SingleChildScrollView(
-                padding: isTablet
-                    ? const EdgeInsets.symmetric(vertical: 100, horizontal: 80)
-                    : const EdgeInsets.fromLTRB(16, 100, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Administrar Mesas',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Gestiona las mesas del restaurante, crea nuevas mesas y edita la información existente.',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () =>
-                          context.push('/admin/manage/mesa/create-mesa'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B5CF6),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.add, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text(
-                            'Nueva Mesa',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
+              child: SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isTablet ? 32 : 16,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Administrar Mesas',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Gestiona las mesas del restaurante, crea nuevas mesas y edita la información existente.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () =>
+                              context.push('/admin/manage/mesa/create-mesa'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B5CF6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                'Nueva Mesa',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildGridMesas(mesasFiltradas, isTablet),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                    _buildGridMesas(mesasFiltradas, isTablet),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -381,7 +387,9 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
     if (id == null || id.trim().isEmpty) {
       return 'Pendiente de sincronizaci�n';
     }
-    return id.length <= 6 ? id.toUpperCase() : id.substring(id.length - 6).toUpperCase();
+    return id.length <= 6
+        ? id.toUpperCase()
+        : id.substring(id.length - 6).toUpperCase();
   }
 
   String _buildReservaTexto(MesaModel mesa) {
@@ -398,7 +406,6 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
     }
     return fechaFormateada;
   }
-
 
   void _mostrarOpcionesMesa(MesaModel mesa) {
     showModalBottomSheet(
@@ -620,7 +627,8 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                  border:
+                      Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -667,7 +675,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
                 return;
               }
               if (context.mounted) {
-                context.pop(); 
+                context.pop();
               }
             },
             style: ElevatedButton.styleFrom(
@@ -771,11 +779,13 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                     color: Color(0xFF8B5CF6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  borderSide:
+                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  borderSide:
+                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -807,11 +817,13 @@ class _FormularioMesaDialogState extends ConsumerState<_FormularioMesaDialog> {
                 prefixIcon: const Icon(Icons.people, color: Color(0xFF8B5CF6)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  borderSide:
+                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  borderSide:
+                      BorderSide(color: Colors.white.withValues(alpha: 0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),

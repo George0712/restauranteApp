@@ -26,6 +26,7 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_outlined,
               color: Colors.white),
@@ -47,64 +48,68 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
         ),
         child: Align(
           alignment: Alignment.topLeft,
-          child: SingleChildScrollView(
-            padding: isTablet
-                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 80)
-                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  AppStrings.manageWaiter,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  AppStrings.manageWaiterDescription,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    registerUserController.nombreController.clear();
-                    registerUserController.apellidosController.clear();
-                    registerUserController.telefonoController.clear();
-                    registerUserController.direccionController.clear();
-                    registerUserController.userNameController.clear();
-                    registerUserController.emailController.clear();
-                    registerUserController.passwordController.clear();
-                    context.push('/admin/manage/mesero/create-mesero');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B5CF6),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Nuevo Mesero',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32 : 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      AppStrings.manageWaiter,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      AppStrings.manageWaiterDescription,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        registerUserController.nombreController.clear();
+                        registerUserController.apellidosController.clear();
+                        registerUserController.telefonoController.clear();
+                        registerUserController.direccionController.clear();
+                        registerUserController.userNameController.clear();
+                        registerUserController.emailController.clear();
+                        registerUserController.passwordController.clear();
+                        context.push('/admin/manage/mesero/create-mesero');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF8B5CF6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Nuevo Mesero',
+                            style: TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ListCardsUsers(rol: rol),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                ListCardsUsers(rol: rol),
-              ],
+              ),
             ),
           ),
         ),

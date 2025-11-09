@@ -421,378 +421,382 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
         ),
         child: Align(
           alignment: Alignment.topCenter,
-          child: SingleChildScrollView(
-            padding: isTablet
-                ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
-                : const EdgeInsets.fromLTRB(16, 100, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isEditMode ? 'Editar Combo' : AppStrings.createNewCombo,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  AppStrings.createNewComboDescription,
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
-                ),
-                const SizedBox(height: 24),
-
-                // Foto de perfil (opcional)
-                Center(
-                  child: GestureDetector(
-                    onTap: _handleImageSelection,
-                    onLongPress: _showImageOptions,
-                    child: Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white.withAlpha(40),
-                          backgroundImage: profileImage != null
-                              ? FileImage(profileImage)
-                              : null,
-                          child: profileImage == null
-                              ? Iconify(Bi.box_fill,
-                                  size: 50,
-                                  color: theme.primaryColor.withAlpha(200))
-                              : null,
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: _handleImageSelection,
-                            onLongPress: _showImageOptions,
-                            child: CircleAvatar(
-                              radius: 18,
-                              backgroundColor: theme.primaryColor,
-                              child: Icon(
-                                profileImage == null ? Icons.add_a_photo : Icons.edit,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32 : 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isEditMode ? 'Editar Combo' : AppStrings.createNewCombo,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Inputs de texto
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      CustomInputField(
-                          hintText: AppStrings.name,
-                          controller: nombreController,
-                          isRequired: true,
-                          textCapitalization: TextCapitalization.words,
-                          prefixIcon: const Icon(
-                            Icons.inventory_2_outlined,
-                            color: Color(0xFF34D399),
-                            size: 22,
-                          ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Por favor ingrese un nombre'
-                              : AppConstants.nameRegex.hasMatch(value)
-                                  ? null
-                                  : 'El nombre no es válido'),
-                      const SizedBox(height: 16),
-                      CustomInputField(
-                        hintText: AppStrings.price,
-                        keyboardType: TextInputType.number,
-                        controller: precioController,
-                        isRequired: true,
-                        prefixIcon: const Icon(
-                          Icons.attach_money,
-                          color: Color(0xFF34D399),
-                          size: 22,
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Por favor ingrese un valor'
-                            : AppConstants.priceRegex.hasMatch(value)
-                                ? null
-                                : 'Este campo no es válida',
-                      ),
-                      const SizedBox(height: 16),
-                      CustomInputField(
-                        hintText: AppStrings.timePreparation,
-                        controller: tiempoPreparacionController,
-                        isRequired: true,
-                        keyboardType: TextInputType.number,
-                        prefixIcon: const Icon(
-                          Icons.access_time,
-                          color: Color(0xFF34D399),
-                          size: 22,
-                        ),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Ingrese un tiempo de preparación'
-                            : AppConstants.timePreparationRegex.hasMatch(value)
-                                ? null
-                                : 'El tiempo de preparación no es válido',
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.add_shopping_cart,
-                              color: Colors.white),
-                          label: const Text(
-                            'Agregar Productos al Combo',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(32),
-                            ),
-                          ),
-                          onPressed: () {
-                            context.push(
-                                '/admin/manage/combo/create-item-combo/products-item-combo');
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Productos seleccionados (píldoras)
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final selectedProducts = ref.watch(selectedComboProductsProvider);
-
-                          if (selectedProducts.isEmpty) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.info_outline, color: Colors.white70, size: 20),
-                                    SizedBox(width: 12),
-                                    Text(
-                                      'No hay productos seleccionados',
-                                      style: TextStyle(color: Colors.white70, fontSize: 14),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Text(
-                                    'Productos seleccionados:',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF34D399),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      '${selectedProducts.length}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: selectedProducts.map((product) {
-                                  return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF34D399).withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: const Color(0xFF34D399),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            product.name,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        GestureDetector(
-                                          onTap: () {
-                                            // Eliminar producto
-                                            ref.read(selectedComboProductsProvider.notifier).state =
-                                              selectedProducts.where((p) => p.id != product.id).toList();
-                                          },
-                                          child: Container(
-                                            padding: const EdgeInsets.all(2),
-                                            decoration: const BoxDecoration(
-                                              color: Color(0xFFEF4444),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(
-                                              Icons.close,
-                                              size: 14,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Checkbox de disponibilidad
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                    const SizedBox(height: 8),
+                    const Text(
+                      AppStrings.createNewComboDescription,
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 24),
+              
+                    // Foto de perfil (opcional)
+                    Center(
+                      child: GestureDetector(
+                        onTap: _handleImageSelection,
+                        onLongPress: _showImageOptions,
+                        child: Stack(
                           children: [
-                            const Text(
-                              'Disponible:',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white,
-                              ),
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.white.withAlpha(40),
+                              backgroundImage: profileImage != null
+                                  ? FileImage(profileImage)
+                                  : null,
+                              child: profileImage == null
+                                  ? Iconify(Bi.box_fill,
+                                      size: 50,
+                                      color: theme.primaryColor.withAlpha(200))
+                                  : null,
                             ),
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Radio<bool>(
-                                        value: true,
-                                        groupValue: isAvailable,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            isAvailable = value;
-                                          });
-                                        },
-                                        activeColor: Colors.green,
-                                      ),
-                                      const Text('Sí',
-                                          style:
-                                              TextStyle(color: Colors.white)),
-                                    ],
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: _handleImageSelection,
+                                onLongPress: _showImageOptions,
+                                child: CircleAvatar(
+                                  radius: 18,
+                                  backgroundColor: theme.primaryColor,
+                                  child: Icon(
+                                    profileImage == null ? Icons.add_a_photo : Icons.edit,
+                                    size: 18,
+                                    color: Colors.white,
                                   ),
-                                  const SizedBox(width: 16),
-                                  Row(
-                                    children: [
-                                      Radio<bool>(
-                                        value: false,
-                                        groupValue: isAvailable,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            isAvailable = value;
-                                          });
-                                        },
-                                        activeColor: Colors.red,
-                                      ),
-                                      const Text('No',
-                                          style:
-                                              TextStyle(color: Colors.white)),
-                                    ],
-                                  ),
-                                ],
+                                ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Botones
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () {
-                        if (!isEditMode) {
-                          _clearAllFields();
-                        }
-                        context.pop();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        side: const BorderSide(color: Colors.white),
-                      ),
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 24),
+              
+                    // Inputs de texto
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          CustomInputField(
+                              hintText: AppStrings.name,
+                              controller: nombreController,
+                              isRequired: true,
+                              textCapitalization: TextCapitalization.words,
+                              prefixIcon: const Icon(
+                                Icons.inventory_2_outlined,
+                                color: Color(0xFF34D399),
+                                size: 22,
+                              ),
+                              validator: (value) => value == null || value.isEmpty
+                                  ? 'Por favor ingrese un nombre'
+                                  : AppConstants.nameRegex.hasMatch(value)
+                                      ? null
+                                      : 'El nombre no es válido'),
+                          const SizedBox(height: 16),
+                          CustomInputField(
+                            hintText: AppStrings.price,
+                            keyboardType: TextInputType.number,
+                            controller: precioController,
+                            isRequired: true,
+                            prefixIcon: const Icon(
+                              Icons.attach_money,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Por favor ingrese un valor'
+                                : AppConstants.priceRegex.hasMatch(value)
+                                    ? null
+                                    : 'Este campo no es válida',
+                          ),
+                          const SizedBox(height: 16),
+                          CustomInputField(
+                            hintText: AppStrings.timePreparation,
+                            controller: tiempoPreparacionController,
+                            isRequired: true,
+                            keyboardType: TextInputType.number,
+                            prefixIcon: const Icon(
+                              Icons.access_time,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Ingrese un tiempo de preparación'
+                                : AppConstants.timePreparationRegex.hasMatch(value)
+                                    ? null
+                                    : 'El tiempo de preparación no es válido',
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              icon: const Icon(Icons.add_shopping_cart,
+                                  color: Colors.white),
+                              label: const Text(
+                                'Agregar Productos al Combo',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: theme.primaryColor,
+                                padding: const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(32),
+                                ),
+                              ),
+                              onPressed: () {
+                                context.push(
+                                    '/admin/manage/combo/create-item-combo/products-item-combo');
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+              
+                          // Productos seleccionados (píldoras)
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final selectedProducts = ref.watch(selectedComboProductsProvider);
+              
+                              if (selectedProducts.isEmpty) {
+                                return const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.info_outline, color: Colors.white70, size: 20),
+                                        SizedBox(width: 12),
+                                        Text(
+                                          'No hay productos seleccionados',
+                                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
+              
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Productos seleccionados:',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF34D399),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          '${selectedProducts.length}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: selectedProducts.map((product) {
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF34D399).withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: const Color(0xFF34D399),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                product.name,
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            GestureDetector(
+                                              onTap: () {
+                                                // Eliminar producto
+                                                ref.read(selectedComboProductsProvider.notifier).state =
+                                                  selectedProducts.where((p) => p.id != product.id).toList();
+                                              },
+                                              child: Container(
+                                                padding: const EdgeInsets.all(2),
+                                                decoration: const BoxDecoration(
+                                                  color: Color(0xFFEF4444),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.close,
+                                                  size: 14,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+              
+                          // Checkbox de disponibilidad
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  'Disponible:',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Radio<bool>(
+                                            value: true,
+                                            groupValue: isAvailable,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                isAvailable = value;
+                                              });
+                                            },
+                                            activeColor: Colors.green,
+                                          ),
+                                          const Text('Sí',
+                                              style:
+                                                  TextStyle(color: Colors.white)),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Row(
+                                        children: [
+                                          Radio<bool>(
+                                            value: false,
+                                            groupValue: isAvailable,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                isAvailable = value;
+                                              });
+                                            },
+                                            activeColor: Colors.red,
+                                          ),
+                                          const Text('No',
+                                              style:
+                                                  TextStyle(color: Colors.white)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: areFieldsValid &&
-                              (_formKey.currentState?.validate() ?? false) &&
-                              !_isLoading
-                          ? _saveCombo
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF8B5CF6),
-                        disabledBackgroundColor:
-                            const Color(0xFF8B5CF6).withAlpha(100),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(
-                              isEditMode ? 'Actualizar Combo' : 'Guardar Combo',
-                              style: const TextStyle(color: Colors.white),
-                            ),
+              
+                    const SizedBox(height: 32),
+              
+                    // Botones
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () {
+                            if (!isEditMode) {
+                              _clearAllFields();
+                            }
+                            context.pop();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            side: const BorderSide(color: Colors.white),
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: areFieldsValid &&
+                                  (_formKey.currentState?.validate() ?? false) &&
+                                  !_isLoading
+                              ? _saveCombo
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B5CF6),
+                            disabledBackgroundColor:
+                                const Color(0xFF8B5CF6).withAlpha(100),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  isEditMode ? 'Actualizar Combo' : 'Guardar Combo',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

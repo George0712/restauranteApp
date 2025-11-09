@@ -25,6 +25,7 @@ class ComboDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_outlined,
               color: Colors.white),
@@ -56,287 +57,281 @@ class ComboDetailScreen extends ConsumerWidget {
               );
             }
 
-            return CustomScrollView(
-              slivers: [
-                // Hero image
-                SliverAppBar(
-                  expandedHeight: size.height * 0.4,
-                  pinned: false,
-                  floating: false,
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  automaticallyImplyLeading: false,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        CloudinaryImageWidget(
-                          imageUrl: combo.photo,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                          errorWidget: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  theme.primaryColor.withValues(alpha: 0.3),
-                                  theme.primaryColor.withValues(alpha: 0.1),
-                                ],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.fastfood_rounded,
-                              size: 120,
-                              color: Colors.white.withValues(alpha: 0.7),
-                            ),
-                          ),
-                        ),
-                        // Gradient overlay
-                        Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.black.withValues(alpha: 0.4),
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.8),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // Status badge
-                        Positioned(
-                          bottom: 20,
-                          right: 16,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: combo.disponible ?? true
-                                    ? [
-                                        const Color(0xFF10B981),
-                                        const Color(0xFF059669)
-                                      ]
-                                    : [
-                                        const Color(0xFFEF4444),
-                                        const Color(0xFFDC2626)
-                                      ],
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  combo.disponible ?? true
-                                      ? Icons.check_circle_outline
-                                      : Icons.cancel_outlined,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  combo.disponible ?? true
-                                      ? 'Disponible'
-                                      : 'No disponible',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Content
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(isTablet ? 32 : 20),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFF0F0F23),
-                          Color(0xFF1A1A2E),
-                          Color(0xFF16213E),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title and price
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                combo.name,
-                                style: const TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
+            return SafeArea(
+              child: CustomScrollView(
+                slivers: [
+                  // Hero image
+                  SliverAppBar(
+                    expandedHeight: size.height * 0.4,
+                    pinned: false,
+                    floating: false,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    automaticallyImplyLeading: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          CloudinaryImageWidget(
+                            imageUrl: combo.photo,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                            errorWidget: Container(
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    theme.primaryColor,
-                                    theme.primaryColor.withValues(alpha: 0.8),
+                                    theme.primaryColor.withValues(alpha: 0.3),
+                                    theme.primaryColor.withValues(alpha: 0.1),
                                   ],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.fastfood_rounded,
+                                size: 120,
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ),
+                          // Gradient overlay
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.4),
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.8),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Status badge
+                          Positioned(
+                            bottom: 20,
+                            right: 16,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: combo.disponible ?? true
+                                      ? [
+                                          const Color(0xFF10B981),
+                                          const Color(0xFF059669)
+                                        ]
+                                      : [
+                                          const Color(0xFFEF4444),
+                                          const Color(0xFFDC2626)
+                                        ],
+                                ),
+                                borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: theme.primaryColor
-                                        .withValues(alpha: 0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
-                              child: Text(
-                                '\$${combo.price.toStringAsFixed(0).replaceAllMapped(
-                                      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                      (Match m) => '${m[1]}.',
-                                    )}',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    combo.disponible ?? true
+                                        ? 'Disponible'
+                                        : 'No disponible',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Info cards
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildInfoCard(
-                                'Tiempo de preparación',
-                                '${combo.timePreparation} minutos',
-                                Icons.access_time,
-                                const Color(0xFF3B82F6),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildInfoCard(
-                                'Productos incluidos',
-                                '${combo.products.length} items',
-                                Icons.inventory_2,
-                                const Color(0xFF8B5CF6),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Products section
-                        if (combo.products.isNotEmpty) ...[
-                          _buildSection(
-                            'Productos del Combo',
-                            combo.products,
-                            Icons.fastfood,
                           ),
-                          const SizedBox(height: 24),
                         ],
-
-                        // Savings section
-                        if (combo.products.isNotEmpty) _buildSavingsCard(combo),
-
-                        const Spacer(),
-
-                        // Action buttons
-                        Padding(
-                          padding: const EdgeInsets.only(top: 32),
-                          child: Row(
+                      ),
+                    ),
+                  ),
+              
+                  // Content
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(isTablet ? 32 : 20),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF0F0F23),
+                            Color(0xFF1A1A2E),
+                            Color(0xFF16213E),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title and price
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    context.push(
-                                        '/admin/manage/combo/editar/$comboId');
-                                  },
-                                  icon: const Icon(Icons.edit),
-                                  label: const Text('Editar Combo'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF8B5CF6),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                child: Text(
+                                  combo.name,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              ElevatedButton.icon(
-                                onPressed: () =>
-                                    _toggleAvailability(context, ref, combo),
-                                icon: Icon(
-                                  combo.disponible ?? true
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      theme.primaryColor,
+                                      theme.primaryColor.withValues(alpha: 0.8),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: theme.primaryColor
+                                          .withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                                label: Text(
-                                  combo.disponible ?? true
-                                      ? 'Desactivar'
-                                      : 'Activar',
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: combo.disponible ?? true
-                                      ? const Color(0xFFF59E0B)
-                                      : const Color(0xFF10B981),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 16, horizontal: 20),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                child: Text(
+                                  '\$${combo.price.toStringAsFixed(0).replaceAllMapped(
+                                        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                        (Match m) => '${m[1]}.',
+                                      )}',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
-
-                        SizedBox(
-                            height: MediaQuery.of(context).padding.bottom + 20),
-                      ],
+              
+                          const SizedBox(height: 24),
+              
+                          // Info cards
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildInfoCard(
+                                  'Tiempo de preparación',
+                                  '${combo.timePreparation} minutos',
+                                  Icons.access_time,
+                                  const Color(0xFF3B82F6),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildInfoCard(
+                                  'Productos incluidos',
+                                  '${combo.products.length} items',
+                                  Icons.inventory_2,
+                                  const Color(0xFF8B5CF6),
+                                ),
+                              ),
+                            ],
+                          ),
+              
+                          const SizedBox(height: 24),
+              
+                          // Products section
+                          if (combo.products.isNotEmpty) ...[
+                            _buildSection(
+                              'Productos del Combo',
+                              combo.products,
+                              Icons.fastfood,
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+              
+                          // Savings section
+                          if (combo.products.isNotEmpty) _buildSavingsCard(combo),
+              
+                          const Spacer(),
+              
+                          // Action buttons
+                          Padding(
+                            padding: const EdgeInsets.only(top: 32),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      context.push(
+                                          '/admin/manage/combo/editar/$comboId');
+                                    },
+                                    icon: const Icon(Icons.edit),
+                                    label: const Text('Editar Combo'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF8B5CF6),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                ElevatedButton.icon(
+                                  onPressed: () =>
+                                      _toggleAvailability(context, ref, combo),
+                                  icon: Icon(
+                                    combo.disponible ?? true
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  label: Text(
+                                    combo.disponible ?? true
+                                        ? 'Desactivar'
+                                        : 'Activar',
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: combo.disponible ?? true
+                                        ? const Color(0xFFF59E0B)
+                                        : const Color(0xFF10B981),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16, horizontal: 20),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+              
+                          SizedBox(
+                              height: MediaQuery.of(context).padding.bottom + 20),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
           loading: () => const Center(

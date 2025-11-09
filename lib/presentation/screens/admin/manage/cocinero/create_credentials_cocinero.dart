@@ -55,6 +55,7 @@ class _CreateCredentialsCocineroState
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_outlined,
               color: Colors.white),
@@ -76,158 +77,159 @@ class _CreateCredentialsCocineroState
         ),
         child: Align(
           alignment: Alignment.topCenter,
-          child: SingleChildScrollView(
-            child: Container(
-              width: isTablet ? 500 : double.infinity,
-              padding: isTablet
-                  ? const EdgeInsets.symmetric(vertical: 100, horizontal: 60)
-                  : const EdgeInsets.fromLTRB(16, 100, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    AppStrings.registerCookCredentials,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 32 : 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      AppStrings.registerCookCredentials,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    AppStrings.registerCookCredentialsDescription,
-                    style: TextStyle(fontSize: 16, color: Colors.white70),
-                  ),
-                  const SizedBox(height: 24),
-                  Form(
-                    key: _formKey,
-                    child: Column(
+                    const SizedBox(height: 8),
+                    const Text(
+                      AppStrings.registerCookCredentialsDescription,
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 24),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          CustomInputField(
+                            hintText: AppStrings.userName,
+                            controller: registerUserController.userNameController,
+                            isRequired: true,
+                            textCapitalization: TextCapitalization.none,
+                            prefixIcon: const Icon(
+                              Icons.alternate_email,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
+                            validator: (value) {
+                              return value!.isEmpty
+                                  ? AppStrings.pleaseEnterUserName
+                                  : AppStrings.invalidUserName;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          CustomInputField(
+                            hintText: AppStrings.email,
+                            controller: registerUserController.emailController,
+                            isRequired: true,
+                            keyboardType: TextInputType.emailAddress,
+                            textCapitalization: TextCapitalization.none,
+                            prefixIcon: const Icon(
+                              Icons.email_outlined,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
+                            validator: (value) {
+                              return value!.isEmpty
+                                  ? AppStrings.pleaseEnterEmailAddress
+                                  : AppConstants.emailRegex.hasMatch(value)
+                                      ? null
+                                      : AppStrings.invalidEmailAddress;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          CustomInputField(
+                            hintText: AppStrings.password,
+                            controller: registerUserController.passwordController,
+                            isRequired: true,
+                            obscureText: true,
+                            prefixIcon: const Icon(
+                              Icons.lock_outline,
+                              color: Color(0xFF34D399),
+                              size: 22,
+                            ),
+                            validator: (value) {
+                              return value!.isEmpty
+                                  ? AppStrings.pleaseEnterPassword
+                                  : AppConstants.passwordRegex.hasMatch(value)
+                                      ? null
+                                      : AppStrings.invalidPassword;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        CustomInputField(
-                          hintText: AppStrings.userName,
-                          controller: registerUserController.userNameController,
-                          isRequired: true,
-                          textCapitalization: TextCapitalization.none,
-                          prefixIcon: const Icon(
-                            Icons.alternate_email,
-                            color: Color(0xFF34D399),
-                            size: 22,
-                          ),
-                          validator: (value) {
-                            return value!.isEmpty
-                                ? AppStrings.pleaseEnterUserName
-                                : AppStrings.invalidUserName;
+                        OutlinedButton(
+                          onPressed: () {
+                            context.pop();
                           },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            side: const BorderSide(color: Colors.white),
+                          ),
+                          child: const Text(
+                            'Cancelar',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
-                        const SizedBox(height: 16),
-                        CustomInputField(
-                          hintText: AppStrings.email,
-                          controller: registerUserController.emailController,
-                          isRequired: true,
-                          keyboardType: TextInputType.emailAddress,
-                          textCapitalization: TextCapitalization.none,
-                          prefixIcon: const Icon(
-                            Icons.email_outlined,
-                            color: Color(0xFF34D399),
-                            size: 22,
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: areFieldsValid &&
+                                  (_formKey.currentState?.validate() ?? false)
+                              ? () async {
+                                  if (tempUser == null) {
+                                    SnackbarHelper.showWarning(
+                                        'Falta información de contacto');
+                                    return;
+                                  }
+                                  try {
+                                    await registerUserController.registrarUsuario(
+                                      ref,
+                                      nombre: tempUser.nombre,
+                                      apellidos: tempUser.apellidos,
+                                      telefono: tempUser.telefono,
+                                      direccion: tempUser.direccion,
+                                      username: registerUserController
+                                          .userNameController.text
+                                          .trim(),
+                                      email: registerUserController
+                                          .emailController.text
+                                          .trim(),
+                                      password: registerUserController
+                                          .passwordController.text
+                                          .trim(),
+                                      rol: tempUser.rol,
+                                    );
+                                    SnackbarHelper.showSuccess(
+                                        'Cocinero registrado con éxito');
+                                    context.go('/admin/manage/cocinero');
+                                  } catch (e) {
+                                    SnackbarHelper.showError(
+                                        'Error: ${e.toString()}');
+                                  }
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B5CF6),
+                            disabledBackgroundColor:
+                                const Color(0xFF8B5CF6).withAlpha(100),
                           ),
-                          validator: (value) {
-                            return value!.isEmpty
-                                ? AppStrings.pleaseEnterEmailAddress
-                                : AppConstants.emailRegex.hasMatch(value)
-                                    ? null
-                                    : AppStrings.invalidEmailAddress;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        CustomInputField(
-                          hintText: AppStrings.password,
-                          controller: registerUserController.passwordController,
-                          isRequired: true,
-                          obscureText: true,
-                          prefixIcon: const Icon(
-                            Icons.lock_outline,
-                            color: Color(0xFF34D399),
-                            size: 22,
+                          child: const Text(
+                            'Guardar',
+                            style: TextStyle(color: Colors.white),
                           ),
-                          validator: (value) {
-                            return value!.isEmpty
-                                ? AppStrings.pleaseEnterPassword
-                                : AppConstants.passwordRegex.hasMatch(value)
-                                    ? null
-                                    : AppStrings.invalidPassword;
-                          },
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      OutlinedButton(
-                        onPressed: () {
-                          context.pop();
-                        },
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          side: const BorderSide(color: Colors.white),
-                        ),
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: areFieldsValid &&
-                                (_formKey.currentState?.validate() ?? false)
-                            ? () async {
-                                if (tempUser == null) {
-                                  SnackbarHelper.showWarning(
-                                      'Falta información de contacto');
-                                  return;
-                                }
-                                try {
-                                  await registerUserController.registrarUsuario(
-                                    ref,
-                                    nombre: tempUser.nombre,
-                                    apellidos: tempUser.apellidos,
-                                    telefono: tempUser.telefono,
-                                    direccion: tempUser.direccion,
-                                    username: registerUserController
-                                        .userNameController.text
-                                        .trim(),
-                                    email: registerUserController
-                                        .emailController.text
-                                        .trim(),
-                                    password: registerUserController
-                                        .passwordController.text
-                                        .trim(),
-                                    rol: tempUser.rol,
-                                  );
-                                  SnackbarHelper.showSuccess(
-                                      'Cocinero registrado con éxito');
-                                  context.go('/admin/manage/cocinero');
-                                } catch (e) {
-                                  SnackbarHelper.showError(
-                                      'Error: ${e.toString()}');
-                                }
-                              }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8B5CF6),
-                          disabledBackgroundColor:
-                              const Color(0xFF8B5CF6).withAlpha(100),
-                        ),
-                        child: const Text(
-                          'Guardar',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

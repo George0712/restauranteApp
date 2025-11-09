@@ -18,179 +18,183 @@ class UserDetailScreen extends ConsumerWidget {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon:
-              const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF0F0F23),
-              Color(0xFF1A1A2E),
-              Color(0xFF16213E),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return SafeArea(
+      minimum: const EdgeInsets.only(top: 40),
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon:
+                const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            onPressed: () => context.pop(),
           ),
         ),
-        child: userAsync.when(
-          data: (user) {
-            if (user == null) {
-              return const Center(
-                child: Text(
-                  'Usuario no encontrado',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              );
-            }
-            return CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  expandedHeight: size.height * 0.4,
-                  automaticallyImplyLeading: false,
-                  pinned: false,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        user.foto != null && user.foto!.isNotEmpty
-                            ? CloudinaryImageWidget(
-                                imageUrl: user.foto!,
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.cover,
-                                errorWidget: fallbackAvatar(theme),
-                              )
-                            : fallbackAvatar(theme),
-                        Container(
-                          decoration: const BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black87,
-                              ],
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 20,
-                          left: 16,
-                          child: Text(
-                            '${user.nombre} ${user.apellidos}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFF0F0F23),
+                Color(0xFF1A1A2E),
+                Color(0xFF16213E),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: userAsync.when(
+            data: (user) {
+              if (user == null) {
+                return const Center(
+                  child: Text(
+                    'Usuario no encontrado',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
-                ),
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Container(
-                    padding: EdgeInsets.all(isTablet ? 32 : 20),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFF0F0F23),
-                          Color(0xFF1A1A2E),
-                          Color(0xFF16213E),
+                );
+              }
+              return CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: size.height * 0.4,
+                    automaticallyImplyLeading: false,
+                    pinned: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          user.foto != null && user.foto!.isNotEmpty
+                              ? CloudinaryImageWidget(
+                                  imageUrl: user.foto!,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                  errorWidget: fallbackAvatar(theme),
+                                )
+                              : fallbackAvatar(theme),
+                          Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black87,
+                                ],
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 20,
+                            left: 16,
+                            child: Text(
+                              '${user.nombre} ${user.apellidos}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        infoRow(Icons.email_outlined, 'Email', user.email),
-                        const SizedBox(height: 12),
-                        infoRow(Icons.person_outline, 'Usuario', user.username),
-                        const SizedBox(height: 12),
-                        infoRow(
-                            Icons.phone_outlined, 'Teléfono', user.telefono),
-                        const SizedBox(height: 12),
-                        infoRow(Icons.location_on_outlined, 'Dirección',
-                            user.direccion),
-                        const SizedBox(height: 12),
-                        infoRow(Icons.badge_outlined, 'Rol', user.rol),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () => context.push(
-                                    '/admin/manage/user/edit',
-                                    extra: user),
-                                icon: const Icon(Icons.edit,
-                                    color: Colors.white70),
-                                label: const Text(
-                                  'Editar Usuario',
-                                  style: TextStyle(color: Colors.white70),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF6366F1),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  _showDeleteConfirmation(
-                                      context, user.rol, ref, user);
-                                },
-                                icon: const Icon(Icons.delete,
-                                    color: Colors.white70),
-                                label: const Text(
-                                  'Eliminar',
-                                  style: TextStyle(color: Colors.white70),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red.shade300,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
+                  ),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Container(
+                      padding: EdgeInsets.all(isTablet ? 32 : 20),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF0F0F23),
+                            Color(0xFF1A1A2E),
+                            Color(0xFF16213E),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        SizedBox(
-                            height: MediaQuery.of(context).padding.bottom + 20),
-                      ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          infoRow(Icons.email_outlined, 'Email', user.email),
+                          const SizedBox(height: 12),
+                          infoRow(Icons.person_outline, 'Usuario', user.username),
+                          const SizedBox(height: 12),
+                          infoRow(
+                              Icons.phone_outlined, 'Teléfono', user.telefono),
+                          const SizedBox(height: 12),
+                          infoRow(Icons.location_on_outlined, 'Dirección',
+                              user.direccion),
+                          const SizedBox(height: 12),
+                          infoRow(Icons.badge_outlined, 'Rol', user.rol),
+                          const Spacer(),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () => context.push(
+                                      '/admin/manage/user/edit',
+                                      extra: user),
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.white70),
+                                  label: const Text(
+                                    'Editar Usuario',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF6366F1),
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    _showDeleteConfirmation(
+                                        context, user.rol, ref, user);
+                                  },
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.white70),
+                                  label: const Text(
+                                    'Eliminar',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red.shade300,
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                              height: MediaQuery.of(context).padding.bottom + 20),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(
-            child: Text('Error: ${e.toString()}',
-                style: const TextStyle(color: Colors.red)),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Text('Error: ${e.toString()}',
+                  style: const TextStyle(color: Colors.red)),
+            ),
           ),
         ),
       ),
