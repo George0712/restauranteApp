@@ -74,9 +74,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/icon.png"
-  image_path_android: "assets/icon/icon.png"
-  image_path_ios: "assets/icon/icon.png"
+  image_path: "assets/icon/logo-favicon.png"
+  image_path_android: "assets/icon/logo-favicon.png"
+  image_path_ios: "assets/icon/logo-favicon.png"
 
 # The following section is specific to Flutter packages.
 flutter:
@@ -88,10 +88,15 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/icon/default-monochrome-black.svg
-    - assets/icon/default-monochrome-white.svg
-    - assets/icon/cover.png
-    - assets/icon/cover-2.png
+    - assets/icon/logo-favicon-white.png
+    - assets/icon/logo-favicon-black.png  
+    - assets/icon/logo-favicon.png
+    - assets/icon/dark-logo.png
+    - assets/icon/light-logo.png
+    - assets/icon/default-white-letters.png
+    - assets/icon/default-black-letters.png
+    - assets/icon/default-no-logo.png
+    - assets/icon/default.png
     - assets/images/bg-mesero.png
     - assets/sounds/new_order.mp3
     - assets/sounds/order_complete.mp3

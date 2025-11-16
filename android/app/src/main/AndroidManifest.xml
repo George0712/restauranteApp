@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <application
         android:enableOnBackInvokedCallback="true"
-        android:label="Velox"
+        android:label="OrdenApp"
         android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"

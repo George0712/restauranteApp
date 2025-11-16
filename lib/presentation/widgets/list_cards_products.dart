@@ -6,7 +6,9 @@ import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart
 import 'package:restaurante_app/presentation/widgets/cloudinary_image_widget.dart';
 
 class ListCardsProducts extends ConsumerWidget {
-  const ListCardsProducts({super.key});
+  final String? searchQuery;
+
+  const ListCardsProducts({super.key, this.searchQuery});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,7 +18,14 @@ class ListCardsProducts extends ConsumerWidget {
 
     return productsAsync.when(
       data: (productos) {
-        if (productos.isEmpty) {
+        // Filtrar productos por búsqueda
+        final productosFiltrados = searchQuery != null && searchQuery!.isNotEmpty
+            ? productos.where((producto) {
+                return producto.name.toLowerCase().contains(searchQuery!.toLowerCase());
+              }).toList()
+            : productos;
+
+        if (productosFiltrados.isEmpty) {
           return Center(
             child: Container(
               padding: const EdgeInsets.all(24),
@@ -39,19 +48,34 @@ class ListCardsProducts extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.inventory_2_outlined,
+                    searchQuery != null && searchQuery!.isNotEmpty
+                        ? Icons.search_off
+                        : Icons.inventory_2_outlined,
                     size: 48,
                     color: Colors.grey.shade400,
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No hay Productos registrados',
+                    searchQuery != null && searchQuery!.isNotEmpty
+                        ? 'No se encontraron productos'
+                        : 'No hay Productos registrados',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: Colors.grey.shade300,
                     ),
                   ),
+                  if (searchQuery != null && searchQuery!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Intenta con otro término de búsqueda',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -62,7 +86,7 @@ class ListCardsProducts extends ConsumerWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
-          itemCount: productos.length,
+          itemCount: productosFiltrados.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: isTablet ? 4 : 2,
             crossAxisSpacing: 12,
@@ -70,7 +94,7 @@ class ListCardsProducts extends ConsumerWidget {
             childAspectRatio: 0.8,
           ),
           itemBuilder: (context, index) {
-            final producto = productos[index];
+            final producto = productosFiltrados[index];
 
             return GestureDetector(
               onTap: () => _showProductOptions(context, ref, producto),
@@ -706,7 +730,7 @@ class _ProductOptionsBottomSheetState
 
       if (result == null) {
         // Éxito
-        if (mounted) {
+        if (context.mounted) {
           Navigator.pop(context);
         }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/list_cards_products.dart';
+import 'package:restaurante_app/presentation/widgets/search_text.dart';
 
 class CreateProductoScreen extends ConsumerStatefulWidget {
   const CreateProductoScreen({super.key});
@@ -13,6 +14,8 @@ class CreateProductoScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateProductoScreenState extends ConsumerState<CreateProductoScreen> {
+  String filtroTexto = '';
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -46,7 +49,7 @@ class _CreateProductoScreenState extends ConsumerState<CreateProductoScreen> {
           ),
         ),
         child: Align(
-          alignment: Alignment.topCenter,
+          alignment: Alignment.topLeft,
           child: SafeArea(
             child: Padding(
               padding: EdgeInsets.symmetric(
@@ -56,19 +59,10 @@ class _CreateProductoScreenState extends ConsumerState<CreateProductoScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Buscar producto...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(32),
-                            borderSide: const BorderSide(color: Colors.grey)),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(32),
-                          borderSide: const BorderSide(color: Colors.black),
-                        ),
-                      ),
-                      onChanged: (value) {},
+                    SearchBarText(
+                      onChanged: (value) => setState(() => filtroTexto = value),
+                      hintText:'Buscar producto...',
+                      margin: const EdgeInsets.only(bottom: 12),
                     ),
                     const SizedBox(height: 24),
                     const Text(
@@ -113,7 +107,7 @@ class _CreateProductoScreenState extends ConsumerState<CreateProductoScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const ListCardsProducts(),
+                    ListCardsProducts(searchQuery: filtroTexto),
                   ],
                 ),
               ),

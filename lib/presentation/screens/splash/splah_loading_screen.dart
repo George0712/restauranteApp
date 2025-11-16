@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class SplashLoadingScreen extends StatelessWidget {
   const SplashLoadingScreen({super.key});
@@ -29,9 +28,9 @@ class SplashLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SvgPicture.asset(
-      'assets/icon/default-monochrome-white.svg', 
-      width: 130, 
+    return Image.asset(
+      'assets/icon/light-logo.png',
+      width: 250,
     );
   }
 }

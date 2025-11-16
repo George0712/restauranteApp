@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/widgets/search_text.dart';
 
 class ProductsItemComboScreen extends ConsumerStatefulWidget {
   const ProductsItemComboScreen({super.key});
@@ -105,39 +106,15 @@ class _State extends ConsumerState<ProductsItemComboScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Buscador
-                    TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Buscar producto...',
-                        hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5)),
-                        prefixIcon:
-                            const Icon(Icons.search, color: Color(0xFF34D399)),
-                        filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.08),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(32),
-                          borderSide: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.12)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(32),
-                          borderSide: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.12)),
-                        ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(32)),
-                          borderSide:
-                              BorderSide(color: Color(0xFF34D399), width: 2),
-                        ),
-                      ),
-                      style: const TextStyle(color: Colors.white),
+                    SearchBarText(
                       onChanged: (value) {
                         setState(() {
                           _searchQuery = value.toLowerCase();
                         });
                       },
+                      hintText: 'Buscar producto...',
+                      margin: const EdgeInsets.only(bottom: 16),
                     ),
-                    const SizedBox(height: 16),
 
                     // Filtros de categorías
                     Consumer(

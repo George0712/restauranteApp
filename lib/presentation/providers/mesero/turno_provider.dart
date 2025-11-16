@@ -218,7 +218,7 @@ class TurnoController {
         });
       }
     } catch (e) {
-      print('Error al desactivar turno automáticamente: $e');
+      SnackbarHelper.showError('Error al desactivar turno automáticamente: $e');
     }
   }
 
@@ -275,7 +275,7 @@ class TurnoController {
         }
       }
     } catch (e) {
-      print('Error al verificar turnos expirados: $e');
+      SnackbarHelper.showError('Error al verificar turnos expirados: $e');
     }
   }
 

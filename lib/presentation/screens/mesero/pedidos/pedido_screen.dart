@@ -16,6 +16,7 @@ import 'package:restaurante_app/presentation/widgets/carrito_bottom.dart';
 import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 import 'package:restaurante_app/data/models/mesa_model.dart';
 import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
+import 'package:restaurante_app/presentation/widgets/search_text.dart';
 import 'package:uuid/uuid.dart';
 
 class SeleccionProductosScreen extends ConsumerStatefulWidget {
@@ -52,7 +53,6 @@ class _SeleccionProductosScreenState
   String categoriaSeleccionada = 'Todas';
   String categoriaIdSeleccionada = '';
   String filtroTexto = '';
-  final TextEditingController _searchController = TextEditingController();
   bool pedidoConfirmado = false;
   bool _agregandoExtras = false;
   bool _isScrolled = false;
@@ -97,7 +97,6 @@ class _SeleccionProductosScreenState
   @override
   void dispose() {
     _tabController?.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -107,7 +106,63 @@ class _SeleccionProductosScreenState
     final carrito = ref.watch(carritoProvider);
 
     return Scaffold(
-      appBar: _buildAnimatedAppBar(context, carrito),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon:
+              const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Navigator.of(context).maybePop(),
+          tooltip: 'Volver',
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.shopping_cart_outlined,
+              color: Colors.white,
+            ),
+            onPressed: () => _mostrarCarrito(context),
+            tooltip: 'Ver carrito',
+          ),
+          if (carrito.isNotEmpty)
+            Positioned(
+              right: 6,
+              top: 6,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF8B5CF6),
+                      Color(0xFF7C3AED),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  carrito
+                      .fold(0, (total, item) => total + item.cantidad)
+                      .toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: const BoxDecoration(
@@ -130,12 +185,9 @@ class _SeleccionProductosScreenState
               ];
               return Column(
                 children: [
-                  // Header normal solo cuando NO está scrolled
-                  if (!_isScrolled) ...[
-                    _buildHeader(),
-                    _buildSearchBar(),
-                    _buildCategorias(categorias),
-                  ],
+                  _buildHeader(),
+                  _buildSearchBar(),
+                  _buildCategorias(categorias),
                   if (_agregandoExtras) _buildExtrasBanner(),
                   Expanded(
                     child: NotificationListener<ScrollNotification>(
@@ -144,8 +196,8 @@ class _SeleccionProductosScreenState
                           final pixels = scrollInfo.metrics.pixels;
                           // Usar histéresis para evitar rebotes
                           final shouldBeScrolled = _isScrolled
-                              ? pixels > 20 // threshold más bajo para volver
-                              : pixels > 40; // threshold más alto para activar
+                              ? pixels > 20 
+                              : pixels > 40;
 
                           if (shouldBeScrolled != _isScrolled) {
                             setState(() {
@@ -197,358 +249,6 @@ class _SeleccionProductosScreenState
         ),
       ),
       bottomNavigationBar: _buildCarritoBottomBar(context, carrito),
-    );
-  }
-
-  PreferredSizeWidget _buildAnimatedAppBar(
-      BuildContext context, List<ItemCarrito> carrito) {
-    return PreferredSize(
-      preferredSize: Size.fromHeight(_isScrolled ? 100 : 56),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 350),
-        curve: Curves.easeInOutCubic,
-        decoration: BoxDecoration(
-          gradient: _isScrolled
-              ? LinearGradient(
-                  colors: [
-                    const Color(0xFF0F0F23).withValues(alpha: 0.96),
-                    const Color(0xFF1A1A2E).withValues(alpha: 0.96),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          border: _isScrolled
-              ? Border(
-                  bottom: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
-                )
-              : null,
-          boxShadow: _isScrolled
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
-        ),
-        child: SafeArea(
-          child: ClipRect(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, -0.1),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeInOutCubic,
-                    )),
-                    child: child,
-                  ),
-                );
-              },
-              child: _isScrolled
-                  ? _buildCompactAppBarContent(context, carrito)
-                  : _buildNormalAppBarContent(context, carrito),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNormalAppBarContent(
-      BuildContext context, List<ItemCarrito> carrito) {
-    return Padding(
-      key: const ValueKey('normal'),
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new_outlined,
-              color: Colors.white,
-            ),
-            onPressed: () => context.pop(),
-          ),
-          const Spacer(),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.shopping_cart_outlined,
-                  color: Colors.white,
-                ),
-                onPressed: () => _mostrarCarrito(context),
-                tooltip: 'Ver carrito',
-              ),
-              if (carrito.isNotEmpty)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF8B5CF6),
-                          Color(0xFF7C3AED),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      carrito
-                          .fold(0, (total, item) => total + item.cantidad)
-                          .toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCompactAppBarContent(
-      BuildContext context, List<ItemCarrito> carrito) {
-    final categoriasAsync = ref.watch(categoryDisponibleProvider);
-
-    return categoriasAsync.when(
-      data: (categoriasList) {
-        final nombresCategorias = [
-          'Todas',
-          ...categoriasList.map((c) => c.name).toList()
-        ];
-
-        return Padding(
-          key: const ValueKey('compact'),
-          padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // PRIMERA FILA: Back button + Buscador
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new_outlined,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    onPressed: () => context.pop(),
-                  ),
-                  const SizedBox(width: 2),
-                  Expanded(
-                    child: SizedBox(
-                      height: 34,
-                      child: TextField(
-                        controller: _searchController,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'Buscar productos...',
-                          hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 14,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            size: 20,
-                          ),
-                          suffixIcon: filtroTexto.isNotEmpty
-                              ? IconButton(
-                                  icon: Icon(
-                                    Icons.clear,
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    size: 18,
-                                  ),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() => filtroTexto = '');
-                                  },
-                                )
-                              : null,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              width: 1,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFF8B5CF6),
-                              width: 1.5,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white.withValues(alpha: 0.08),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                        onChanged: (value) =>
-                            setState(() => filtroTexto = value),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              // SEGUNDA FILA: Filtros de categorías
-              SizedBox(
-                height: 30,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  itemCount: nombresCategorias.length,
-                  itemBuilder: (context, index) {
-                    final categoria = nombresCategorias[index];
-                    final isSelected = categoriaSeleccionada == categoria;
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          categoriaSeleccionada = categoria;
-                          if (index == 0) {
-                            categoriaIdSeleccionada = '';
-                          } else {
-                            categoriaIdSeleccionada =
-                                categoriasList[index - 1].id;
-                          }
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        curve: Curves.easeInOut,
-                        margin: EdgeInsets.only(
-                          left: index == 0 ? 0 : 6,
-                          right: index == nombresCategorias.length - 1 ? 0 : 6,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 6,
-                        ),
-                        constraints: BoxConstraints(
-                          minWidth: index == 0 ? 60 : 50, // "Todas" más ancho
-                          maxWidth: 120,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: isSelected
-                              ? const LinearGradient(
-                                  colors: [
-                                    Color(0xFF8B5CF6),
-                                    Color(0xFF7C3AED),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : null,
-                          color: isSelected
-                              ? null
-                              : Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected
-                                ? Colors.transparent
-                                : Colors.white.withValues(alpha: 0.2),
-                            width: 1,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: const Color(0xFF8B5CF6)
-                                        .withValues(alpha: 0.4),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Center(
-                          child: Text(
-                            categoria.length > 9
-                                ? '${categoria.substring(0, 8)}...'
-                                : categoria,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.white.withValues(alpha: 0.9),
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              fontSize: 11,
-                              letterSpacing: 0.2,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      loading: () => Padding(
-        key: const ValueKey('loading'),
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new_outlined,
-                color: Colors.white,
-              ),
-              onPressed: () => context.pop(),
-            ),
-            const Expanded(
-              child: Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8B5CF6)),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      error: (error, stack) => _buildNormalAppBarContent(context, carrito),
     );
   }
 
@@ -688,43 +388,9 @@ class _SeleccionProductosScreenState
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: TextField(
-        controller: _searchController,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: 'Buscar productos...',
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-          prefixIcon:
-              Icon(Icons.search, color: Colors.white.withValues(alpha: 0.7)),
-          suffixIcon: filtroTexto.isNotEmpty
-              ? IconButton(
-                  icon: Icon(Icons.clear,
-                      color: Colors.white.withValues(alpha: 0.7)),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => filtroTexto = '');
-                  },
-                )
-              : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF8B5CF6), width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.1),
-        ),
-        onChanged: (value) => setState(() => filtroTexto = value),
-      ),
+    return SearchBarText(
+      onChanged: (value) => setState(() => filtroTexto = value),
+      hintText: 'Buscar Productos...',
     );
   }
 
@@ -910,8 +576,8 @@ class _SeleccionProductosScreenState
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.grey.shade800.withValues(alpha: 0.95),
-              Colors.grey.shade900.withValues(alpha: 0.98),
+              Colors.grey.shade800.withValues(alpha: 0.2),
+              Colors.grey.shade900.withValues(alpha: 0.4),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -944,7 +610,7 @@ class _SeleccionProductosScreenState
           children: [
             // SECCIÓN DE IMAGEN - 60% del espacio
             Expanded(
-              flex: 6,
+              flex: 4,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade800,
@@ -1026,85 +692,77 @@ class _SeleccionProductosScreenState
                           ),
                         ),
                       ),
-                    // Overlay de estado no disponible
-                    if (!producto.disponible)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.85),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(18),
-                            topRight: Radius.circular(18),
-                          ),
-                        ),
-                        child: const Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.cancel_outlined,
-                                color: Color(0xFFEF4444),
-                                size: 32,
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                'No Disponible',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    // Badge de estado disponible en la esquina
-                    if (producto.disponible)
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF059669),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.check_circle,
-                                color: Colors.white,
-                                size: 12,
-                              ),
-                              SizedBox(width: 2),
-                              Text(
-                                'Disponible',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    // Positioned(
+                    //   top: 10,
+                    //   left: 10,
+                    //   child: Expanded(
+                    //     child: Container(
+                    //       padding: const EdgeInsets.symmetric(
+                    //           horizontal: 6, vertical: 4),
+                    //       decoration: BoxDecoration(
+                    //         gradient: const LinearGradient(
+                    //           colors: [
+                    //             Color(0xFF6366F1),
+                    //             Color(0xFF8B5CF6),
+                    //           ],
+                    //           begin: Alignment.topLeft,
+                    //           end: Alignment.bottomRight,
+                    //         ),
+                    //         borderRadius: BorderRadius.circular(99),
+                    //         boxShadow: [
+                    //           BoxShadow(
+                    //             color: const Color(0xFF6366F1)
+                    //                 .withValues(alpha: 0.3),
+                    //             blurRadius: 8,
+                    //             offset: const Offset(0, 2),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //       child: Row(
+                    //         mainAxisSize: MainAxisSize.min,
+                    //         children: [
+                    //           const Icon(
+                    //             Icons.attach_money_rounded,
+                    //             color: Colors.white,
+                    //             size: 18,
+                    //           ),
+                    //           Flexible(
+                    //             child: Text(
+                    //               producto.price
+                    //                   .toStringAsFixed(0)
+                    //                   .replaceAllMapped(
+                    //                     RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                    //                     (Match m) => '${m[1]}.',
+                    //                   ),
+                    //               style: const TextStyle(
+                    //                 color: Colors.white,
+                    //                 fontWeight: FontWeight.w900,
+                    //                 fontSize: 14,
+                    //                 letterSpacing: 0.5,
+                    //                 shadows: [
+                    //                   Shadow(
+                    //                     color: Colors.black26,
+                    //                     offset: Offset(0, 1),
+                    //                     blurRadius: 2,
+                    //                   ),
+                    //                 ],
+                    //               ),
+                    //               maxLines: 1,
+                    //               overflow: TextOverflow.ellipsis,
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
             ),
             // SECCIÓN DE INFORMACIÓN - 40% del espacio
             Expanded(
-              flex: 4,
+              flex: 3,
               child: Container(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
                 decoration: const BoxDecoration(
@@ -1116,11 +774,45 @@ class _SeleccionProductosScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.attach_money_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        Flexible(
+                          child: Text(
+                            producto.price
+                                .toStringAsFixed(0)
+                                .replaceAllMapped(
+                                  RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                  (Match m) => '${m[1]}.',
+                                ),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              letterSpacing: 0.5,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black26,
+                                  offset: Offset(0, 1),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                     // NOMBRE DEL PRODUCTO
-                    Expanded(
-                      flex: 3,
+                    Flexible(
                       child: Text(
-                        _capitalizeFirstLetter(producto.name),
+                        producto.name,
                         style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
@@ -1134,108 +826,49 @@ class _SeleccionProductosScreenState
                     ),
                     const SizedBox(height: 8),
                     // FILA DE PRECIO Y BOTÓN
-                    Row(
-                      children: [
-                        // PRECIO - Más grande y llamativo
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF6366F1),
-                                  Color(0xFF8B5CF6),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF6366F1)
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.attach_money_rounded,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                                Flexible(
-                                  child: Text(
-                                    producto.price
-                                        .toStringAsFixed(0)
-                                        .replaceAllMapped(
-                                          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                          (Match m) => '${m[1]}.',
-                                        ),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 18,
-                                      letterSpacing: 0.5,
-                                      shadows: [
-                                        Shadow(
-                                          color: Colors.black26,
-                                          offset: Offset(0, 1),
-                                          blurRadius: 2,
-                                        ),
-                                      ],
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        // BOTÓN DE AGREGAR
-                        Container(
-                          decoration: BoxDecoration(
-                            color: producto.disponible
-                                ? const Color(0xFF059669)
-                                : Colors.grey.shade600,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: producto.disponible
-                                    ? const Color(0xFF059669)
-                                        .withValues(alpha: 0.3)
-                                    : Colors.grey.withValues(alpha: 0.2),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: producto.disponible
-                                  ? () => _mostrarDetalleProducto(producto)
-                                  : null,
-                              child: const Padding(
-                                padding: EdgeInsets.all(10),
-                                child: Icon(
-                                  Icons.add_shopping_cart_rounded,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Row(
+                    //   children: [
+                    //     // PRECIO - Más grande y llamativo
+                        
+                    //     // const SizedBox(width: 10),
+                    //     // BOTÓN DE AGREGAR
+                    //     // Container(
+                    //     //   decoration: BoxDecoration(
+                    //     //     color: producto.disponible
+                    //     //         ? const Color(0xFF059669)
+                    //     //         : Colors.grey.shade600,
+                    //     //     borderRadius: BorderRadius.circular(12),
+                    //     //     boxShadow: [
+                    //     //       BoxShadow(
+                    //     //         color: producto.disponible
+                    //     //             ? const Color(0xFF059669)
+                    //     //                 .withValues(alpha: 0.3)
+                    //     //             : Colors.grey.withValues(alpha: 0.2),
+                    //     //         blurRadius: 6,
+                    //     //         offset: const Offset(0, 2),
+                    //     //       ),
+                    //     //     ],
+                    //     //   ),
+                    //     //   child: Material(
+                    //     //     color: Colors.transparent,
+                    //     //     child: InkWell(
+                    //     //       borderRadius: BorderRadius.circular(12),
+                    //     //       onTap: producto.disponible
+                    //     //           ? () => _mostrarDetalleProducto(producto)
+                    //     //           : null,
+                    //     //       child: const Padding(
+                    //     //         padding: EdgeInsets.all(10),
+                    //     //         child: Icon(
+                    //     //           Icons.add_shopping_cart_rounded,
+                    //     //           color: Colors.white,
+                    //     //           size: 20,
+                    //     //         ),
+                    //     //       ),
+                    //     //     ),
+                    //     //   ),
+                    //     // ),
+                    //   ],
+                    // ),
                   ],
                 ),
               ),
@@ -1393,11 +1026,11 @@ class _SeleccionProductosScreenState
       await _crearActualizarPedido(carrito, 'pendiente', false);
       await _cargarCarritoDelPedido();
       if (!mounted) return;
-      Navigator.of(sheetContext).pop();
+      if (sheetContext.mounted){
+        Navigator.of(sheetContext).pop();
+      }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido enviado a cocina')),
-      );
+      SnackbarHelper.showSuccess('Pedido enviado a cocina');
     } catch (e) {
       _mostrarError(context, 'Error al confirmar pedido: $e');
     }
@@ -1418,9 +1051,7 @@ class _SeleccionProductosScreenState
       if (!mounted) return;
       context.pop();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido enviado y ticket generado')),
-      );
+      SnackbarHelper.showSuccess('Pedido enviado y ticket generado');
       await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
     } catch (e) {
       if (!mounted) return;
@@ -1444,7 +1075,9 @@ class _SeleccionProductosScreenState
       if (!mounted) return;
 
       // 2. Cerrar el carrito
-      Navigator.of(sheetContext).pop();
+      if (sheetContext.mounted){
+        Navigator.of(sheetContext).pop();
+      }
 
       if (!mounted) return;
 
@@ -1479,7 +1112,8 @@ class _SeleccionProductosScreenState
         // para que al cerrar el ticket se vuelva a la pantalla anterior (takeaway list)
         final ticketInfo =
             await _generarTicketFactura(context, mostrarMensaje: false);
-        await _abrirTicketPreviewYCerrarPedido(ticketId: ticketInfo?['ticketId'] as String?);
+        await _abrirTicketPreviewYCerrarPedido(
+            ticketId: ticketInfo?['ticketId'] as String?);
       }
     } catch (e) {
       if (!mounted) return;
@@ -1598,7 +1232,8 @@ class _SeleccionProductosScreenState
         // para que al cerrar el ticket se vuelva a la pantalla anterior (delivery list)
         final ticketInfo =
             await _generarTicketFactura(context, mostrarMensaje: false);
-        await _abrirTicketPreviewYCerrarPedido(ticketId: ticketInfo?['ticketId'] as String?);
+        await _abrirTicketPreviewYCerrarPedido(
+            ticketId: ticketInfo?['ticketId'] as String?);
       }
     } catch (e) {
       if (!mounted) return;
@@ -1700,7 +1335,8 @@ class _SeleccionProductosScreenState
         // Navegar al ticket y remover la pantalla actual del stack
         // para que al cerrar el ticket se vuelva a mesas
         if (!mounted) return;
-        await _abrirTicketPreviewYCerrarPedido(ticketId: ticketInfo?['ticketId'] as String?);
+        await _abrirTicketPreviewYCerrarPedido(
+            ticketId: ticketInfo?['ticketId'] as String?);
       }
     } catch (e) {
       if (!mounted) return;
@@ -1811,7 +1447,6 @@ class _SeleccionProductosScreenState
   }
 
   /// Navega al ticket preview y cierra la pantalla actual de pedido
-  /// para que al cerrar el ticket se vuelva directamente a mesas
   Future<void> _abrirTicketPreviewYCerrarPedido({String? ticketId}) async {
     if (!mounted) return;
     final queryParams = <String, String>{};
@@ -1833,9 +1468,6 @@ class _SeleccionProductosScreenState
       path: '/mesero/pedidos/ticket/${widget.pedidoId}',
       queryParameters: queryParams.isEmpty ? null : queryParams,
     );
-
-    // Usar pushReplacement para reemplazar la pantalla actual con el ticket
-    // Así cuando se cierre el ticket, volverá a la pantalla anterior (mesas)
     context.pushReplacement(uri.toString());
   }
 
@@ -2064,13 +1696,7 @@ class _SeleccionProductosScreenState
             _agregandoExtras = false;
             pedidoConfirmado = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Pedido cancelado. Se creo un nuevo pedido para la mesa.',
-              ),
-            ),
-          );
+          SnackbarHelper.showInfo('Pedido cancelado. Se creo un nuevo pedido para la mesa.');
         } else {
           if (!mounted) return;
           if (sheetContext.mounted) {
@@ -2144,9 +1770,8 @@ class _SeleccionProductosScreenState
         : null;
 
     // Verificar si el pedido ya existe para no sobrescribir createdAt
-    final pedidoRef = FirebaseFirestore.instance
-        .collection('pedido')
-        .doc(widget.pedidoId);
+    final pedidoRef =
+        FirebaseFirestore.instance.collection('pedido').doc(widget.pedidoId);
     final pedidoExistente = await pedidoRef.get();
     final esNuevo = !pedidoExistente.exists;
 
@@ -2222,9 +1847,7 @@ class _SeleccionProductosScreenState
 
   void _mostrarError(BuildContext context, String mensaje) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensaje)),
-      );
+      SnackbarHelper.showError(mensaje);
     }
   }
 
@@ -2232,11 +1855,6 @@ class _SeleccionProductosScreenState
     // TODO: Implement report issue functionality
     SnackbarHelper.showInfo(
         'Funcionalidad de reporte de problemas próximamente');
-  }
-
-  String _capitalizeFirstLetter(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 }
 

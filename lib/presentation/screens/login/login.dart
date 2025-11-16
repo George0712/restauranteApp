@@ -45,11 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isPasswordVisible = ref.watch(passwordVisibilityProvider);
     final isFieldsValid = ref.watch(fieldsValidProvider);
 
-    const String assetName = 'assets/icon/cover-2.png';
-    // icon designer: Gregor Cresnar
-    // icon designer link: /creator/grega.cresnar/
-    // font author: Impallari Type
-    // font author site: www.impallari.com
+    const String assetName = 'assets/icon/default-no-logo.png';
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -64,8 +60,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Color(0xFF0F0F23),
               Color(0xFF1A1A2E),
               Color(0xFF16213E),
-            ],          
-          ),          
+            ],
+          ),
         ),
         child: Center(
           child: SingleChildScrollView(
@@ -78,6 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     margin: const EdgeInsets.only(bottom: 24),
                     child: Image.asset(
                       assetName,
+                      width: 300,
                     ),
                   ),
                   Form(
@@ -147,8 +144,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     : Icons.visibility_outlined,
                                 color: isPasswordVisible
                                     ? Colors.white54
-                                    : const Color(
-                                    0xFFDA3276),
+                                    : const Color(0xFFDA3276),
                               ),
                             ),
                           ),
@@ -162,6 +158,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           },
                           keyboardType: TextInputType.visiblePassword,
                         ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Checkbox(
+                              value: "Recordar sesión" == "Recordar sesión",
+                              activeColor: const Color(0xFF8846E8),
+                              onChanged: (value) => (),
+                            ),
+                            const Text("Recordar sesión",
+                                style: TextStyle(color: Colors.white54)),
+                          ],
+                        ),
                         // TextButton(
                         //   onPressed: () {},
                         //   child: const Text(
@@ -173,7 +181,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // ),
                         const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: isFieldsValid && (_formKey.currentState?.validate() ?? false)
+                          onPressed: isFieldsValid &&
+                                  (_formKey.currentState?.validate() ?? false)
                               ? () async {
                                   final success =
                                       await loginController.login(ref);
@@ -194,10 +203,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
                             backgroundColor: isFieldsValid
-                                ? const Color(
-                                    0xFFDA3276)
-                                : Colors
-                                    .white24, 
+                                ? const Color(0xFFDA3276)
+                                : Colors.white24,
                           ),
                           child: const Text(
                             "Entrar",
@@ -208,19 +215,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        // Row(
-                        //   mainAxisAlignment: MainAxisAlignment.center,
-                        //   children: [
-                        //     Checkbox(
-                        //       value: "Recordar sesión" == "Recordar sesión",
-                        //       activeColor: const Color(0xFF8846E8),
-                        //       onChanged: (value) => (),
-                        //     ),
-                        //     const Text("Recordar sesión",
-                        //         style: TextStyle(color: Colors.white54)),
-                        //   ],
-                        // ),
                       ],
                     ),
                   ),

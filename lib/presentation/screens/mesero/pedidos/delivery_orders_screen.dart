@@ -8,6 +8,7 @@ import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
+import 'package:restaurante_app/presentation/widgets/search_text.dart';
 import 'package:uuid/uuid.dart';
 
 class DeliveryOrdersScreen extends ConsumerStatefulWidget {
@@ -138,8 +139,12 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
                                 total: deliveryOrders.length,
                               ),
                               const SizedBox(height: 16),
-                              // _buildSearchField(),
-                              // const SizedBox(height: 16),
+                              SearchBarText(
+                                onChanged: (value) => setState(() {}),
+                                hintText: 'Buscar por nombre, telefono, direccion o ID',
+                                margin: EdgeInsets.zero,
+                              ),
+                              const SizedBox(height: 16),
                               if (filtered.isEmpty)
                                 _EmptyState(
                                   hasOrders: deliveryOrders.isNotEmpty,
@@ -350,39 +355,6 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
     );
   }
 
-  // Widget _buildSearchField() {
-  //   return TextField(
-  //     controller: _searchController,
-  //     style: const TextStyle(color: Colors.white, fontSize: 14.5),
-  //     decoration: InputDecoration(
-  //       hintText: 'Buscar por nombre, telefono, direccion o ID',
-  //       hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.45)),
-  //       filled: true,
-  //       fillColor: Colors.white.withValues(alpha: 0.06),
-  //       prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70),
-  //       suffixIcon: _searchController.text.isEmpty
-  //           ? null
-  //           : IconButton(
-  //               icon: const Icon(Icons.close_rounded, color: Colors.white70),
-  //               onPressed: () {
-  //                 _searchController.clear();
-  //                 setState(() {});
-  //               },
-  //             ),
-  //       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-  //       enabledBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(18),
-  //         borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-  //       ),
-  //       focusedBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(18),
-  //         borderSide: const BorderSide(color: Color(0xFF6366F1)),
-  //       ),
-  //     ),
-  //     onChanged: (_) => setState(() {}),
-  //     textInputAction: TextInputAction.search,
-  //   );
-  // }
 
   Future<void> _openCreateDeliverySheet() async {
     final data = await showModalBottomSheet<DeliveryCustomerData>(

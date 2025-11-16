@@ -8,6 +8,7 @@ import 'package:restaurante_app/data/models/pedido.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 import 'package:restaurante_app/presentation/providers/mesero/mesas_provider.dart';
 import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
+import 'package:restaurante_app/presentation/widgets/search_text.dart';
 
 class TableCheckoutScreen extends ConsumerStatefulWidget {
   const TableCheckoutScreen({super.key});
@@ -267,31 +268,14 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: _searchController,
-          onChanged: (_) => setState(() {}),
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF8B5CF6)),
-            hintText: 'Buscar por mesa, cliente o código',
-            hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-            filled: true,
-            fillColor: const Color(0xFF111827),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18),
-              borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.6),
-            ),
-          ),
+        SearchBarText(
+          onChanged: (value) {
+            _searchController.text = value;
+            setState(() {});
+          },
+          hintText: 'Buscar por mesa, cliente o código',
+          margin: const EdgeInsets.only(bottom: 12),
         ),
-        const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.only(bottom: 6),

@@ -55,153 +55,202 @@ final GoRouter router = GoRouter(
   routes: [
     GoRoute(
       path: '/login',
-      builder: (context, state) => const LoginScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: LoginScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/splash-screen',
-      builder: (context, state) => const SplashScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: SplashScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/admin/home',
-      builder: (context, state) => const HomeAdminScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: HomeAdminScreen(),
+      ),
     ),
     GoRoute(
       path: '/mesero/home',
-      builder: (context, state) => const HomeMeseroScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: HomeMeseroScreen(),
+      ),
     ),
     GoRoute(
       path: '/cocinero/home',
-      builder: (context, state) => const HomeCocineroScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: HomeCocineroScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/admin/manage/mesero',
-      builder: (context, state) => const ManageMeseroScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ManageMeseroScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/cocinero',
-      builder: (context, state) => const ManageCocineroScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ManageCocineroScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/mesas',
-      builder: (context, state) => const AdminMesasScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: AdminMesasScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/incidencias',
-      builder: (context, state) => const ManageIncidenciasScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ManageIncidenciasScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/incidencias/detalle/:incidenciaId',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final incidenciaId = state.pathParameters['incidenciaId']!;
-        return IncidenciaDetailScreen(incidenciaId: incidenciaId);
+        return NoTransitionPage(
+          child: IncidenciaDetailScreen(incidenciaId: incidenciaId),
+        );
       },
     ),
-
     GoRoute(
       path: '/admin/manage/mesero/create-mesero',
-      builder: (context, state) => const CreateMeseroScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateMeseroScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/cocinero/create-cocinero',
-      builder: (context, state) => const CreateCocineroScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateCocineroScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/admin/manage/mesa/create-mesa',
-      builder: (context, state) => const CreateMesaScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateMesaScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/manage-productos',
-      builder: (context, state) => const ManageProductoScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ManageProductoScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/producto/manage-categorys',
-      builder: (context, state) => const ManageCategoryScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ManageCategoryScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/producto/manage-additionals',
-      builder: (context, state) => const ManageAdditionalScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ManageAdditionalScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/producto/manage-combos',
-      builder: (context, state) => const ManageComboScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ManageComboScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/settings',
-      builder: (context, state) => const SettingsUserScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: SettingsUserScreen(),
+      ),
     ),
-    GoRoute(
-      path: '/admin/settings',
-      builder: (context, state) => const SettingsUserScreen(),
-    ),
-
     GoRoute(
       path: '/admin/manage/mesero/create-credentials',
-      builder: (context, state) => const CreateCredentialsMesero(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateCredentialsMesero(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/cocinero/create-credentials',
-      builder: (context, state) => const CreateCredentialsCocinero(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateCredentialsCocinero(),
+      ),
     ),
-
     GoRoute(
       path: '/admin/manage/producto/productos',
-      builder: (context, state) => const CreateProductoScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateProductoScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/admin/manage/producto/create-item-productos',
-      builder: (context, state) => const CreateItemProductScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateItemProductScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/category/create-item-categorys',
-      builder: (context, state) => const CreateItemCategoryScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateItemCategoryScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/additional/create-item-Additionals',
-      builder: (context, state) => const CreateItemAdditionalScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateItemAdditionalScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/combo/create-item-Combos',
-      builder: (context, state) => const CreateItemComboScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: CreateItemComboScreen(),
+      ),
     ),
     GoRoute(
       path: '/admin/manage/combo/create-item-combo/products-item-combo',
-      builder: (context, state) => const ProductsItemComboScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ProductsItemComboScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/mesero/pedidos/mesas',
-      builder: (context, state) => const MesasScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: MesasScreen(),
+      ),
     ),
     GoRoute(
       path: '/mesero/pedidos/domicilio',
-      builder: (context, state) => const DeliveryOrdersScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: DeliveryOrdersScreen(),
+      ),
     ),
     GoRoute(
       path: '/mesero/pedidos/seguimiento',
-      builder: (context, state) => const OrderTrackingScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: OrderTrackingScreen(),
+      ),
     ),
     GoRoute(
       path: '/mesero/pedidos/cobrar',
-      builder: (context, state) => const TableCheckoutScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: TableCheckoutScreen(),
+      ),
     ),
     GoRoute(
       path: '/mesero/reportar-incidencia',
-      builder: (context, state) => const ReportIncidentScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: ReportIncidentScreen(),
+      ),
     ),
     GoRoute(
       path: '/mesero/pedidos/para-llevar',
-      builder: (context, state) => const TakeawayOrdersScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: TakeawayOrdersScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/mesero/pedidos/detalle/:mesaId/:pedidoId',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final pedidoId = state.pathParameters['pedidoId']!;
         final mesaIdFromPath = state.pathParameters['mesaId'];
 
@@ -216,108 +265,128 @@ final GoRouter router = GoRouter(
 
         final queryParams = state.uri.queryParameters;
 
-        return SeleccionProductosScreen(
-          pedidoId: pedidoId,
-          mesaId: mesaIdFromPath ?? queryParams['mesaId'],
-          mesaNombre: decodeParam(queryParams['mesaNombre']),
-          clienteNombre: decodeParam(queryParams['clienteNombre']),
-          orderMode: (queryParams['orderMode'] ?? 'mesa').toLowerCase(),
-          clienteTelefono: decodeParam(queryParams['clienteTelefono']),
-          clienteDireccion: decodeParam(queryParams['clienteDireccion']),
-          clienteReferencia: decodeParam(queryParams['clienteReferencia']),
+        return NoTransitionPage(
+          child: SeleccionProductosScreen(
+            pedidoId: pedidoId,
+            mesaId: mesaIdFromPath ?? queryParams['mesaId'],
+            mesaNombre: decodeParam(queryParams['mesaNombre']),
+            clienteNombre: decodeParam(queryParams['clienteNombre']),
+            orderMode: (queryParams['orderMode'] ?? 'mesa').toLowerCase(),
+            clienteTelefono: decodeParam(queryParams['clienteTelefono']),
+            clienteDireccion: decodeParam(queryParams['clienteDireccion']),
+            clienteReferencia: decodeParam(queryParams['clienteReferencia']),
+          ),
         );
       },
     ),
-
     GoRoute(
       path: '/mesero/pedidos/ticket/:pedidoId',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final pedidoId = state.pathParameters['pedidoId']!;
         final query = state.uri.queryParameters;
-        return TicketPreviewScreen(
-          pedidoId: pedidoId,
-          ticketId: query['ticketId'],
-          mesaId: query['mesaId'],
-          mesaNombre: query['mesaNombre'],
-          clienteNombre: query['clienteNombre'],
+        return NoTransitionPage(
+          child: TicketPreviewScreen(
+            pedidoId: pedidoId,
+            ticketId: query['ticketId'],
+            mesaId: query['mesaId'],
+            mesaNombre: query['mesaNombre'],
+            clienteNombre: query['clienteNombre'],
+          ),
         );
       },
     ),
-
     GoRoute(
       path: '/mesero/historial',
-      builder: (context, state) => const HistorialScreen(),
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: HistorialScreen(),
+      ),
     ),
-
     GoRoute(
       path: '/admin/manage/producto/detalle/:id',
-      builder: (context, state) => ProductDetailScreen(
-        productId: state.pathParameters['id']!,
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: ProductDetailScreen(
+          productId: state.pathParameters['id']!,
+        ),
       ),
     ),
     GoRoute(
       path: '/admin/manage/producto/editar/:id',
-      builder: (context, state) => CreateItemProductScreen(
-        productId: state.pathParameters['id']!,
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: CreateItemProductScreen(
+          productId: state.pathParameters['id']!,
+        ),
       ),
     ),
-
     GoRoute(
       path: '/admin/manage/combo/detalle/:id',
-      builder: (context, state) => ComboDetailScreen(
-        comboId: state.pathParameters['id']!,
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: ComboDetailScreen(
+          comboId: state.pathParameters['id']!,
+        ),
       ),
     ),
     GoRoute(
       path: '/admin/manage/combo/editar/:id',
-      builder: (context, state) => CreateItemComboScreen(
-        comboId: state.pathParameters['id']!,
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: CreateItemComboScreen(
+          comboId: state.pathParameters['id']!,
+        ),
       ),
     ),
-
     GoRoute(
       path: '/admin/manage/category/edit',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final category = state.extra as CategoryModel?;
-        return CreateItemCategoryScreen(category: category);
+        return NoTransitionPage(
+          child: CreateItemCategoryScreen(category: category),
+        );
       },
     ),
-
     GoRoute(
       path: '/admin/manage/additional/edit',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final additional = state.extra as AdditionalModel?;
-        return CreateItemAdditionalScreen(additional: additional);
+        return NoTransitionPage(
+          child: CreateItemAdditionalScreen(additional: additional),
+        );
       },
     ),
-
     GoRoute(
       path: '/admin/manage/user/edit',
-      builder: (context, state) {
-        final user = state.extra as UserModel;
-
-        if (user.rol == 'mesero') {
-          return CreateMeseroScreen(user: user);
+      pageBuilder: (context, state) {
+        final user = state.extra as UserModel?;
+        final Widget page;
+        if (user == null) {
+          page = const Scaffold(
+            body: Center(
+              child: Text('Usuario no proporcionado'),
+            ),
+          );
+        } else if (user.rol == 'mesero') {
+          page = CreateMeseroScreen(user: user);
         } else if (user.rol == 'cocinero') {
-          return CreateCocineroScreen(user: user);
+          page = CreateCocineroScreen(user: user);
         } else {
           // Ruta fallback, por si no es ninguno de estos roles
-          return Scaffold(
+          page = Scaffold(
             body: Center(
               child: Text('Rol no soportado: ${user.rol}'),
             ),
           );
         }
+
+        return NoTransitionPage(child: page);
       },
     ),
     GoRoute(
       path: '/admin/manage/user/detail/:userId',
-      builder: (context, state) {
+      pageBuilder: (context, state) {
         final userId = state.pathParameters['userId']!;
-        return UserDetailScreen(userId: userId);
+        return NoTransitionPage(
+          child: UserDetailScreen(userId: userId),
+        );
       },
     ),
   ],
   errorBuilder: (context, state) => const NotFoundScreen(),
 );
-

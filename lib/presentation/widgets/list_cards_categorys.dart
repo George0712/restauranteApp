@@ -365,7 +365,7 @@ class _CategoryOptionsBottomSheetState
       foto: categoria.photo,
     );
 
-    if (mounted) {
+    if (context.mounted) {
       setState(() => _isLoading = false);
       Navigator.pop(context);
     }

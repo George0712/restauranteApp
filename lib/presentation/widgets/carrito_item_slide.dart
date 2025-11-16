@@ -31,15 +31,15 @@ class CarritoItemSlide extends ConsumerWidget {
         0;
 
     final totalItem = (item.precioUnitario + modsPrecio) * item.cantidad;
-    final white70 = Colors.white.withOpacity(0.7);
+    final white70 = Colors.white.withValues(alpha: 0.7);
 
     Widget cardContent = Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white
-            .withOpacity(0.05), // Fondo transparente con leve brillo
+            .withValues(alpha: 0.05), // Fondo transparente con leve brillo
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -52,7 +52,7 @@ class CarritoItemSlide extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
+                    color: Colors.black.withValues(alpha: 0.18),
                     offset: const Offset(0, 3),
                     blurRadius: 6,
                   ),
@@ -168,7 +168,7 @@ class CarritoItemSlide extends ConsumerWidget {
       background: Container(
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.85),
+          color: Colors.red.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.centerRight,
@@ -217,9 +217,9 @@ class CarritoItemSlide extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -227,7 +227,7 @@ class CarritoItemSlide extends ConsumerWidget {
           Icon(
             Icons.shopping_bag_outlined,
             size: 16,
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 8),
           Text(
@@ -235,7 +235,7 @@ class CarritoItemSlide extends ConsumerWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 17,
-              color: Colors.white.withOpacity(0.85),
+              color: Colors.white.withValues(alpha: 0.85),
             ),
           ),
         ],
@@ -246,9 +246,9 @@ class CarritoItemSlide extends ConsumerWidget {
   Widget _buildCantidadControls(WidgetRef ref, CarritoController controller) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -296,7 +296,7 @@ class CarritoItemSlide extends ConsumerWidget {
         child: Icon(
           icon,
           size: 18,
-          color: enabled ? Colors.white : Colors.white.withOpacity(0.35),
+          color: enabled ? Colors.white : Colors.white.withValues(alpha: 0.35),
         ),
       ),
     );
@@ -313,7 +313,7 @@ class CarritoItemSlide extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child:
@@ -341,7 +341,7 @@ class CarritoItemSlide extends ConsumerWidget {
             child: Text(
               'Cancelar',
               style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w600),
             ),
           ),

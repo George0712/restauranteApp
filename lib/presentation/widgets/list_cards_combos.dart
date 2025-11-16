@@ -733,7 +733,7 @@ class _ComboOptionsBottomSheetState
 
       if (result == null) {
         // Éxito
-        if (mounted) {
+        if (context.mounted) {
           Navigator.pop(context);
         }
 
