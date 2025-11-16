@@ -170,7 +170,6 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
   void _removeImage() {
     final imageNotifier = ref.read(profileImageProvider.notifier);
     imageNotifier.clearImage();
-    SnackbarHelper.showInfo('Imagen eliminada');
   }
 
   @override
@@ -236,7 +235,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                           const TextStyle(fontSize: 16, color: Colors.white70),
                     ),
                     const SizedBox(height: 24),
-                            
+
                     // Foto perfil
                     Center(
                       child: GestureDetector(
@@ -280,7 +279,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                            
+
                     // Inputs de texto
                     Form(
                       key: _formKey,
@@ -360,7 +359,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                            
+
                     // Botones
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -401,9 +400,7 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
                                     );
                                     if (!mounted) return;
                                     if (res == null) {
-                                      SnackbarHelper.showSuccess(
-                                          'Mesero actualizado exitosamente');
-                                          if(context.mounted) context.pop();
+                                      if (context.mounted) context.pop();
                                     } else {
                                       SnackbarHelper.showError('Error: $res');
                                     }

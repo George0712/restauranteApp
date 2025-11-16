@@ -19,11 +19,14 @@ class ListCardsProducts extends ConsumerWidget {
     return productsAsync.when(
       data: (productos) {
         // Filtrar productos por búsqueda
-        final productosFiltrados = searchQuery != null && searchQuery!.isNotEmpty
-            ? productos.where((producto) {
-                return producto.name.toLowerCase().contains(searchQuery!.toLowerCase());
-              }).toList()
-            : productos;
+        final productosFiltrados =
+            searchQuery != null && searchQuery!.isNotEmpty
+                ? productos.where((producto) {
+                    return producto.name
+                        .toLowerCase()
+                        .contains(searchQuery!.toLowerCase());
+                  }).toList()
+                : productos;
 
         if (productosFiltrados.isEmpty) {
           return Center(
@@ -91,7 +94,7 @@ class ListCardsProducts extends ConsumerWidget {
             crossAxisCount: isTablet ? 4 : 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 0.8,
+            childAspectRatio: isTablet ? 0.75 : 0.7,
           ),
           itemBuilder: (context, index) {
             final producto = productosFiltrados[index];
@@ -131,7 +134,7 @@ class ListCardsProducts extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              flex: 3,
+                              flex: 5,
                               child: Stack(
                                 children: [
                                   CloudinaryImageWidget(
@@ -208,139 +211,117 @@ class ListCardsProducts extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        producto.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Colors.white,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            const Color(0xFF6366F1),
-                                            const Color(0xFF6366F1)
-                                                .withValues(alpha: 0.8),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF6366F1)
-                                                .withValues(alpha: 0.3),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Text(
-                                        '\$${producto.price.toStringAsFixed(0).replaceAllMapped(
-                                              RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                              (Match m) => '${m[1]}.',
-                                            )}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
+                            // Sección de información del producto
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xFF6366F1)
+                                        .withValues(alpha: 0.15),
+                                    const Color(0xFF8B5CF6)
+                                        .withValues(alpha: 0.08),
                                   ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Nombre del producto - permite múltiples líneas
+                                  Text(
+                                    producto.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: Colors.white,
+                                      height: 1.3,
+                                      letterSpacing: 0.3,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  // Precio - más prominente
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Color(0xFF10B981),
+                                                Color(0xFF059669),
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0xFF10B981)
+                                                    .withValues(alpha: 0.4),
+                                                blurRadius: 6,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            '\$${producto.price.toStringAsFixed(0).replaceAllMapped(
+                                                  RegExp(
+                                                      r'(\d)(?=(\d{3})+(?!\d))'),
+                                                  (Match m) => '${m[1]}.',
+                                                )}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        // Badge de disponibilidad
+                        // Badge de disponibilidad 
                         Positioned(
-                          top: 8,
-                          right: 8,
+                          top: 10,
+                          right: 10,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 5,
+                              vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: producto.disponible
-                                    ? [
-                                        const Color(0xFF10B981),
-                                        const Color(0xFF059669),
-                                      ]
-                                    : [
-                                        const Color(0xFFEF4444),
-                                        const Color(0xFFDC2626),
-                                      ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
+                              color: producto.disponible
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFFEF4444),
+                              borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: (producto.disponible
-                                          ? const Color(0xFF10B981)
-                                          : const Color(0xFFEF4444))
-                                      .withValues(alpha: 0.4),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  producto.disponible
-                                      ? 'Disponible'
-                                      : 'No disponible',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        // Icono de opciones
-                        /*Positioned(
-                          top: 8,
-                          left: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.more_vert,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ),*/
                       ],
                     ),
                   ),
@@ -740,8 +721,6 @@ class _ProductOptionsBottomSheetState
 
         if (widget.producto.disponible) {
           SnackbarHelper.showWarning(message);
-        } else {
-          SnackbarHelper.showSuccess(message);
         }
       } else {
         // Error
@@ -842,11 +821,7 @@ class _ProductOptionsBottomSheetState
       final controller = ref.read(productManagementControllerProvider);
       final result = await controller.deleteProduct(widget.producto.id);
 
-      if (result == null) {
-        // Éxito
-        SnackbarHelper.showSuccess('Producto eliminado correctamente');
-      } else {
-        // Error
+      if (result != null) {
         SnackbarHelper.showError('Error al eliminar: $result');
       }
     } catch (e) {

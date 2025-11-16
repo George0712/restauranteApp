@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/list_cards_additionals.dart';
 
 class ManageAdditionalScreen extends ConsumerStatefulWidget {
@@ -18,8 +17,6 @@ class _ManageAdditionalScreenState
   final rol = 'mesero';
   @override
   Widget build(BuildContext context) {
-    final registerAdditionalController =
-        ref.watch(registerAdditionalControllerProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
@@ -77,10 +74,7 @@ class _ManageAdditionalScreenState
                     // Botones
                     ElevatedButton(
                       onPressed: () {
-                        registerAdditionalController.nameController.clear();
-                        registerAdditionalController.priceController.clear();
-                        context.push(
-                            '/admin/manage/additional/create-item-additionals');
+                        context.push('/admin/manage/additional/create-item-additionals');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B5CF6),

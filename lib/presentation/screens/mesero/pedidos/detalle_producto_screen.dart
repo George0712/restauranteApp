@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
@@ -131,15 +132,7 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
           
           if (estadosFinalizados.contains(estadoNormalizado)) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text(
-                    'No se pueden agregar productos a un pedido que ya está finalizado',
-                  ),
-                  backgroundColor: Colors.orange.shade700,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
+              SnackbarHelper.showInfo('No se pueden agregar productos a un pedido que ya está finalizado');
             }
             return;
           }
@@ -176,9 +169,7 @@ class _DetalleProductoScreenState extends ConsumerState<DetalleProductoScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al agregar al carrito: $e')),
-        );
+        SnackbarHelper.showError('Error al agregar al carrito: $e');
       }
     }
   }

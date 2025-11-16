@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/list_cards_user.dart';
 
 class ManageMeseroScreen extends ConsumerStatefulWidget {
@@ -17,7 +16,6 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final registerUserController = ref.watch(registerUserControllerProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
@@ -76,13 +74,6 @@ class _ManageMeseroScreenState extends ConsumerState<ManageMeseroScreen> {
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
-                        registerUserController.nombreController.clear();
-                        registerUserController.apellidosController.clear();
-                        registerUserController.telefonoController.clear();
-                        registerUserController.direccionController.clear();
-                        registerUserController.userNameController.clear();
-                        registerUserController.emailController.clear();
-                        registerUserController.passwordController.clear();
                         context.push('/admin/manage/mesero/create-mesero');
                       },
                       style: ElevatedButton.styleFrom(

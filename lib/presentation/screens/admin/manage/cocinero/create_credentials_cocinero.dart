@@ -213,8 +213,6 @@ class _CreateCredentialsCocineroState
                                           .trim(),
                                       rol: tempUser.rol,
                                     );
-                                    SnackbarHelper.showSuccess(
-                                        'Cocinero registrado con éxito');
                                     context.pop();
                                     context.pop();
                                     context.pushReplacement(

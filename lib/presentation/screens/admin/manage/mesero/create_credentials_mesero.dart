@@ -236,8 +236,6 @@ class _CreateCredentialsMeseroState
                                       rol: tempUser.rol,
                                     );
                                     if (res == null) {
-                                      SnackbarHelper.showSuccess(
-                                          'Usuario creado correctamente');
                                       ref
                                           .read(userTempProvider.notifier)
                                           .state = null;

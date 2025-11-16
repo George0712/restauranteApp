@@ -226,7 +226,6 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
   void _removeImage() {
     final imageNotifier = ref.read(profileImageProvider.notifier);
     imageNotifier.clearImage();
-    SnackbarHelper.showInfo('Imagen eliminada');
   }
 
   Future<void> _saveCombo() async {
@@ -291,8 +290,6 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
         setState(() => _isLoading = false);
 
         if (error == null) {
-          SnackbarHelper.showSuccess('Combo actualizado exitosamente');
-      
           if (mounted) {
             context.pop();
           }
@@ -328,12 +325,8 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
         setState(() => _isLoading = false);
 
         if (error == null) {
-          SnackbarHelper.showSuccess('Combo registrado exitosamente');
-
-          // Limpiar campos y productos seleccionados
           _clearAllFields();
 
-          // Esperar un momento para que se vea el mensaje
           await Future.delayed(const Duration(milliseconds: 500));
 
           if (mounted) {
@@ -679,66 +672,6 @@ class _CreateItemComboScreenState extends ConsumerState<CreateItemComboScreen> {
                                 ],
                               );
                             },
-                          ),
-                          const SizedBox(height: 16),
-              
-                          // Checkbox de disponibilidad
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Disponible:',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Radio<bool>(
-                                            value: true,
-                                            groupValue: isAvailable,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                isAvailable = value;
-                                              });
-                                            },
-                                            activeColor: Colors.green,
-                                          ),
-                                          const Text('Sí',
-                                              style:
-                                                  TextStyle(color: Colors.white)),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Row(
-                                        children: [
-                                          Radio<bool>(
-                                            value: false,
-                                            groupValue: isAvailable,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                isAvailable = value;
-                                              });
-                                            },
-                                            activeColor: Colors.red,
-                                          ),
-                                          const Text('No',
-                                              style:
-                                                  TextStyle(color: Colors.white)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
                         ],
                       ),

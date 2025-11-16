@@ -18,6 +18,7 @@ class CarritoBottomSheet extends ConsumerWidget {
   final VoidCallback onActualizarPedido;
   final VoidCallback onReportIssue;
   final VoidCallback onGenerarTicket;
+  final VoidCallback? onVerTicket;
   final VoidCallback? onConfirmarYPagarTakeaway;
   final VoidCallback? onConfirmarYPagarDelivery;
   final String? pedidoId;
@@ -32,6 +33,7 @@ class CarritoBottomSheet extends ConsumerWidget {
     required this.onActualizarPedido,
     required this.onReportIssue,
     required this.onGenerarTicket,
+    this.onVerTicket,
     this.onConfirmarYPagarTakeaway,
     this.onConfirmarYPagarDelivery,
     this.pedidoId,
@@ -43,7 +45,8 @@ class CarritoBottomSheet extends ConsumerWidget {
     final adicionalesAsync = ref.watch(additionalProvider);
     final carritoController = ref.watch(carritoControllerProvider);
     final isAdminAsync = ref.watch(isCurrentUserAdminStreamProvider);
-    final totalItems = carrito.fold<int>(0, (total, item) => total + item.cantidad);
+    final totalItems =
+        carrito.fold<int>(0, (total, item) => total + item.cantidad);
     final heightFactor = totalItems >= 4 ? 0.96 : 0.82;
     return FractionallySizedBox(
       heightFactor: heightFactor,
@@ -66,110 +69,119 @@ class CarritoBottomSheet extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildTitulo(context),
-              const SizedBox(height: 12),
-              Expanded(
-                child: adicionalesAsync.when(
-                  data: (adicionales) {
-                    return ListView(
-                      padding: EdgeInsets.zero,
-                      children: [
-                        _ResumenCarritoCard(
-                          total: carritoController.calcularTotal(),
-                          cantidadTotal: carrito.fold<int>(
-                              0, (total, item) => total + item.cantidad),
-                        ),
-                        const SizedBox(height: 16),
-                        if (carrito.isEmpty)
-                          _buildCarritoVacio(context)
-                        else
-                          ...carrito.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final item = entry.value;
-                            final nombresAdicionales =
-                                item.modificacionesSeleccionadas.map((id) {
-                              final adicional = adicionales.firstWhere(
-                                (a) => a.id == id,
-                                orElse: () =>
-                                    AdditionalModel(id: id, name: id, price: 0),
-                              );
-                              return adicional.name;
-                            }).toList();
-                            return StreamBuilder<DocumentSnapshot>(
-                              stream: pedidoId != null
-                                  ? FirebaseFirestore.instance
-                                      .collection('pedido')
-                                      .doc(pedidoId)
-                                      .snapshots()
-                                  : null,
-                              builder: (context, snapshot) {
-                                bool isReadOnly = false;
-                                if (pedidoId != null && snapshot.hasData && snapshot.data!.exists) {
-                                  final pedidoData = snapshot.data!.data() as Map<String, dynamic>;
-                                  final estado = (pedidoData['status'] ?? 'pendiente').toString().toLowerCase();
-                                  final estadoNormalizado = estado.replaceAll(' ', '_');
-                                  const estadosFinalizados = {
-                                    'terminado',
-                                    'entregado',
-                                    'completado',
-                                    'pagado',
-                                    'finalizado',
-                                    'cerrado',
-                                    'listo_para_pago',
-                                  };
-                                  isReadOnly = estadosFinalizados.contains(estadoNormalizado);
-                                }
-                                return CarritoItemSlide(
-                                  item: item,
-                                  nombresAdicionales: nombresAdicionales,
-                                  index: index,
-                                  isReadOnly: isReadOnly,
-                                );
-                              },
-                            );
-                          }).toList(),
-                      ],
-                    );
-                  },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, _) => Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Text('Error al cargar adicionales: $error'),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              isAdminAsync.when(
-                data: (isAdmin) =>
-                    _buildAcciones(context, ref, carrito, isAdmin),
-                loading: () => _buildAcciones(context, ref, carrito, false),
-                error: (_, __) => _buildAcciones(context, ref, carrito, false),
-              ),
-            ],
+                const SizedBox(height: 20),
+                _buildTitulo(context),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: adicionalesAsync.when(
+                    data: (adicionales) {
+                      return ListView(
+                        padding: EdgeInsets.zero,
+                        children: [
+                          _ResumenCarritoCard(
+                            total: carritoController.calcularTotal(),
+                            cantidadTotal: carrito.fold<int>(
+                                0, (total, item) => total + item.cantidad),
+                          ),
+                          const SizedBox(height: 16),
+                          if (carrito.isEmpty)
+                            _buildCarritoVacio(context)
+                          else
+                            ...carrito.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final item = entry.value;
+                              final nombresAdicionales =
+                                  item.modificacionesSeleccionadas.map((id) {
+                                final adicional = adicionales.firstWhere(
+                                  (a) => a.id == id,
+                                  orElse: () => AdditionalModel(
+                                      id: id, name: id, price: 0),
+                                );
+                                return adicional.name;
+                              }).toList();
+                              return StreamBuilder<DocumentSnapshot>(
+                                stream: pedidoId != null
+                                    ? FirebaseFirestore.instance
+                                        .collection('pedido')
+                                        .doc(pedidoId)
+                                        .snapshots()
+                                    : null,
+                                builder: (context, snapshot) {
+                                  bool isReadOnly = false;
+                                  if (pedidoId != null &&
+                                      snapshot.hasData &&
+                                      snapshot.data!.exists) {
+                                    final pedidoData = snapshot.data!.data()
+                                        as Map<String, dynamic>;
+                                    final estado =
+                                        (pedidoData['status'] ?? 'pendiente')
+                                            .toString()
+                                            .toLowerCase();
+                                    final estadoNormalizado =
+                                        estado.replaceAll(' ', '_');
+                                    const estadosFinalizados = {
+                                      'terminado',
+                                      'entregado',
+                                      'completado',
+                                      'pagado',
+                                      'finalizado',
+                                      'cerrado',
+                                      'listo_para_pago',
+                                    };
+                                    isReadOnly = estadosFinalizados
+                                        .contains(estadoNormalizado);
+                                  }
+                                  return CarritoItemSlide(
+                                    item: item,
+                                    nombresAdicionales: nombresAdicionales,
+                                    index: index,
+                                    isReadOnly: isReadOnly,
+                                  );
+                                },
+                              );
+                            }).toList(),
+                        ],
+                      );
+                    },
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, _) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text('Error al cargar adicionales: $error'),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                isAdminAsync.when(
+                  data: (isAdmin) =>
+                      _buildAcciones(context, ref, carrito, isAdmin),
+                  loading: () => _buildAcciones(context, ref, carrito, false),
+                  error: (_, __) =>
+                      _buildAcciones(context, ref, carrito, false),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
 
   Widget _buildTitulo(BuildContext context) {
     const titleStyle = TextStyle(
-      fontSize: 22, 
+      fontSize: 22,
       fontWeight: FontWeight.w700,
       color: Colors.white,
     );
@@ -179,7 +191,8 @@ class CarritoBottomSheet extends ConsumerWidget {
         style: titleStyle,
       );
     }
-    final shortId = pedidoId!.length > 8 ? pedidoId!.substring(0, 8) : pedidoId!;
+    final shortId =
+        pedidoId!.length > 8 ? pedidoId!.substring(0, 8) : pedidoId!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -238,7 +251,7 @@ class CarritoBottomSheet extends ConsumerWidget {
               Text(
                 'Al enviar el pedido, solo se podrá modificar y cancelar si aún no se encuentra en preparación.',
                 style: TextStyle(
-                  fontSize: 12, 
+                  fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.6),
                 ),
               ),
@@ -252,7 +265,8 @@ class CarritoBottomSheet extends ConsumerWidget {
         final pagado = pedidoData['pagado'] == true;
         final pedidoItems = (pedidoData['items'] as List?) ?? [];
         final bool pedidoSinItems = pedidoItems.isEmpty;
-        final mode = (pedidoData['mode'] ?? orderMode ?? '').toString().toLowerCase();
+        final mode =
+            (pedidoData['mode'] ?? orderMode ?? '').toString().toLowerCase();
         final isParaguevar = mode == 'para_llevar';
         final isDomicilio = mode == 'domicilio';
 
@@ -357,8 +371,7 @@ class CarritoBottomSheet extends ConsumerWidget {
         };
         final estadoPermiteActualizacion =
             estadosActualizacion.contains(estadoNormalizado);
-        final estadoPermiteEdicion =
-            estadosEdicion.contains(estadoNormalizado);
+        final estadoPermiteEdicion = estadosEdicion.contains(estadoNormalizado);
         final estadoPermiteCancelacion =
             estadosCancelacion.contains(estadoNormalizado);
         final estadoFinalizado = estadosFinalizados.contains(estadoNormalizado);
@@ -381,12 +394,11 @@ class CarritoBottomSheet extends ConsumerWidget {
           ),
         );
         acciones.add(const SizedBox(height: 8));
+
         acciones.add(
           _SecondaryButton(
             icon: Icons.receipt_long,
-            label: pagado
-                ? 'Generar nuevamente ticket'
-                : 'Generar ticket / factura',
+            label: 'Ver ticket / factura',
             onPressed: onGenerarTicket,
           ),
         );
@@ -394,7 +406,7 @@ class CarritoBottomSheet extends ConsumerWidget {
         acciones.add(Text(
           'Generar el ticket no marca el pedido como pagado.',
           style: TextStyle(
-            fontSize: 12, 
+            fontSize: 12,
             color: Colors.white.withValues(alpha: 0.6),
           ),
         ));
@@ -471,9 +483,8 @@ class CarritoBottomSheet extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.shopping_bag_outlined, 
-               size: 48, 
-               color: Colors.white.withValues(alpha: 0.6)),
+          Icon(Icons.shopping_bag_outlined,
+              size: 48, color: Colors.white.withValues(alpha: 0.6)),
           const SizedBox(height: 12),
           Text(
             'Aún no has agregado productos',
@@ -507,6 +518,7 @@ class CarritoBottomSheet extends ConsumerWidget {
       if (value is String) return double.tryParse(value) ?? 0;
       return 0;
     }
+
     final carritoCanonico = carrito.map((item) {
       final adicionales = [...item.modificacionesSeleccionadas]..sort();
       final nota = item.notas ?? '';

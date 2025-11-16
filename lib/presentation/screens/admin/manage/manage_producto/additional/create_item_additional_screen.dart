@@ -177,7 +177,6 @@ class _CreateItemAdditionalScreenState
   void _removeImage() {
     final imageNotifier = ref.read(profileImageProvider.notifier);
     imageNotifier.clearImage();
-    SnackbarHelper.showInfo('Imagen eliminada');
   }
 
   @override
@@ -324,74 +323,6 @@ class _CreateItemAdditionalScreenState
                                     ? null
                                     : 'El campo no es válido',
                           ),
-                          const SizedBox(height: 16),
-
-                          // Checkbox de disponibilidad
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Disponible:',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.white),
-                                ),
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Radio<bool>(
-                                            value: true,
-                                            groupValue: isAvailable,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                isAvailable = value;
-                                              });
-                                              ref
-                                                  .read(
-                                                      registerAdditionalControllerProvider)
-                                                  .setDisponible(value ?? true);
-                                            },
-                                            activeColor: Colors.green,
-                                          ),
-                                          const Text('Sí',
-                                              style: TextStyle(
-                                                  color: Colors.white)),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Row(
-                                        children: [
-                                          Radio<bool>(
-                                            value: false,
-                                            groupValue: isAvailable,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                isAvailable = value;
-                                              });
-                                              ref
-                                                  .read(
-                                                      registerAdditionalControllerProvider)
-                                                  .setDisponible(
-                                                      value ?? false);
-                                            },
-                                            activeColor: Colors.red,
-                                          ),
-                                          const Text('No',
-                                              style: TextStyle(
-                                                  color: Colors.white)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -448,11 +379,6 @@ class _CreateItemAdditionalScreenState
                                   }
 
                                   if (result == null) {
-                                    SnackbarHelper.showSuccess(
-                                        widget.additional == null
-                                            ? 'Adicional agregado'
-                                            : 'Adicional actualizado');
-
                                     _clearAllFields();
 
                                     if (mounted) {

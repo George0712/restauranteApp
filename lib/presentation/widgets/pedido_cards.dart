@@ -959,12 +959,6 @@ class PedidoCard extends ConsumerWidget {
               if (reportController.text.trim().isNotEmpty) {
                 Navigator.of(context).pop();
                 // Aquí se puede implementar la lógica para enviar el reporte
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Problema reportado exitosamente'),
-                    backgroundColor: Colors.redAccent,
-                  ),
-                );
               }
             },
             icon: const Icon(Icons.send, size: 18),

@@ -105,7 +105,8 @@ class ListCardsUsers extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: MediaQuery.of(context).padding.top + 200),
+      padding: EdgeInsets.symmetric(
+          vertical: MediaQuery.of(context).padding.top + 200),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -132,7 +133,8 @@ class ListCardsUsers extends ConsumerWidget {
     );
   }
 
-  void _showUserOptions(BuildContext context, WidgetRef ref, UserModel usuario) {
+  void _showUserOptions(
+      BuildContext context, WidgetRef ref, UserModel usuario) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -304,7 +306,8 @@ class _UserOptionsBottomSheetState
                         color: Colors.white)),
                 Text(subtitle,
                     style: TextStyle(
-                        fontSize: 14, color: Colors.white.withValues(alpha: 0.7))),
+                        fontSize: 14,
+                        color: Colors.white.withValues(alpha: 0.7))),
               ],
             )),
             const Icon(Icons.arrow_forward_ios,
@@ -372,15 +375,8 @@ class _UserOptionsBottomSheetState
       final controller = ref.read(registerUserControllerProvider);
       final result = await controller.deleteUser(usuario.uid);
 
-      if (result == null) {
-        if (context.mounted) {
-          ref.invalidate(usersProvider(rol));
-          SnackbarHelper.showSuccess('Usuario eliminado correctamente');
-        }
-      } else {
-        if (context.mounted) {
-          SnackbarHelper.showError('Error al eliminar: $result');
-        }
+      if (result != null) {
+        SnackbarHelper.showError('Error al eliminar: $result');
       }
     } catch (e) {
       if (context.mounted) {

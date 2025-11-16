@@ -1258,8 +1258,6 @@ class _MesasScreenState extends ConsumerState<MesasScreen> {
       await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
 
       setState(() => mesaSeleccionadaId = null);
-
-      SnackbarHelper.showSuccess('Mesa liberada y pedido cancelado.');
     } catch (e) {
       developer.log('Error liberando mesa ${mesa.id}: $e');
       if (!mounted) {

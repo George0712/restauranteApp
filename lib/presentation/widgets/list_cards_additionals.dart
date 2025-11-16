@@ -398,8 +398,6 @@ class _AdditionalOptionsSheetState
     }
 
     if (result == null) {
-      SnackbarHelper.showSuccess(
-          widget.additional.disponible ? "Desactivado" : "Activado");
     } else {
       SnackbarHelper.showError(result);
     }
@@ -462,9 +460,7 @@ class _AdditionalOptionsSheetState
         await controller.eliminarAdditional(ref, id: widget.additional.id);
 
     // Mostrar mensaje de resultado
-    if (result == null) {
-      SnackbarHelper.showSuccess('Adicional eliminado');
-    } else {
+    if (result != null) {
       SnackbarHelper.showError(result);
     }
   }

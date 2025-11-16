@@ -5,6 +5,7 @@ import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/product_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/search_text.dart';
+import 'package:restaurante_app/presentation/widgets/cloudinary_image_widget.dart';
 
 class ProductsItemComboScreen extends ConsumerStatefulWidget {
   const ProductsItemComboScreen({super.key});
@@ -304,16 +305,71 @@ class _State extends ConsumerState<ProductsItemComboScreen> {
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 8),
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      theme.primaryColor.withAlpha(100),
-                                  child: Text(
-                                    product.name[0].toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                leading: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: product.photo != null && product.photo!.isNotEmpty
+                                      ? CloudinaryImageWidget(
+                                          imageUrl: product.photo,
+                                          width: 56,
+                                          height: 56,
+                                          fit: BoxFit.cover,
+                                          placeholder: Container(
+                                            width: 56,
+                                            height: 56,
+                                            color: theme.primaryColor.withAlpha(100),
+                                            child: const Center(
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor: AlwaysStoppedAnimation<Color>(
+                                                  Color(0xFF34D399),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          errorWidget: Container(
+                                            width: 56,
+                                            height: 56,
+                                            decoration: BoxDecoration(
+                                              color: theme.primaryColor.withAlpha(100),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                product.name[0].toUpperCase(),
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 20,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 56,
+                                          height: 56,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                const Color(0xFF34D399).withValues(alpha: 0.2),
+                                                const Color(0xFF34D399).withValues(alpha: 0.1),
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              product.name[0].toUpperCase(),
+                                              style: const TextStyle(
+                                                color: Color(0xFF34D399),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                 ),
                                 title: Text(
                                   product.name,
@@ -322,13 +378,19 @@ class _State extends ConsumerState<ProductsItemComboScreen> {
                                     fontWeight: FontWeight.w500,
                                     fontSize: 16,
                                   ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 subtitle: Text(
-                                  '\$${product.price.toStringAsFixed(2)}',
+                                  '\$${product.price.toStringAsFixed(0).replaceAllMapped(
+                                        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                        (Match m) => '${m[1]}.',
+                                      )}',
                                   style: const TextStyle(
                                     color: Color(0xFF34D399),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 13,
+                                    letterSpacing: 0.3,
                                   ),
                                 ),
                                 trailing: Checkbox(

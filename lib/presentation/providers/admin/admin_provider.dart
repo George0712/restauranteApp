@@ -22,7 +22,8 @@ import 'package:restaurante_app/presentation/controllers/admin/user_controller.d
 import 'package:restaurante_app/presentation/controllers/admin/mesa_controller.dart';
 
 //Providers Admin
-final adminControllerProvider = StateNotifierProvider<AdminController, AdminDashboardModel>((ref) {
+final adminControllerProvider =
+    StateNotifierProvider<AdminController, AdminDashboardModel>((ref) {
   final controller = AdminController();
   controller.cargarDashboard(); // carga datos al iniciar
   return controller;
@@ -36,61 +37,65 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
 final totalVentasProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
-    .collection('pedido')
-    .where('pagado', isEqualTo: true)
-    .snapshots()
-    .map((snapshot) {
-      final now = DateTime.now();
-      final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+      .collection('pedido')
+      .where('pagado', isEqualTo: true)
+      .snapshots()
+      .map((snapshot) {
+    final now = DateTime.now();
+    final startDate = DateTime(now.year, now.month, now.day)
+        .subtract(const Duration(days: 6));
 
-      int totalVentas = 0;
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
+    int totalVentas = 0;
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
 
-        final createdAt = _parseTimestamp(data['createdAt']) ??
-            _parseTimestamp(data['fechaCreacion']) ??
-            _parseTimestamp(data['fecha']);
+      final createdAt = _parseTimestamp(data['createdAt']) ??
+          _parseTimestamp(data['fechaCreacion']) ??
+          _parseTimestamp(data['fecha']);
 
-        if (createdAt == null) continue;
+      if (createdAt == null) continue;
 
-        final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
-        if (dayKey.isBefore(startDate)) continue;
+      final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
+      if (dayKey.isBefore(startDate)) continue;
 
-        final venta = data['total'];
-        if (venta is int) {
-          totalVentas += venta;
-        } else if (venta is double) {
-          totalVentas += venta.toInt();
-        }
+      final venta = data['total'];
+      if (venta is int) {
+        totalVentas += venta;
+      } else if (venta is double) {
+        totalVentas += venta.toInt();
       }
-      return totalVentas;
-    });
+    }
+    return totalVentas;
+  });
 });
 
 // Provider para contar pedidos (órdenes)
 final ordenesProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
-    .collection('pedido')
-    .where('status', isEqualTo: 'pendiente')
-    .snapshots()
-    .map((snapshot) => snapshot.size);
+      .collection('pedido')
+      .where('status', isEqualTo: 'pendiente')
+      .snapshots()
+      .map((snapshot) => snapshot.size);
 });
 
 // Provider para contar usuarios
 final usuariosProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
-  return firestore.collection('usuario').snapshots().map((snapshot) => snapshot.size - 1);
+  return firestore
+      .collection('usuario')
+      .snapshots()
+      .map((snapshot) => snapshot.size - 1);
 });
 
 // Provider para contar productos
 final productosProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
-    .collection('producto')
-    .where('disponible', isEqualTo: true)
-    .snapshots()
-    .map((snapshot) => snapshot.size);
+      .collection('producto')
+      .where('disponible', isEqualTo: true)
+      .snapshots()
+      .map((snapshot) => snapshot.size);
 });
 
 class SalesPoint {
@@ -128,7 +133,8 @@ final weeklySalesProvider = StreamProvider<List<SalesPoint>>((ref) {
       .snapshots()
       .map((snapshot) {
     final now = DateTime.now();
-    final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+    final startDate = DateTime(now.year, now.month, now.day)
+        .subtract(const Duration(days: 6));
 
     final Map<DateTime, double> totalsByDay = {};
 
@@ -145,7 +151,8 @@ final weeklySalesProvider = StreamProvider<List<SalesPoint>>((ref) {
       if (dayKey.isBefore(startDate)) continue;
 
       final total = (data['total'] as num?)?.toDouble() ?? 0.0;
-      totalsByDay.update(dayKey, (value) => value + total, ifAbsent: () => total);
+      totalsByDay.update(dayKey, (value) => value + total,
+          ifAbsent: () => total);
     }
 
     final List<SalesPoint> points = [];
@@ -196,10 +203,7 @@ final todaySalesProvider = StreamProvider<double>((ref) {
 final completedTodayProvider = StreamProvider<int>((ref) {
   final firestore = ref.watch(firestoreProvider);
 
-  return firestore
-      .collection('pedido')
-      .snapshots()
-      .map((snapshot) {
+  return firestore.collection('pedido').snapshots().map((snapshot) {
     final today = DateTime.now();
     final todayKey = DateTime(today.year, today.month, today.day);
 
@@ -207,12 +211,14 @@ final completedTodayProvider = StreamProvider<int>((ref) {
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final status = (data['status'] ?? '').toString().toLowerCase();
-      
+
       // Solo contar pedidos completados (terminado, entregado o pagado)
-      if (status != 'terminado' && status != 'entregado' && status != 'pagado') {
+      if (status != 'terminado' &&
+          status != 'entregado' &&
+          status != 'pagado') {
         continue;
       }
-      
+
       final createdAt = _parseTimestamp(data['createdAt']) ??
           _parseTimestamp(data['fechaCreacion']) ??
           _parseTimestamp(data['fecha']);
@@ -263,13 +269,15 @@ final averageTicketProvider = StreamProvider<double>((ref) {
   });
 });
 
-final orderStatusSummaryProvider = StreamProvider<List<OrderStatusMetric>>((ref) {
+final orderStatusSummaryProvider =
+    StreamProvider<List<OrderStatusMetric>>((ref) {
   final firestore = ref.watch(firestoreProvider);
 
   return firestore.collection('pedido').snapshots().map((snapshot) {
     final now = DateTime.now();
-    final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
-    
+    final startDate = DateTime(now.year, now.month, now.day)
+        .subtract(const Duration(days: 6));
+
     final Map<String, int> counts = {
       'pendiente': 0,
       'preparando': 0,
@@ -279,7 +287,7 @@ final orderStatusSummaryProvider = StreamProvider<List<OrderStatusMetric>>((ref)
 
     for (final doc in snapshot.docs) {
       final data = doc.data();
-      
+
       // Filtrar por últimos 7 días
       final createdAt = _parseTimestamp(data['createdAt']) ??
           _parseTimestamp(data['fechaCreacion']) ??
@@ -289,15 +297,17 @@ final orderStatusSummaryProvider = StreamProvider<List<OrderStatusMetric>>((ref)
 
       final dayKey = DateTime(createdAt.year, createdAt.month, createdAt.day);
       if (dayKey.isBefore(startDate)) continue;
-      
-      final status = (data['status'] ?? data['estado'] ?? '').toString().toLowerCase();
+
+      final status =
+          (data['status'] ?? data['estado'] ?? '').toString().toLowerCase();
       if (counts.containsKey(status)) {
         counts[status] = counts[status]! + 1;
       }
     }
 
     return counts.entries
-        .map((entry) => OrderStatusMetric(status: entry.key, count: entry.value))
+        .map(
+            (entry) => OrderStatusMetric(status: entry.key, count: entry.value))
         .toList();
   });
 });
@@ -311,7 +321,8 @@ final topProductsProvider = StreamProvider<List<TopProductMetric>>((ref) {
       .snapshots()
       .map((snapshot) {
     final now = DateTime.now();
-    final startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
+    final startDate = DateTime(now.year, now.month, now.day)
+        .subtract(const Duration(days: 6));
 
     final Map<String, _ProductAccumulator> aggregated = {};
 
@@ -333,8 +344,10 @@ final topProductsProvider = StreamProvider<List<TopProductMetric>>((ref) {
       if (items is List) {
         for (final item in items) {
           if (item is Map<String, dynamic>) {
-            final name = (item['name'] ?? item['nombre'] ?? 'Producto').toString();
-            final quantity = (item['quantity'] ?? item['cantidad'] ?? 0) as num?;
+            final name =
+                (item['name'] ?? item['nombre'] ?? 'Producto').toString();
+            final quantity =
+                (item['quantity'] ?? item['cantidad'] ?? 0) as num?;
             final price = (item['price'] ?? item['precio'] ?? 0) as num?;
 
             final safeQuantity = quantity?.toInt() ?? 0;
@@ -387,7 +400,9 @@ class _ProductAccumulator {
   int quantity;
   double total;
 
-  _ProductAccumulator({required this.name}) : quantity = 0, total = 0.0;
+  _ProductAccumulator({required this.name})
+      : quantity = 0,
+        total = 0.0;
 }
 
 //Providers Users
@@ -403,14 +418,16 @@ final isContactInfoValidProvider = StateProvider<bool>((ref) => false);
 final isCredentialsValidProvider = StateProvider<bool>((ref) => false);
 final userTempProvider = StateProvider<UserModel?>((ref) => null);
 
-final usersProvider = StreamProvider.family<List<UserModel>, String>((ref, rol) {
+final usersProvider =
+    StreamProvider.family<List<UserModel>, String>((ref, rol) {
   final firestore = ref.watch(firestoreProvider);
   return firestore
       .collection('usuario')
       .where('rol', isEqualTo: rol)
       .snapshots()
-      .map((snapshot) =>
-          snapshot.docs.map((doc) => UserModel.fromMap(doc.data(), doc.id)).toList());
+      .map((snapshot) => snapshot.docs
+          .map((doc) => UserModel.fromMap(doc.data(), doc.id))
+          .toList());
 });
 
 final userManagementControllerProvider =
@@ -418,7 +435,8 @@ final userManagementControllerProvider =
   return ProductManagementController();
 });
 
-final userByIdProvider = StreamProvider.family<UserModel?, String>((ref, userId) {
+final userByIdProvider =
+    StreamProvider.family<UserModel?, String>((ref, userId) {
   final firestore = ref.watch(firestoreProvider);
   return firestore.collection('usuario').doc(userId).snapshots().map((doc) {
     if (!doc.exists) return null;
@@ -486,10 +504,7 @@ class ProfileImageNotifier extends StateNotifier<File?> {
 
       if (pickedFile != null) {
         state = File(pickedFile.path);
-
-        final sourceText =
-            source == ImageSource.camera ? 'tomada' : 'seleccionada';
-        SnackbarHelper.showSuccess('Imagen $sourceText correctamente');
+        source == ImageSource.camera ? 'tomada' : 'seleccionada';
       } else {
         final sourceText = source == ImageSource.camera ? 'tomó' : 'seleccionó';
         SnackbarHelper.showWarning('No se $sourceText ninguna imagen');
@@ -712,7 +727,9 @@ final additionalProvider = StreamProvider<List<AdditionalModel>>((ref) {
 final additionalsProvider = StreamProvider<List<AdditionalModel>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore.collection('adicional').snapshots().map((snapshot) {
-    return snapshot.docs.map((doc) => AdditionalModel.fromMap(doc.data(), doc.id)).toList();
+    return snapshot.docs
+        .map((doc) => AdditionalModel.fromMap(doc.data(), doc.id))
+        .toList();
   });
 });
 
@@ -737,7 +754,8 @@ final editComboControllerProvider =
 });
 
 // Provider para productos seleccionados del combo (máximo 5)
-final selectedComboProductsProvider = StateProvider<List<ProductModel>>((ref) => []);
+final selectedComboProductsProvider =
+    StateProvider<List<ProductModel>>((ref) => []);
 
 // Provider para obtener todos los combos
 final combosProvider = StreamProvider<List<ComboModel>>((ref) {
@@ -747,12 +765,15 @@ final combosProvider = StreamProvider<List<ComboModel>>((ref) {
       final data = doc.data();
       // Parsear los productos desde el array de IDs o referencias
       final productsData = data['products'] as List<dynamic>? ?? [];
-      final products = productsData.map((item) {
-        if (item is Map<String, dynamic>) {
-          return ProductModel.fromMap(item, item['id'] ?? '');
-        }
-        return null;
-      }).whereType<ProductModel>().toList();
+      final products = productsData
+          .map((item) {
+            if (item is Map<String, dynamic>) {
+              return ProductModel.fromMap(item, item['id'] ?? '');
+            }
+            return null;
+          })
+          .whereType<ProductModel>()
+          .toList();
 
       return ComboModel(
         id: doc.id,
@@ -771,21 +792,20 @@ final combosProvider = StreamProvider<List<ComboModel>>((ref) {
 final comboByIdProvider =
     StreamProvider.family<ComboModel?, String>((ref, comboId) {
   final firestore = ref.watch(firestoreProvider);
-  return firestore
-      .collection('combo')
-      .doc(comboId)
-      .snapshots()
-      .map((snapshot) {
+  return firestore.collection('combo').doc(comboId).snapshots().map((snapshot) {
     if (snapshot.exists && snapshot.data() != null) {
       final data = snapshot.data()!;
       // Parsear los productos desde el array
       final productsData = data['products'] as List<dynamic>? ?? [];
-      final products = productsData.map((item) {
-        if (item is Map<String, dynamic>) {
-          return ProductModel.fromMap(item, item['id'] ?? '');
-        }
-        return null;
-      }).whereType<ProductModel>().toList();
+      final products = productsData
+          .map((item) {
+            if (item is Map<String, dynamic>) {
+              return ProductModel.fromMap(item, item['id'] ?? '');
+            }
+            return null;
+          })
+          .whereType<ProductModel>()
+          .toList();
 
       return ComboModel(
         id: snapshot.id,
@@ -815,7 +835,9 @@ final isMesaFieldsValidProvider = StateProvider<bool>((ref) => false);
 final mesasProvider = StreamProvider<List<MesaModel>>((ref) {
   final firestore = ref.watch(firestoreProvider);
   return firestore.collection('mesa').snapshots().map((snapshot) {
-    final mesas = snapshot.docs.map((doc) => MesaModel.fromMap(doc.data(), doc.id)).toList();
+    final mesas = snapshot.docs
+        .map((doc) => MesaModel.fromMap(doc.data(), doc.id))
+        .toList();
     // Ordenar las mesas por ID numérico ascendente
     mesas.sort((a, b) => a.id.compareTo(b.id));
     return mesas;

@@ -370,11 +370,7 @@ class _CategoryOptionsBottomSheetState
       Navigator.pop(context);
     }
 
-    if (result == null) {
-      SnackbarHelper.showSuccess(categoria.disponible
-          ? 'Categoría desactivada'
-          : 'Categoría activada');
-    } else {
+    if (result != null) {
       SnackbarHelper.showError('Error: $result');
     }
   }
@@ -435,9 +431,7 @@ class _CategoryOptionsBottomSheetState
     final result = await controller.eliminarCategoria(ref, id: categoria.id);
 
     // Mostrar mensaje de resultado
-    if (result == null) {
-      SnackbarHelper.showSuccess('Categoría eliminada exitosamente');
-    } else {
+    if (result != null) {
       SnackbarHelper.showError('Error al eliminar: $result');
     }
   }

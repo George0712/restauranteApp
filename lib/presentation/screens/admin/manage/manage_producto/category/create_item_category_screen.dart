@@ -172,7 +172,6 @@ class _CreateItemCategoryScreenState
   void _removeImage() {
     final imageNotifier = ref.read(profileImageProvider.notifier);
     imageNotifier.clearImage();
-    SnackbarHelper.showInfo('Imagen eliminada');
   }
 
   @override
@@ -299,65 +298,6 @@ class _CreateItemCategoryScreenState
                                   : AppConstants.nameRegex.hasMatch(value)
                                       ? null
                                       : 'El nombre no es válido'),
-                          const SizedBox(height: 16),
-                          // Checkbox de disponibilidad
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Disponible:',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Radio<bool>(
-                                            value: true,
-                                            groupValue: isAvailable,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                isAvailable = value;
-                                              });
-                                            },
-                                            activeColor: Colors.green,
-                                          ),
-                                          const Text('Sí',
-                                              style:
-                                                  TextStyle(color: Colors.white)),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Row(
-                                        children: [
-                                          Radio<bool>(
-                                            value: false,
-                                            groupValue: isAvailable,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                isAvailable = value;
-                                              });
-                                            },
-                                            activeColor: Colors.red,
-                                          ),
-                                          const Text('No',
-                                              style:
-                                                  TextStyle(color: Colors.white)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -410,15 +350,9 @@ class _CreateItemCategoryScreenState
                                   }
               
                                   if (result == null) {
-                                    SnackbarHelper.showSuccess(
-                                        widget.category == null
-                                            ? 'Categoría agregada exitosamente'
-                                            : 'Categoría actualizada exitosamente');
-              
                                     _clearAllFields();
               
                                     if (mounted) {
-                                      // Volver a la pantalla anterior (gestión de categorías)
                                       context.pop();
                                     }
                                   } else {

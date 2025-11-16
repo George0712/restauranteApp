@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/list_cards_products.dart';
 import 'package:restaurante_app/presentation/widgets/search_text.dart';
 
@@ -20,8 +19,6 @@ class _CreateProductoScreenState extends ConsumerState<CreateProductoScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-    final registerProductoController =
-        ref.watch(registerProductoControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -76,15 +73,7 @@ class _CreateProductoScreenState extends ConsumerState<CreateProductoScreen> {
                     const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: () {
-                        registerProductoController.nombreController.clear();
-                        registerProductoController.precioController.clear();
-                        registerProductoController.tiempoPreparacionController
-                            .clear();
-                        registerProductoController.ingredientesController.clear();
-                        ref.read(profileImageProvider.notifier).clearImage();
-          
-                        context
-                            .push('/admin/manage/producto/create-item-productos');
+                        context.push('/admin/manage/producto/create-item-productos');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B5CF6),

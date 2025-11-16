@@ -304,7 +304,6 @@ class UserDetailScreen extends ConsumerWidget {
       if (result == null) {
         if (context.mounted) {
           ref.invalidate(usersProvider(rol));
-          SnackbarHelper.showSuccess('Usuario eliminado correctamente');
         }
       } else {
         if (context.mounted) {

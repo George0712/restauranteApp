@@ -118,49 +118,54 @@ class _SeleccionProductosScreenState
           tooltip: 'Volver',
         ),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.shopping_cart_outlined,
-              color: Colors.white,
-            ),
-            onPressed: () => _mostrarCarrito(context),
-            tooltip: 'Ver carrito',
-          ),
-          if (carrito.isNotEmpty)
-            Positioned(
-              right: 6,
-              top: 6,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF8B5CF6),
-                      Color(0xFF7C3AED),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.shopping_cart_outlined,
+                  color: Colors.white,
                 ),
-                child: Text(
-                  carrito
-                      .fold(0, (total, item) => total + item.cantidad)
-                      .toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                onPressed: () => _mostrarCarrito(context),
+                tooltip: 'Ver carrito',
               ),
-            ),
+              if (carrito.isNotEmpty)
+                Positioned(
+                  right: 6,
+                  top: 8,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF8B5CF6),
+                          Color(0xFF7C3AED),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      carrito
+                          .fold(0, (total, item) => total + item.cantidad)
+                          .toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ],
       ),
       extendBodyBehindAppBar: true,
@@ -195,9 +200,8 @@ class _SeleccionProductosScreenState
                         if (scrollInfo is ScrollUpdateNotification) {
                           final pixels = scrollInfo.metrics.pixels;
                           // Usar histéresis para evitar rebotes
-                          final shouldBeScrolled = _isScrolled
-                              ? pixels > 20 
-                              : pixels > 40;
+                          final shouldBeScrolled =
+                              _isScrolled ? pixels > 20 : pixels > 40;
 
                           if (shouldBeScrolled != _isScrolled) {
                             setState(() {
@@ -550,13 +554,15 @@ class _SeleccionProductosScreenState
       );
     }
 
+    final isTablet = MediaQuery.of(context).size.width > 600;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.builder(
         itemCount: productosFiltrados.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-          childAspectRatio: 0.8,
+          crossAxisCount: isTablet ? 3 : 2,
+          childAspectRatio: isTablet ? 0.75 : 0.7,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
         ),
@@ -608,9 +614,9 @@ class _SeleccionProductosScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // SECCIÓN DE IMAGEN - 60% del espacio
+            // SECCIÓN DE IMAGEN - 70% del espacio
             Expanded(
-              flex: 4,
+              flex: 5,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade800,
@@ -760,117 +766,90 @@ class _SeleccionProductosScreenState
                 ),
               ),
             ),
-            // SECCIÓN DE INFORMACIÓN - 40% del espacio
-            Expanded(
-              flex: 3,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(18),
-                    bottomRight: Radius.circular(18),
-                  ),
+            // SECCIÓN DE INFORMACIÓN - 30% del espacio
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF6366F1).withValues(alpha: 0.15),
+                    const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(18),
+                  bottomRight: Radius.circular(18),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // NOMBRE DEL PRODUCTO - permite múltiples líneas
+                  Text(
+                    producto.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.white,
+                      height: 1.3,
+                      letterSpacing: 0.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 10),
+                  // PRECIO - más prominente
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF10B981),
+                          Color(0xFF059669),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
                           Icons.attach_money_rounded,
                           color: Colors.white,
-                          size: 18,
+                          size: 16,
                         ),
-                        Flexible(
-                          child: Text(
-                            producto.price
-                                .toStringAsFixed(0)
-                                .replaceAllMapped(
-                                  RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                  (Match m) => '${m[1]}.',
-                                ),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 16,
-                              letterSpacing: 0.5,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(0, 1),
-                                  blurRadius: 2,
-                                ),
-                              ],
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        Text(
+                          producto.price.toStringAsFixed(0).replaceAllMapped(
+                                RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                (Match m) => '${m[1]}.',
+                              ),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            fontSize: 16,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ],
                     ),
-                    // NOMBRE DEL PRODUCTO
-                    Flexible(
-                      child: Text(
-                        producto.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: Colors.white,
-                          height: 1.2,
-                          letterSpacing: 0.3,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // FILA DE PRECIO Y BOTÓN
-                    // Row(
-                    //   children: [
-                    //     // PRECIO - Más grande y llamativo
-                        
-                    //     // const SizedBox(width: 10),
-                    //     // BOTÓN DE AGREGAR
-                    //     // Container(
-                    //     //   decoration: BoxDecoration(
-                    //     //     color: producto.disponible
-                    //     //         ? const Color(0xFF059669)
-                    //     //         : Colors.grey.shade600,
-                    //     //     borderRadius: BorderRadius.circular(12),
-                    //     //     boxShadow: [
-                    //     //       BoxShadow(
-                    //     //         color: producto.disponible
-                    //     //             ? const Color(0xFF059669)
-                    //     //                 .withValues(alpha: 0.3)
-                    //     //             : Colors.grey.withValues(alpha: 0.2),
-                    //     //         blurRadius: 6,
-                    //     //         offset: const Offset(0, 2),
-                    //     //       ),
-                    //     //     ],
-                    //     //   ),
-                    //     //   child: Material(
-                    //     //     color: Colors.transparent,
-                    //     //     child: InkWell(
-                    //     //       borderRadius: BorderRadius.circular(12),
-                    //     //       onTap: producto.disponible
-                    //     //           ? () => _mostrarDetalleProducto(producto)
-                    //     //           : null,
-                    //     //       child: const Padding(
-                    //     //         padding: EdgeInsets.all(10),
-                    //     //         child: Icon(
-                    //     //           Icons.add_shopping_cart_rounded,
-                    //     //           color: Colors.white,
-                    //     //           size: 20,
-                    //     //         ),
-                    //     //       ),
-                    //     //     ),
-                    //     //   ),
-                    //     // ),
-                    //   ],
-                    // ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1026,11 +1005,10 @@ class _SeleccionProductosScreenState
       await _crearActualizarPedido(carrito, 'pendiente', false);
       await _cargarCarritoDelPedido();
       if (!mounted) return;
-      if (sheetContext.mounted){
+      if (sheetContext.mounted) {
         Navigator.of(sheetContext).pop();
       }
       if (!mounted) return;
-      SnackbarHelper.showSuccess('Pedido enviado a cocina');
     } catch (e) {
       _mostrarError(context, 'Error al confirmar pedido: $e');
     }
@@ -1051,7 +1029,6 @@ class _SeleccionProductosScreenState
       if (!mounted) return;
       context.pop();
       if (!mounted) return;
-      SnackbarHelper.showSuccess('Pedido enviado y ticket generado');
       await _abrirTicketPreview(ticketId: ticketInfo?['ticketId'] as String?);
     } catch (e) {
       if (!mounted) return;
@@ -1075,16 +1052,11 @@ class _SeleccionProductosScreenState
       if (!mounted) return;
 
       // 2. Cerrar el carrito
-      if (sheetContext.mounted){
+      if (sheetContext.mounted) {
         Navigator.of(sheetContext).pop();
       }
 
       if (!mounted) return;
-
-      // 3. Mostrar mensaje de que se envió a cocina
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pedido enviado a cocina')),
-      );
 
       // 4. Abrir el diálogo de pago inmediatamente
       final pagoCompletado = await showModalBottomSheet<bool>(
@@ -1188,10 +1160,6 @@ class _SeleccionProductosScreenState
         await _cargarCarritoDelPedido();
 
         if (!mounted) return;
-
-        SnackbarHelper.showInfo(
-          'Pedido enviado a cocina - Pago pendiente al entregar',
-        );
 
         // Volver a la pantalla anterior
         if (mounted) {
@@ -1564,11 +1532,6 @@ class _SeleccionProductosScreenState
       await pedidoRef.set({
         'ultimoTicketGeneradoAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-      if (mostrarMensaje && mounted) {
-        SnackbarHelper.showSuccess(
-          'Ticket generado correctamente.',
-        );
-      }
       return {
         'ticketId': ticketRef.id,
       };
@@ -1588,9 +1551,6 @@ class _SeleccionProductosScreenState
     setState(() {
       _agregandoExtras = false;
     });
-    SnackbarHelper.showInfo(
-      'Puedes agregar o quitar productos del pedido',
-    );
   }
 
   Future<void> _cancelarPedido(BuildContext sheetContext) async {
@@ -1696,7 +1656,6 @@ class _SeleccionProductosScreenState
             _agregandoExtras = false;
             pedidoConfirmado = false;
           });
-          SnackbarHelper.showInfo('Pedido cancelado. Se creo un nuevo pedido para la mesa.');
         } else {
           if (!mounted) return;
           if (sheetContext.mounted) {
@@ -1707,9 +1666,7 @@ class _SeleccionProductosScreenState
             _agregandoExtras = false;
             pedidoConfirmado = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pedido cancelado.')),
-          );
+          _mostrarError(context, 'Pedido cancelado.');
         }
         if (!mounted) return;
         _volverAPantallaDeMesas();

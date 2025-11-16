@@ -37,6 +37,12 @@ class _CreateItemProductScreenState
   double _uploadProgress = 0.0;
   String? _originalImageUrl; // Para mantener referencia de la imagen original
 
+  // Controladores para limpiar en dispose
+  VoidCallback? _nombreListener;
+  VoidCallback? _precioListener;
+  VoidCallback? _tiempoListener;
+  VoidCallback? _ingredientesListener;
+
   // Getter para determinar si estamos editando
   bool get isEditing => widget.productId != null;
 
@@ -53,12 +59,19 @@ class _CreateItemProductScreenState
 
     final registerProductController =
         ref.read(registerProductoControllerProvider);
-    registerProductController.nombreController.addListener(_validateFields);
-    registerProductController.precioController.addListener(_validateFields);
+
+    // Guardar referencias a los listeners
+    _nombreListener = _validateFields;
+    _precioListener = _validateFields;
+    _tiempoListener = _validateFields;
+    _ingredientesListener = _validateFields;
+
+    registerProductController.nombreController.addListener(_nombreListener!);
+    registerProductController.precioController.addListener(_precioListener!);
     registerProductController.tiempoPreparacionController
-        .addListener(_validateFields);
+        .addListener(_tiempoListener!);
     registerProductController.ingredientesController
-        .addListener(_validateFields);
+        .addListener(_ingredientesListener!);
   }
 
   void _validateFields() {
@@ -71,14 +84,28 @@ class _CreateItemProductScreenState
 
   @override
   void dispose() {
-    final registerProductController =
-        ref.read(registerProductoControllerProvider);
-    registerProductController.nombreController.removeListener(_validateFields);
-    registerProductController.precioController.removeListener(_validateFields);
-    registerProductController.tiempoPreparacionController
-        .removeListener(_validateFields);
-    registerProductController.ingredientesController
-        .removeListener(_validateFields);
+    // Limpiar listeners sin usar ref
+    if (_nombreListener != null || _precioListener != null ||
+        _tiempoListener != null || _ingredientesListener != null) {
+      try {
+        final registerProductController =
+            ref.read(registerProductoControllerProvider);
+        if (_nombreListener != null) {
+          registerProductController.nombreController.removeListener(_nombreListener!);
+        }
+        if (_precioListener != null) {
+          registerProductController.precioController.removeListener(_precioListener!);
+        }
+        if (_tiempoListener != null) {
+          registerProductController.tiempoPreparacionController.removeListener(_tiempoListener!);
+        }
+        if (_ingredientesListener != null) {
+          registerProductController.ingredientesController.removeListener(_ingredientesListener!);
+        }
+      } catch (e) {
+        // Ignorar error si ref ya no está disponible
+      }
+    }
     super.dispose();
   }
 
@@ -251,7 +278,6 @@ class _CreateItemProductScreenState
     setState(() {
       _originalImageUrl = null;
     });
-    SnackbarHelper.showInfo('Imagen eliminada');
   }
 
   // Método para manejar el envío del formulario
@@ -327,12 +353,6 @@ class _CreateItemProductScreenState
       }
 
       if (result == null) {
-        final message = isEditing
-            ? 'Producto actualizado correctamente'
-            : 'Producto agregado correctamente';
-
-        SnackbarHelper.showSuccess(message);
-
         _clearAllFields();
 
         if (mounted) {
@@ -771,65 +791,6 @@ class _CreateItemProductScreenState
                               : AppConstants.ingredientesRegex.hasMatch(value)
                                   ? null
                                   : 'Este campo no es válido',
-                        ),
-                        const SizedBox(height: 16),
-                        // Checkbox de disponibilidad
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Text(
-                                'Disponible:',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Radio<bool>(
-                                          value: true,
-                                          groupValue: isAvailable,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              isAvailable = value;
-                                            });
-                                          },
-                                          activeColor: Colors.green,
-                                        ),
-                                        const Text('Sí',
-                                            style:
-                                                TextStyle(color: Colors.white)),
-                                      ],
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Row(
-                                      children: [
-                                        Radio<bool>(
-                                          value: false,
-                                          groupValue: isAvailable,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              isAvailable = value;
-                                            });
-                                          },
-                                          activeColor: Colors.red,
-                                        ),
-                                        const Text('No',
-                                            style:
-                                                TextStyle(color: Colors.white)),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),

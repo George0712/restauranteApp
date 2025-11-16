@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/widgets/tab_label.dart';
 import 'package:restaurante_app/presentation/providers/mesero/pedidos_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -2051,23 +2053,11 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
       await Clipboard.setData(ClipboardData(text: texto));
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Recibo copiado al portapapeles'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackbarHelper.showSuccess('Recibo copiado al portapapeles');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al copiar: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackbarHelper.showError('Error al copiar: $e');
       }
     }
   }
@@ -2207,13 +2197,7 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al preparar impresión: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackbarHelper.showSuccess('Error al preparar impresión: $e');
       }
     }
   }
@@ -2227,25 +2211,9 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
         bytes: pdfBytes,
         filename: 'Pedido_${pedidoId.substring(0, 8)}.pdf',
       );
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('PDF compartido exitosamente'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al compartir PDF: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackbarHelper.showError('Error al compartir PDF: $e');
       }
     }
   }
@@ -2293,31 +2261,14 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
         text: 'Recibo del Pedido ${pedidoId.substring(0, 8)}',
         subject: 'Recibo - Restaurante App',
       );
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Imagen del recibo compartida exitosamente'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
     } catch (e) {
       // Cerrar indicador de carga si está abierto
       if (mounted && Navigator.canPop(context)) {
-        Navigator.of(context).pop();
+        context.pop();
       }
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al compartir imagen: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        SnackbarHelper.showError('Error al compartir imagen: $e');
       }
     }
   }
@@ -2596,26 +2547,10 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
         buffer.toString(),
         subject: 'Recibo del Pedido ${pedidoId.substring(0, 8)} - Restaurante App',
       );
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Recibo compartido exitosamente'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
     } catch (e) {
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al compartir: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        SnackbarHelper.showError('Error al compartir: $e');
       }
     }
   }

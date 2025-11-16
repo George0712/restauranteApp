@@ -68,7 +68,7 @@ class ListCardsCombos extends ConsumerWidget {
             crossAxisCount: isTablet ? 4 : 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 0.8,
+            childAspectRatio: isTablet ? 0.75 : 0.7,
           ),
           itemBuilder: (context, index) {
             final combo = combos[index];
@@ -108,7 +108,7 @@ class ListCardsCombos extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              flex: 3,
+                              flex: 5,
                               child: Stack(
                                 children: [
                                   CloudinaryImageWidget(
@@ -180,118 +180,107 @@ class ListCardsCombos extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          combo.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                            color: Colors.white,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFFF59E0B),
-                                            Color(0xFFD97706),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFFF59E0B)
-                                                .withValues(alpha: 0.3),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Text(
-                                        '\$${combo.price.toStringAsFixed(0).replaceAllMapped(
-                                              RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-                                              (Match m) => '${m[1]}.',
-                                            )}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
+                            // Sección de información del combo
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                                    const Color(0xFFD97706).withValues(alpha: 0.08),
                                   ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Nombre del combo - permite múltiples líneas
+                                  Text(
+                                    combo.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: Colors.white,
+                                      height: 1.3,
+                                      letterSpacing: 0.3,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  // Precio - más prominente
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Color(0xFFF59E0B),
+                                                Color(0xFFD97706),
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius: BorderRadius.circular(8),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0xFFF59E0B)
+                                                    .withValues(alpha: 0.4),
+                                                blurRadius: 6,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Text(
+                                            '\$${combo.price.toStringAsFixed(0).replaceAllMapped(
+                                                  RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                                  (Match m) => '${m[1]}.',
+                                                )}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        // Badge de disponibilidad
+                        // Badge de disponibilidad - más compacto
                         Positioned(
-                          top: 8,
-                          right: 8,
+                          top: 10,
+                          right: 10,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 5,
+                              vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: combo.disponible ?? true
-                                    ? [
-                                        const Color(0xFF10B981),
-                                        const Color(0xFF059669),
-                                      ]
-                                    : [
-                                        const Color(0xFFEF4444),
-                                        const Color(0xFFDC2626),
-                                      ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
+                              color: combo.disponible ?? true
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFFEF4444),
+                              borderRadius: BorderRadius.circular(20),
                               boxShadow: [
                                 BoxShadow(
-                                  color: (combo.disponible ?? true
-                                          ? const Color(0xFF10B981)
-                                          : const Color(0xFFEF4444))
-                                      .withValues(alpha: 0.4),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  combo.disponible ?? true
-                                      ? 'Disponible'
-                                      : 'No disponible',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
@@ -743,8 +732,6 @@ class _ComboOptionsBottomSheetState
 
         if (widget.combo.disponible ?? true) {
           SnackbarHelper.showWarning(message);
-        } else {
-          SnackbarHelper.showSuccess(message);
         }
       } else {
         // Error
@@ -845,11 +832,7 @@ class _ComboOptionsBottomSheetState
       final controller = ref.read(comboManagementControllerProvider);
       final result = await controller.deleteCombo(widget.combo.id);
 
-      if (result == null) {
-        // Éxito
-        SnackbarHelper.showSuccess('Combo eliminado correctamente');
-      } else {
-        // Error
+      if (result != null) {
         SnackbarHelper.showError('Error al eliminar: $result');
       }
     } catch (e) {

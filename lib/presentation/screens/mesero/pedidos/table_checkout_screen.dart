@@ -555,12 +555,6 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
       );
 
       await ref.read(mesasMeseroProvider.notifier).editarMesa(mesaActualizada);
-
-      if (mounted) {
-        SnackbarHelper.showInfo(
-          'Mesa ${mesa.id} liberada automáticamente después del pago.',
-        );
-      }
     } catch (e) {
       // Silenciosamente fallar si no se puede liberar la mesa
       debugPrint('Error al liberar mesa tras pago: $e');

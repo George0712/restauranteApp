@@ -22,6 +22,15 @@ class _CreateMesaScreenState extends ConsumerState<CreateMesaScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Limpiar campos al iniciar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final mesaController = ref.read(mesaControllerProvider);
+      mesaController.numeroMesaController.clear();
+      mesaController.capacidadController.clear();
+      ref.read(isMesaFieldsValidProvider.notifier).state = false;
+    });
+
     final mesaController = ref.read(mesaControllerProvider);
     mesaController.numeroMesaController.addListener(_validateFields);
     mesaController.capacidadController.addListener(_validateFields);

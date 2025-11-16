@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/constants/app_strings.dart';
-import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
 import 'package:restaurante_app/presentation/widgets/list_cards_categorys.dart';
 
 class ManageCategoryScreen extends ConsumerStatefulWidget {
@@ -17,8 +16,6 @@ class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen> {
   final disponible = true;
   @override
   Widget build(BuildContext context) {
-    final registerCategoryController =
-        ref.read(registerCategoryControllerProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
@@ -76,10 +73,8 @@ class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen> {
                     // Botones
                     ElevatedButton(
                       onPressed: () {
-                        registerCategoryController.nombreController.clear();
                         context.pop();
-                        context.push(
-                            '/admin/manage/category/create-item-categorys');
+                        context.push('/admin/manage/category/create-item-categorys');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF8B5CF6),

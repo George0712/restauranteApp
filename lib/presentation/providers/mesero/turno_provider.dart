@@ -181,7 +181,7 @@ class TurnoController {
       // Programar desactivación automática
       _programarDesactivacionAutomatica(horaFinProgramada, user.uid);
 
-      SnackbarHelper.showSuccess('Turno iniciado correctamente');
+      SnackbarHelper.showSuccess('Turno iniciado');
     } catch (e) {
       SnackbarHelper.showError('Error al iniciar turno: $e');
     }

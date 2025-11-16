@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
-import 'package:restaurante_app/presentation/widgets/payment_bottom_sheet.dart';
 
 class TicketPreviewScreen extends ConsumerStatefulWidget {
   const TicketPreviewScreen({
@@ -188,26 +186,52 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
                         subtotal: subtotal, total: total, formatter: _currency),
                     const SizedBox(height: 24),
                     // Botones de acción
-                    if (!pagado) ...[
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _abrirPasarelaPago(context),
-                          icon: const Icon(Icons.payments),
-                          label: const Text('Registrar pago'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: const Color(0xFF34D399),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              // TODO: Implementar impresión del ticket
+                            },
+                            icon: const Icon(Icons.print),
+                            label: const Text('Imprimir'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              side: BorderSide(
+                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
+                              ),
+                              foregroundColor: const Color(0xFF8B5CF6),
+                              backgroundColor: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
                             ),
-                            elevation: 0,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              // TODO: Implementar compartir ticket
+                            },
+                            icon: const Icon(Icons.share),
+                            label: const Text('Compartir'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              side: BorderSide(
+                                color: const Color(0xFF8B5CF6).withValues(alpha: 0.5),
+                              ),
+                              foregroundColor: const Color(0xFF8B5CF6),
+                              backgroundColor: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
@@ -257,31 +281,6 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
       return Uri.decodeComponent(value);
     } catch (_) {
       return value;
-    }
-  }
-
-  Future<void> _abrirPasarelaPago(BuildContext context) async {
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => PaymentBottomSheet(pedidoId: widget.pedidoId),
-    );
-    if (result == true) {
-      if (context.mounted) {
-        SnackbarHelper.showSuccess(
-          'Pago registrado correctamente.',
-        );
-        final uri = Uri(
-            path: '/mesero/pedidos/ticket/${widget.pedidoId}',
-            queryParameters: {
-              'mesaId': widget.mesaId,
-              'mesaNombre': widget.mesaNombre,
-              'clienteNombre': widget.clienteNombre,
-              'ticketId': widget.ticketId,
-            }..removeWhere((_, v) => v == null));
-        context.go(uri.toString());
-      }
     }
   }
 }

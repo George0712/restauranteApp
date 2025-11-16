@@ -440,7 +440,6 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
         'cancelledBy': 'mesero',
       });
-      SnackbarHelper.showSuccess('Pedido cancelado correctamente.');
     } catch (error) {
       SnackbarHelper.showError('No se pudo cancelar el pedido: $error');
     } finally {
@@ -475,7 +474,6 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
         await ticket.reference.delete();
       }
       await docRef.delete();
-      SnackbarHelper.showSuccess('Pedido eliminado.');
     } catch (error) {
       SnackbarHelper.showError('No se pudo eliminar el pedido: $error');
     } finally {
@@ -997,7 +995,6 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
         'status': 'terminado',
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      SnackbarHelper.showSuccess('Pedido marcado como listo para recoger');
     } catch (error) {
       SnackbarHelper.showError('Error al actualizar estado: $error');
     } finally {
@@ -1022,7 +1019,6 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
         'deliveredAt': FieldValue.serverTimestamp(),
       });
-      SnackbarHelper.showSuccess('Pedido marcado como entregado.');
     } catch (error) {
       SnackbarHelper.showError('No se pudo actualizar el estado: $error');
     } finally {

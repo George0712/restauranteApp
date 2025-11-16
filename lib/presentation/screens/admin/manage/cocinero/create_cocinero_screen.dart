@@ -169,7 +169,6 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
   void _removeImage() {
     final imageNotifier = ref.read(profileImageProvider.notifier);
     imageNotifier.clearImage();
-    SnackbarHelper.showInfo('Imagen eliminada');
   }
 
   @override
@@ -400,8 +399,6 @@ class _CreateCocineroScreenState extends ConsumerState<CreateCocineroScreen> {
                                     );
                                     if (!mounted) return;
                                     if (res == null) {
-                                      SnackbarHelper.showSuccess(
-                                          'Cocinero actualizado exitosamente');
                                       context.pop();
                                     } else {
                                       SnackbarHelper.showError('Error: $res');

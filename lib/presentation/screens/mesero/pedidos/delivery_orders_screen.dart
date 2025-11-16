@@ -905,7 +905,6 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
         'status': 'terminado',
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      SnackbarHelper.showSuccess('Pedido marcado como listo para envío');
     } catch (error) {
       SnackbarHelper.showError('Error al actualizar estado: $error');
     } finally {
@@ -930,7 +929,6 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
         'deliveredAt': FieldValue.serverTimestamp(),
       });
-      SnackbarHelper.showSuccess('Pedido marcado como entregado.');
     } catch (error) {
       SnackbarHelper.showError('No se pudo actualizar el estado: $error');
     } finally {
@@ -1152,7 +1150,6 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
         'updatedAt': FieldValue.serverTimestamp(),
         'cancelledBy': 'mesero',
       });
-      SnackbarHelper.showSuccess('Pedido cancelado correctamente.');
     } catch (error) {
       SnackbarHelper.showError('No se pudo cancelar el pedido: $error');
     } finally {
@@ -1187,7 +1184,6 @@ class _DeliveryOrdersScreenState extends ConsumerState<DeliveryOrdersScreen> {
         await ticket.reference.delete();
       }
       await docRef.delete();
-      SnackbarHelper.showSuccess('Pedido eliminado.');
     } catch (error) {
       SnackbarHelper.showError('No se pudo eliminar el pedido: $error');
     } finally {
@@ -2547,9 +2543,7 @@ class _DeliveryPaymentSheetState extends ConsumerState<_DeliveryPaymentSheet> {
       setState(() {
         _errorMessage = 'No pudimos registrar el pago. Intenta nuevamente.';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al registrar pago: $e')),
-      );
+      SnackbarHelper.showError('Error al registrar pago: $e');
     } finally {
       if (mounted) {
         setState(() {

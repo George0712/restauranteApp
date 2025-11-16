@@ -550,10 +550,6 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
       await db.collection('pedidos').doc(pedido.id).update({
         'priorityLevel': newPriority ? 'alta' : 'normal',
       });
-
-      SnackbarHelper.showSuccess(
-        newPriority ? 'Pedido marcado como prioridad' : 'Prioridad removida',
-      );
     } catch (e) {
       SnackbarHelper.showError('Error al actualizar prioridad: $e');
     }
@@ -622,8 +618,6 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
           'kitchenNote': result,
           'kitchenNoteTimestamp': FieldValue.serverTimestamp(),
         });
-
-        SnackbarHelper.showSuccess('Nota enviada a cocina');
       } catch (e) {
         SnackbarHelper.showError('Error al enviar nota: $e');
       }
