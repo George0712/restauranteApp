@@ -137,9 +137,12 @@ final pendingPedidosProvider = Provider<AsyncValue<List<Pedido>>>((ref) {
 
       final pendientes = pedidos.where((pedido) {
         final esPendiente = pedido.status == 'pendiente' || pedido.status == 'preparando';
-        developer.log("Pedido ${pedido.id} - Status: '${pedido.status}' - Es pendiente: $esPendiente");
-        return esPendiente;
+        if (!esPendiente) return false;
+
+        // Para otros modos o sin pago requerido mostrar igual
+        return true;
       }).toList();
+      
 
       final ordenados = _sortByRecent(pendientes);
 
@@ -167,17 +170,17 @@ final completedPedidosProvider = Provider<AsyncValue<List<Pedido>>>((ref) {
       developer.log("COMPLETED PROVIDER: Recibidos ${pedidos.length} pedidos");
 
       final completados = pedidos.where((pedido) {
-        // ✅ Incluir TODOS los estados completados
+        //Incluir TODOS los estados completados
         final esCompletado = pedido.status == 'terminado' ||
                             pedido.status == 'cancelado' ||
-                            pedido.status == 'pagado' ||      // ✅ Añadir 'pagado'
-                            pedido.status == 'entregado';     // ✅ Añadir 'entregado' por si acaso
+                            pedido.status == 'pagado' ||
+                            pedido.status == 'entregado';
 
         developer.log("Pedido ${pedido.id} - Status: '${pedido.status}' - Es completado: $esCompletado");
         return esCompletado;
       }).toList();
 
-      // ✅ Usar la nueva función de ordenamiento para mostrar los más recientes primero
+      // mostrar los más recientes primero
       final ordenados = _sortCompletedByMostRecent(completados);
 
       developer.log("PEDIDOS COMPLETADOS FILTRADOS: ${completados.length}");

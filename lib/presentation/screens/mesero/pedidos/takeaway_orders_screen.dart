@@ -15,7 +15,8 @@ class TakeawayOrdersScreen extends ConsumerStatefulWidget {
   const TakeawayOrdersScreen({super.key});
 
   @override
-  ConsumerState<TakeawayOrdersScreen> createState() => _TakeawayOrdersScreenState();
+  ConsumerState<TakeawayOrdersScreen> createState() =>
+      _TakeawayOrdersScreenState();
 }
 
 class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
@@ -57,7 +58,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
           elevation: 0,
           scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: Colors.white),
             onPressed: () => Navigator.of(context).maybePop(),
             tooltip: 'Volver',
           ),
@@ -97,7 +99,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
               child: pedidosAsync.when(
                 data: (pedidos) {
                   final takeawayOrders = pedidos
-                      .where((pedido) => pedido.mode.toLowerCase() == 'para_llevar')
+                      .where((pedido) =>
+                          pedido.mode.toLowerCase() == 'para_llevar')
                       .toList();
                   final stats = _computeStats(takeawayOrders);
                   final filtered = _applyFilters(takeawayOrders);
@@ -154,31 +157,40 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: filtered.length,
-                                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 16),
                                   itemBuilder: (context, index) {
                                     final pedido = filtered[index];
-                                    final color =
-                                        _statusColors[pedido.status.toLowerCase()] ??
-                                            const Color(0xFF6366F1);
-                                    final lowerStatus = pedido.status.toLowerCase();
-                                    final isProcessing = _processingOrders.contains(pedido.id);
+                                    final color = _statusColors[
+                                            pedido.status.toLowerCase()] ??
+                                        const Color(0xFF6366F1);
+                                    final lowerStatus =
+                                        pedido.status.toLowerCase();
+                                    final isProcessing =
+                                        _processingOrders.contains(pedido.id);
                                     final canCancel = lowerStatus == 'nuevo' ||
                                         lowerStatus == 'pendiente' ||
                                         lowerStatus == 'preparando';
-                                    final canDelete =
-                                        lowerStatus == 'nuevo' && pedido.items.isEmpty;
+                                    final canDelete = lowerStatus == 'nuevo' &&
+                                        pedido.items.isEmpty;
                                     return _TakeawayOrderCard(
                                       pedido: pedido,
                                       statusColor: color,
-                                      onManage: () => _goToTakeawayOrder(pedido),
-                                      onCopyPhone: (pedido.clienteTelefono ?? '').isEmpty
-                                          ? null
-                                          : () => _copyToClipboard(
-                                                pedido.clienteTelefono!,
-                                                'Telefono copiado',
-                                              ),
-                                      onCancel: canCancel ? () => _cancelOrder(pedido) : null,
-                                      onDelete: canDelete ? () => _deleteOrder(pedido) : null,
+                                      onManage: () =>
+                                          _goToTakeawayOrder(pedido),
+                                      onCopyPhone:
+                                          (pedido.clienteTelefono ?? '').isEmpty
+                                              ? null
+                                              : () => _copyToClipboard(
+                                                    pedido.clienteTelefono!,
+                                                    'Telefono copiado',
+                                                  ),
+                                      onCancel: canCancel
+                                          ? () => _cancelOrder(pedido)
+                                          : null,
+                                      onDelete: canDelete
+                                          ? () => _deleteOrder(pedido)
+                                          : null,
                                       isBusy: isProcessing,
                                       canCancel: canCancel,
                                       canDelete: canDelete,
@@ -228,8 +240,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
     final search = _searchController.text.trim().toLowerCase();
 
     final filtered = pedidos.where((pedido) {
-      final statusMatches =
-          _statusFilter == 'all' || pedido.status.toLowerCase() == _statusFilter;
+      final statusMatches = _statusFilter == 'all' ||
+          pedido.status.toLowerCase() == _statusFilter;
       if (!statusMatches) return false;
 
       if (search.isEmpty) return true;
@@ -247,8 +259,12 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
           .any((value) => value.contains(search));
     }).toList()
       ..sort((a, b) {
-        final aDate = a.createdAt ?? a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final bDate = b.createdAt ?? b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final aDate = a.createdAt ??
+            a.updatedAt ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate = b.createdAt ??
+            b.updatedAt ??
+            DateTime.fromMillisecondsSinceEpoch(0);
         return bDate.compareTo(aDate);
       });
 
@@ -359,7 +375,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
     _goToTakeawayProductSelection(pedidoId, data);
   }
 
-  void _goToTakeawayProductSelection(String pedidoId, TakeawayCustomerData data) async {
+  void _goToTakeawayProductSelection(
+      String pedidoId, TakeawayCustomerData data) async {
     // Crear pedido vacío en Firestore
     setState(() => _creatingOrder = true);
 
@@ -369,7 +386,7 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
 
       final payload = <String, dynamic>{
         'id': pedidoId,
-        'mode': 'para_llevar',
+        'mode': 'parallevar',
         'status': 'nuevo',
         'subtotal': 0.0,
         'total': 0.0,
@@ -387,12 +404,15 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
         'meseroNombre': '${user.nombre} ${user.apellidos}'.trim(),
       };
 
-      await FirebaseFirestore.instance.collection('pedido').doc(pedidoId).set(payload);
+      await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(pedidoId)
+          .set(payload);
 
       if (!mounted) return;
 
       final query = <String, String>{
-        'orderMode': 'para_llevar',
+        'orderMode': 'parallevar',
         'clienteNombre': Uri.encodeComponent(data.nombre),
         'clienteTelefono': Uri.encodeComponent(data.telefono),
         if (data.notas != null && data.notas!.isNotEmpty)
@@ -400,7 +420,7 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
       };
 
       final uri = Uri(
-        path: '/mesero/pedidos/detalle/para_llevar/$pedidoId',
+        path: '/mesero/pedidos/detalle/para-llevar/$pedidoId',
         queryParameters: query,
       );
       context.push(uri.toString());
@@ -434,7 +454,10 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
     });
 
     try {
-      await FirebaseFirestore.instance.collection('pedido').doc(pedido.id).update({
+      await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(pedido.id)
+          .update({
         'status': 'cancelado',
         'cancelledAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -468,11 +491,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
     });
 
     try {
-      final docRef = FirebaseFirestore.instance.collection('pedido').doc(pedido.id);
-      final tickets = await docRef.collection('tickets').get();
-      for (final ticket in tickets.docs) {
-        await ticket.reference.delete();
-      }
+      final docRef =
+          FirebaseFirestore.instance.collection('pedido').doc(pedido.id);
       await docRef.delete();
     } catch (error) {
       SnackbarHelper.showError('No se pudo eliminar el pedido: $error');
@@ -541,8 +561,12 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
 
   Future<void> _showOrderManagementSheet(Pedido pedido) async {
     final lowerStatus = pedido.status.toLowerCase();
-    final isActive = lowerStatus == 'nuevo' || lowerStatus == 'pendiente' || lowerStatus == 'preparando';
-    final isCompleted = lowerStatus == 'terminado' || lowerStatus == 'entregado' || lowerStatus == 'pagado';
+    final isActive = lowerStatus == 'nuevo' ||
+        lowerStatus == 'pendiente' ||
+        lowerStatus == 'preparando';
+    final isCompleted = lowerStatus == 'terminado' ||
+        lowerStatus == 'entregado' ||
+        lowerStatus == 'pagado';
 
     await showModalBottomSheet(
       context: context,
@@ -607,7 +631,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                   _buildInfoRow(
                     icon: Icons.person_outline,
                     label: 'Cliente',
-                    value: pedido.clienteNombre ?? pedido.cliente ?? 'Sin nombre',
+                    value:
+                        pedido.clienteNombre ?? pedido.cliente ?? 'Sin nombre',
                   ),
                   if (pedido.clienteTelefono?.isNotEmpty ?? false) ...[
                     const SizedBox(height: 12),
@@ -621,13 +646,15 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                   _buildInfoRow(
                     icon: Icons.shopping_bag_outlined,
                     label: 'Artículos',
-                    value: '${pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad)} producto${pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad) == 1 ? '' : 's'}',
+                    value:
+                        '${pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad)} producto${pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad) == 1 ? '' : 's'}',
                   ),
                   const SizedBox(height: 12),
                   _buildInfoRow(
                     icon: Icons.payments_outlined,
                     label: 'Total',
-                    value: NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0)
+                    value: NumberFormat.currency(
+                            locale: 'es_CO', symbol: r'$', decimalDigits: 0)
                         .format(pedido.total),
                   ),
                 ],
@@ -637,8 +664,6 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
             // Management actions
             // Actions for ACTIVE orders (nuevo, pendiente, preparando)
             if (isActive) ...[
-              
-
               // Process payment
               if (!pedido.pagado) ...[
                 SizedBox(
@@ -653,7 +678,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5CF6),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                   ),
                 ),
@@ -674,7 +700,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF22C55E),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                   ),
                 ),
@@ -696,7 +723,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                       foregroundColor: const Color(0xFF3B82F6),
                       side: const BorderSide(color: Color(0xFF3B82F6)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                   ),
                 ),
@@ -720,7 +748,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF22C55E),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                   ),
                 ),
@@ -740,9 +769,11 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                     label: const Text('Ver detalles del pedido'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.3)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                   ),
                 ),
@@ -763,7 +794,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                       foregroundColor: const Color(0xFF3B82F6),
                       side: const BorderSide(color: Color(0xFF3B82F6)),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                   ),
                 ),
@@ -779,7 +811,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFEF4444).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.3)),
                 ),
                 child: const Row(
                   children: [
@@ -908,7 +941,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
               ),
               title: const Text(
                 'Copiar número',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               ),
               subtitle: Text(
                 pedido.clienteTelefono ?? '',
@@ -927,11 +961,13 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                   color: const Color(0xFF25D366).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.message_rounded, color: Color(0xFF25D366)),
+                child:
+                    const Icon(Icons.message_rounded, color: Color(0xFF25D366)),
               ),
               title: const Text(
                 'Abrir WhatsApp',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               ),
               subtitle: const Text(
                 'Enviar mensaje al cliente',
@@ -969,8 +1005,22 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
       builder: (context) => PaymentBottomSheet(pedidoId: pedido.id),
     );
 
-    if (result == true && mounted) {
+    if (result == true) {
+      // El pago fue confirmado
+      // Ahora sí crea/actualiza el pedido en Firestore, marcándolo como "pagado"
+      await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(pedido.id)
+          .update({
+        'pagado': true,
+        'paymentStatus': 'paid',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
       SnackbarHelper.showSuccess('Pago procesado correctamente');
+    } else {
+      // Pago cancelado o ventana cerrada
+      // No crear ni actualizar pedido, o eliminar pedido provisional si creó uno
+      SnackbarHelper.showInfo('Pago cancelado, el pedido no fue creado');
     }
   }
 
@@ -979,7 +1029,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
 
     final confirmed = await _confirmAction(
       title: 'Marcar como listo',
-      message: '¿El pedido está completo y empacado? Se notificará al cliente que puede recogerlo.',
+      message:
+          '¿El pedido está completo y empacado? Se notificará al cliente que puede recogerlo.',
       confirmLabel: 'Marcar como listo',
       confirmColor: const Color(0xFF22C55E),
     );
@@ -991,7 +1042,10 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
     });
 
     try {
-      await FirebaseFirestore.instance.collection('pedido').doc(pedido.id).update({
+      await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(pedido.id)
+          .update({
         'status': 'terminado',
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -1014,7 +1068,10 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
     });
 
     try {
-      await FirebaseFirestore.instance.collection('pedido').doc(pedido.id).update({
+      await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(pedido.id)
+          .update({
         'status': 'entregado',
         'updatedAt': FieldValue.serverTimestamp(),
         'deliveredAt': FieldValue.serverTimestamp(),
@@ -1132,10 +1189,14 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            if (item.adicionales != null && item.adicionales!.isNotEmpty)
+                            if (item.adicionales != null &&
+                                item.adicionales!.isNotEmpty)
                               Text(
                                 item.adicionales!
-                                    .map((adicional) => adicional['name'] ?? adicional['nombre'] ?? '')
+                                    .map((adicional) =>
+                                        adicional['name'] ??
+                                        adicional['nombre'] ??
+                                        '')
                                     .where((nombre) => nombre.isNotEmpty)
                                     .join(', '),
                                 style: TextStyle(
@@ -1207,7 +1268,8 @@ class _TakeawayOrdersScreenState extends ConsumerState<TakeawayOrdersScreen> {
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF34D399),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
                 child: const Text('Cerrar'),
               ),
@@ -1344,10 +1406,13 @@ class _TakeawayOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String name = pedido.clienteNombre ?? pedido.cliente ?? 'Cliente sin nombre';
+    final String name =
+        pedido.clienteNombre ?? pedido.cliente ?? 'Cliente sin nombre';
     final String? telefono = pedido.clienteTelefono;
-    final int itemsCount = pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad);
-    final DateTime created = pedido.createdAt ?? pedido.updatedAt ?? DateTime.now();
+    final int itemsCount =
+        pedido.items.fold<int>(0, (acc, item) => acc + item.cantidad);
+    final DateTime created =
+        pedido.createdAt ?? pedido.updatedAt ?? DateTime.now();
     final String elapsed = _formatElapsed(created);
 
     return Container(
@@ -1358,7 +1423,8 @@ class _TakeawayOrderCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2),
+        border:
+            Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: statusColor.withValues(alpha: 0.18),
@@ -1396,7 +1462,8 @@ class _TakeawayOrderCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _StatusBadge(label: pedido.status.toUpperCase(), color: statusColor),
+                  _StatusBadge(
+                      label: pedido.status.toUpperCase(), color: statusColor),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1413,7 +1480,8 @@ class _TakeawayOrderCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(Icons.phone_rounded, color: Colors.white.withValues(alpha: 0.7), size: 18),
+                    Icon(Icons.phone_rounded,
+                        color: Colors.white.withValues(alpha: 0.7), size: 18),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -1442,10 +1510,14 @@ class _TakeawayOrderCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _Tag(icon: Icons.shopping_bag_outlined, label: '$itemsCount articulo${itemsCount == 1 ? '' : 's'}'),
+                    _Tag(
+                        icon: Icons.shopping_bag_outlined,
+                        label:
+                            '$itemsCount articulo${itemsCount == 1 ? '' : 's'}'),
                     _Tag(
                       icon: Icons.payments_outlined,
-                      label: NumberFormat.currency(locale: 'es_CO', symbol: r'$', decimalDigits: 0)
+                      label: NumberFormat.currency(
+                              locale: 'es_CO', symbol: r'$', decimalDigits: 0)
                           .format(pedido.total),
                     ),
                     _Tag(icon: Icons.schedule_rounded, label: elapsed),
@@ -1461,8 +1533,10 @@ class _TakeawayOrderCard extends StatelessWidget {
                     icon: const Icon(Icons.edit_note_rounded),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF34D399),
-                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 22, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                       textStyle: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
@@ -1487,19 +1561,24 @@ class _TakeawayOrderCard extends StatelessWidget {
                                     height: 16,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
                                     ),
                                   )
                                 : const Icon(Icons.cancel_outlined, size: 18),
                             label: Text(
-                              isBusy && onCancel != null ? 'Procesando...' : 'Cancelar',
-                              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                              isBusy && onCancel != null
+                                  ? 'Procesando...'
+                                  : 'Cancelar',
+                              style: const TextStyle(
+                                  fontSize: 13.5, fontWeight: FontWeight.w600),
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFFEF4444),
                               side: const BorderSide(color: Color(0xFFEF4444)),
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
                             ),
                           ),
                         ),
@@ -1508,16 +1587,21 @@ class _TakeawayOrderCard extends StatelessWidget {
                         Expanded(
                           child: TextButton.icon(
                             onPressed: isBusy ? null : onDelete,
-                            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                            icon: const Icon(Icons.delete_outline_rounded,
+                                size: 18),
                             label: const Text(
                               'Eliminar',
-                              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                  fontSize: 13.5, fontWeight: FontWeight.w600),
                             ),
                             style: TextButton.styleFrom(
-                              foregroundColor: Colors.white.withValues(alpha: 0.85),
-                              backgroundColor: Colors.white.withValues(alpha: 0.06),
+                              foregroundColor:
+                                  Colors.white.withValues(alpha: 0.85),
+                              backgroundColor:
+                                  Colors.white.withValues(alpha: 0.06),
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14)),
                             ),
                           ),
                         ),
@@ -1539,7 +1623,8 @@ class _TakeawayOrderCard extends StatelessWidget {
       final minutes = diff.inMinutes % 60;
       return 'Hace ${diff.inHours}h ${minutes}m';
     }
-    if (diff.inDays < 7) return 'Hace ${diff.inDays} dia${diff.inDays == 1 ? '' : 's'}';
+    if (diff.inDays < 7)
+      return 'Hace ${diff.inDays} dia${diff.inDays == 1 ? '' : 's'}';
     return DateFormat('dd MMM - HH:mm', 'es').format(date);
   }
 }
@@ -1632,13 +1717,17 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              hasOrders ? Icons.filter_alt_off_rounded : Icons.shopping_bag_outlined,
+              hasOrders
+                  ? Icons.filter_alt_off_rounded
+                  : Icons.shopping_bag_outlined,
               color: Colors.white.withValues(alpha: 0.35),
               size: 52,
             ),
             const SizedBox(height: 12),
             Text(
-              hasOrders ? 'Sin resultados para la busqueda' : 'Aun no hay pedidos para llevar',
+              hasOrders
+                  ? 'Sin resultados para la busqueda'
+                  : 'Aun no hay pedidos para llevar',
               style: textTheme.titleMedium?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
@@ -1661,7 +1750,8 @@ class _EmptyState extends StatelessWidget {
               TextButton.icon(
                 onPressed: onClear,
                 icon: const Icon(Icons.clear_all_rounded, color: Colors.white),
-                label: const Text('Limpiar filtros', style: TextStyle(color: Colors.white)),
+                label: const Text('Limpiar filtros',
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           ],
@@ -1684,7 +1774,8 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off_rounded, color: Colors.white54, size: 48),
+            const Icon(Icons.cloud_off_rounded,
+                color: Colors.white54, size: 48),
             const SizedBox(height: 12),
             Text(
               'No fue posible cargar los pedidos.',
@@ -1725,10 +1816,12 @@ class _TakeawayCustomerSheet extends ConsumerStatefulWidget {
   const _TakeawayCustomerSheet();
 
   @override
-  ConsumerState<_TakeawayCustomerSheet> createState() => _TakeawayCustomerSheetState();
+  ConsumerState<_TakeawayCustomerSheet> createState() =>
+      _TakeawayCustomerSheetState();
 }
 
-class _TakeawayCustomerSheetState extends ConsumerState<_TakeawayCustomerSheet> {
+class _TakeawayCustomerSheetState
+    extends ConsumerState<_TakeawayCustomerSheet> {
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
   final TextEditingController _notasController = TextEditingController();
@@ -1779,109 +1872,119 @@ class _TakeawayCustomerSheetState extends ConsumerState<_TakeawayCustomerSheet> 
                   controller: scrollController,
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Nuevo Pedido Para Llevar',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'El pago se procesa al confirmar el pedido',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _buildField(
-                  controller: _nombreController,
-                  label: 'Nombre del cliente *',
-                  hint: 'Ej. Ana Gomez',
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Ingresa el nombre del cliente';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                _buildField(
-                  controller: _telefonoController,
-                  label: 'Telefono de contacto *',
-                  hint: 'Ej. 320 123 4567',
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    final trimmed = value?.trim() ?? '';
-                    if (trimmed.isEmpty) {
-                      return 'Agrega el telefono de contacto';
-                    }
-                    if (trimmed.length < 7) {
-                      return 'El telefono es muy corto';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 14),
-                TextButton.icon(
-                  onPressed: () => setState(() => _showOptionalFields = !_showOptionalFields),
-                  icon: Icon(
-                    _showOptionalFields ? Icons.expand_less_rounded : Icons.expand_more_rounded,
-                    color: const Color(0xFF34D399),
-                  ),
-                  label: Text(
-                    _showOptionalFields ? 'Ocultar campos opcionales' : 'Mostrar campos opcionales',
-                    style: const TextStyle(color: Color(0xFF34D399)),
-                  ),
-                ),
-                if (_showOptionalFields) ...[
-                  const SizedBox(height: 14),
-                  _buildField(
-                    controller: _notasController,
-                    label: 'Notas (Opcional)',
-                    hint: 'Preferencias o indicaciones especiales',
-                    maxLines: 2,
-                    textInputAction: TextInputAction.done,
-                  ),
-                ],
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    icon: _submitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Nuevo Pedido Para Llevar',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'El pago se procesa al confirmar el pedido',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildField(
+                          controller: _nombreController,
+                          label: 'Nombre del cliente *',
+                          hint: 'Ej. Ana Gomez',
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Ingresa el nombre del cliente';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        _buildField(
+                          controller: _telefonoController,
+                          label: 'Telefono de contacto *',
+                          hint: 'Ej. 320 123 4567',
+                          keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            final trimmed = value?.trim() ?? '';
+                            if (trimmed.isEmpty) {
+                              return 'Agrega el telefono de contacto';
+                            }
+                            if (trimmed.length < 7) {
+                              return 'El telefono es muy corto';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+                        TextButton.icon(
+                          onPressed: () => setState(
+                              () => _showOptionalFields = !_showOptionalFields),
+                          icon: Icon(
+                            _showOptionalFields
+                                ? Icons.expand_less_rounded
+                                : Icons.expand_more_rounded,
+                            color: const Color(0xFF34D399),
+                          ),
+                          label: Text(
+                            _showOptionalFields
+                                ? 'Ocultar campos opcionales'
+                                : 'Mostrar campos opcionales',
+                            style: const TextStyle(color: Color(0xFF34D399)),
+                          ),
+                        ),
+                        if (_showOptionalFields) ...[
+                          const SizedBox(height: 14),
+                          _buildField(
+                            controller: _notasController,
+                            label: 'Notas (Opcional)',
+                            hint: 'Preferencias o indicaciones especiales',
+                            maxLines: 2,
+                            textInputAction: TextInputAction.done,
+                          ),
+                        ],
+                        const SizedBox(height: 22),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            icon: _submitting
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    ),
+                                  )
+                                : const Icon(Icons.navigate_next_rounded),
+                            label: Text(_submitting
+                                ? 'Creando...'
+                                : 'Continuar con productos'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFF34D399),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
                             ),
-                          )
-                        : const Icon(Icons.navigate_next_rounded),
-                    label: Text(_submitting ? 'Creando...' : 'Continuar con productos'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF34D399),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      textStyle: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
+                            onPressed: _submitting ? null : _handleSubmit,
+                          ),
+                        ),
+                      ],
                     ),
-                    onPressed: _submitting ? null : _handleSubmit,
-                  ),
-                ),
-              ],
-            ),
                   ),
                 ),
               ),
@@ -1937,10 +2040,12 @@ class _TakeawayCustomerSheetState extends ConsumerState<_TakeawayCustomerSheet> 
             hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.08),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+              borderSide:
+                  BorderSide(color: Colors.white.withValues(alpha: 0.1)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -1969,9 +2074,10 @@ class _TakeawayCustomerSheetState extends ConsumerState<_TakeawayCustomerSheet> 
       TakeawayCustomerData(
         nombre: _nombreController.text.trim(),
         telefono: _telefonoController.text.trim(),
-        notas: _notasController.text.trim().isEmpty ? null : _notasController.text.trim(),
+        notas: _notasController.text.trim().isEmpty
+            ? null
+            : _notasController.text.trim(),
       ),
     );
   }
 }
-

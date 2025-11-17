@@ -745,7 +745,7 @@ class _CompletedOrdersTabState extends ConsumerState<_CompletedOrdersTab> {
 }
 
 // -------------------- Estados Vacio y Error --------------------
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   final IconData icon;
   final String title;
   final String subtitle;
@@ -759,7 +759,7 @@ class _EmptyState extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(
@@ -799,12 +799,12 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _ErrorState extends StatelessWidget {
+class _ErrorState extends ConsumerWidget {
   final Object error;
   const _ErrorState(this.error);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(

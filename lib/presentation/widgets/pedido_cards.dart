@@ -23,7 +23,7 @@ class PedidoCard extends ConsumerWidget {
 
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: isCompact ? 2 : 4, // Menor margen horizontal para más ancho
+        horizontal: isCompact ? 2 : 4,
         vertical: isCompact ? 8 : 12,
       ),
       decoration: BoxDecoration(
@@ -103,7 +103,6 @@ class PedidoCard extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 8),
-        // Información temporal en una fila flexible
         Wrap(
           spacing: 12,
           runSpacing: 4,
@@ -1152,7 +1151,7 @@ class PedidoCard extends ConsumerWidget {
   }
 }
 
-class _InfoChip extends StatelessWidget {
+class _InfoChip extends ConsumerWidget {
   final IconData icon;
   final String label;
   final Color color;
@@ -1164,7 +1163,7 @@ class _InfoChip extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -1195,14 +1194,14 @@ class _InfoChip extends StatelessWidget {
 }
 
 
-class _StatusPill extends StatelessWidget {
+class _StatusPill extends ConsumerWidget {
   final String label;
   final Color color;
 
   const _StatusPill({required this.label, required this.color});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(

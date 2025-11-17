@@ -106,7 +106,7 @@ class Pedido {
   final String mode;
   final double subtotal;
   final double total;
-  final String? tableNumber; // UUID - mantener para compatibilidad
+  final String? tableNumber; 
   final DateTime? updatedAt;
   final DateTime? createdAt;
   final List<ItemPedido> items;
@@ -117,7 +117,6 @@ class Pedido {
   final String? meseroId;
   final String? meseroNombre;
 
-  // ✅ NUEVOS CAMPOS PARA INFORMACIÓN LEGIBLE:
   final int? mesaId;           // Número real de la mesa (1, 2, 3, etc.)
   final String? mesaNombre;    // "Mesa 3" - información legible
   final String? clienteNombre; // Nombre del cliente para historial
@@ -125,7 +124,7 @@ class Pedido {
   final String? clienteDireccion; // Direccion de entrega
   final String? clienteReferencia; // Referencia extra para la entrega
 
-  // ✅ CAMPO PARA RASTREAR QUIÉN CANCELÓ EL PEDIDO:
+  // CAMPO PARA RASTREAR QUIÉN CANCELÓ EL PEDIDO:
   final String? cancelledBy;   // 'cocina' o 'mesero'
   final bool pagado;
   final String? paymentStatus;
@@ -146,7 +145,6 @@ class Pedido {
     this.notas,
     this.meseroId,
     this.meseroNombre,
-    // ✅ Nuevos parámetros:
     this.mesaId,
     this.mesaNombre,
     this.clienteNombre,
@@ -158,11 +156,9 @@ class Pedido {
     this.paymentStatus,
   });
 
-  // Getters para compatibilidad con código existente
   String get estado => status;
   String get modo => mode;
   int get mesaIdLegacy {
-    // Si tenemos el mesaId nuevo, usarlo; sino, usar 0 por defecto
     return mesaId ?? 0;
   }
   String get tableUuid => tableNumber ?? '';
@@ -233,7 +229,6 @@ class Pedido {
       'notas': notas,
       'meseroId': meseroId,
       'meseroNombre': meseroNombre,
-      // ✅ Nuevos campos:
       'mesaId': mesaId,
       'mesaNombre': mesaNombre,
       'clienteNombre': clienteNombre,

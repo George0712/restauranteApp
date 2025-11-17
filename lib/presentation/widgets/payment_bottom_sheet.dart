@@ -8,6 +8,9 @@ import 'package:restaurante_app/presentation/providers/login/auth_service.dart';
 
 final NumberFormat _paymentFormatter = NumberFormat('#,##0', 'es_CO');
 
+// Límite máximo de descuento por porcentaje permitido
+const double _kMaxDiscountPercentage = 20.0;
+
 class PaymentBottomSheet extends ConsumerStatefulWidget {
   final String pedidoId;
   final VoidCallback? onPaid;
@@ -26,6 +29,15 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
   String _selectedMethod = 'cash';
   bool _processing = false;
   String? _errorMessage;
+
+  // Descuento
+  final TextEditingController _descuentoController = TextEditingController();
+
+  @override
+  void dispose() {
+    _descuentoController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +95,11 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
             final pagado = data['pagado'] == true;
             final paymentInfo = data['payment'] as Map<String, dynamic>?;
 
+            // Calcular descuento y validar
+            final descuentoValor = _calcularDescuento(total);
+            final totalConDescuento = (total - descuentoValor).clamp(0.0, double.infinity);
+            final hasDiscountError = _hasDiscountError();
+
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
               child: Column(
@@ -114,10 +131,16 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  if (!pagado) ...[
+                    _buildDescuentoSection(),
+                    const SizedBox(height: 20),
+                  ],
                   _buildResumenCard(
                     subtotal: subtotal,
                     extras: extras,
                     total: total,
+                    descuento: descuentoValor,
+                    totalFinal: totalConDescuento,
                     pagado: pagado,
                     paymentInfo: paymentInfo,
                   ),
@@ -161,9 +184,9 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: pagado || _processing
+                          onPressed: pagado || _processing || hasDiscountError
                               ? null
-                              : () => _registrarPago(total),
+                              : () => _registrarPago(total, descuentoValor, totalConDescuento),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             backgroundColor: const Color(0xFF6366F1),
@@ -199,6 +222,8 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     required double subtotal,
     required double extras,
     required double total,
+    required double descuento,
+    required double totalFinal,
     required bool pagado,
     Map<String, dynamic>? paymentInfo,
   }) {
@@ -230,12 +255,22 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
             const SizedBox(height: 6),
             _buildResumenRow('Extras agregados', _formatCurrency(extras)),
           ],
+          const SizedBox(height: 6),
+          _buildResumenRow('Total', _formatCurrency(total)),
+          if (descuento > 0) ...[
+            const SizedBox(height: 6),
+            _buildResumenRow(
+              'Descuento aplicado',
+              '- ${_formatCurrency(descuento)}',
+              isDiscount: true,
+            ),
+          ],
           const SizedBox(height: 12),
           Divider(height: 1, color: Colors.grey.shade600),
           const SizedBox(height: 12),
           _buildResumenRow(
             pagado ? 'Total cobrado' : 'Total a cobrar',
-            _formatCurrency(total),
+            _formatCurrency(totalFinal),
             highlight: true,
           ),
           if (pagado) ...[
@@ -277,7 +312,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     );
   }
 
-  Widget _buildResumenRow(String label, String value, {bool highlight = false}) {
+  Widget _buildResumenRow(String label, String value, {bool highlight = false, bool isDiscount = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -286,7 +321,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           style: TextStyle(
             fontSize: highlight ? 16 : 14,
             fontWeight: highlight ? FontWeight.w600 : FontWeight.w400,
-            color: highlight ? Colors.white : Colors.grey.shade400,
+            color: isDiscount ? Colors.green.shade300 : (highlight ? Colors.white : Colors.grey.shade400),
           ),
         ),
         Text(
@@ -294,11 +329,153 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
           style: TextStyle(
             fontSize: highlight ? 18 : 14,
             fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
-            color: highlight ? Colors.white : Colors.grey.shade300,
+            color: isDiscount ? Colors.green.shade300 : (highlight ? Colors.white : Colors.grey.shade300),
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildDescuentoSection() {
+    // Validar el porcentaje ingresado
+    final bool hasError = _hasDiscountError();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF363740).withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade700),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.percent, color: Color(0xFF6366F1), size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Aplicar descuento',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade900.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade700),
+                ),
+                child: Text(
+                  'Max ${_kMaxDiscountPercentage.toInt()}%',
+                  style: const TextStyle(
+                    color: Colors.orange,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _descuentoController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: 'Porcentaje de descuento',
+              labelStyle: TextStyle(
+                color: hasError ? Colors.red.shade300 : Colors.grey.shade400,
+              ),
+              hintText: 'Ej: 10',
+              hintStyle: TextStyle(color: Colors.grey.shade600),
+              errorText: hasError
+                  ? 'El porcentaje no puede superar el ${_kMaxDiscountPercentage.toInt()}%'
+                  : null,
+              errorStyle: TextStyle(
+                color: Colors.red.shade300,
+                fontSize: 12,
+              ),
+              suffixText: '%',
+              suffixStyle: TextStyle(
+                color: hasError ? Colors.red.shade300 : const Color(0xFF6366F1),
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+              prefixIcon: Icon(
+                hasError ? Icons.error_outline : Icons.discount,
+                color: hasError ? Colors.red.shade300 : const Color(0xFF6366F1),
+              ),
+              filled: true,
+              fillColor: const Color(0xFF1F233A),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade700),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError ? Colors.red.shade700 : Colors.grey.shade700,
+                  width: hasError ? 2 : 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: hasError ? Colors.red.shade700 : const Color(0xFF6366F1),
+                  width: 2,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+              ),
+            ),
+            onChanged: (value) {
+              setState(() {});
+            },
+          ),
+          if (!hasError) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Ingresa un porcentaje entre 0% y ${_kMaxDiscountPercentage.toInt()}%',
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  bool _hasDiscountError() {
+    final descuentoTexto = _descuentoController.text.trim();
+    if (descuentoTexto.isEmpty) return false;
+
+    final porcentajeIngresado = double.tryParse(descuentoTexto);
+    return porcentajeIngresado != null && porcentajeIngresado > _kMaxDiscountPercentage;
+  }
+
+  double _calcularDescuento(double total) {
+    final descuentoTexto = _descuentoController.text.trim();
+    if (descuentoTexto.isEmpty) return 0.0;
+
+    final porcentaje = double.tryParse(descuentoTexto) ?? 0.0;
+    if (porcentaje <= 0) return 0.0;
+
+    // Limitar el porcentaje al máximo permitido
+    final porcentajeLimitado = porcentaje.clamp(0.0, _kMaxDiscountPercentage);
+    return (total * porcentajeLimitado / 100).clamp(0.0, total);
   }
 
   Widget _buildMetodoPagoSelector({required bool pagado}) {
@@ -384,7 +561,7 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
     );
   }
 
-  Future<void> _registrarPago(double total) async {
+  Future<void> _registrarPago(double totalOriginal, double descuento, double totalFinal) async {
     if (_selectedMethod != 'cash') {
       setState(() {
         _errorMessage = 'Por ahora solo es posible cobrar en efectivo.';
@@ -412,7 +589,8 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
       final paymentData = <String, dynamic>{
         'method': 'cash',
         'status': 'completed',
-        'amount': total,
+        'amount': totalFinal,
+        'originalAmount': totalOriginal,
         'processedAt': FieldValue.serverTimestamp(),
       };
 
@@ -421,16 +599,35 @@ class _PaymentBottomSheetState extends ConsumerState<PaymentBottomSheet> {
         paymentData['processedByName'] = processedByName;
       }
 
-      await FirebaseFirestore.instance
-          .collection('pedido')
-          .doc(widget.pedidoId)
-          .update({
+      // Agregar información del descuento si se aplicó
+      if (descuento > 0) {
+        final porcentajeAplicado = double.tryParse(_descuentoController.text.trim()) ?? 0.0;
+        paymentData['discount'] = {
+          'type': 'porcentaje',
+          'percentage': porcentajeAplicado.clamp(0.0, _kMaxDiscountPercentage),
+          'amount': descuento,
+        };
+      }
+
+      final updateData = <String, dynamic>{
         'pagado': true,
         'paymentStatus': 'paid',
         'paidAt': FieldValue.serverTimestamp(),
         'payment': paymentData,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+
+      // Actualizar el total si se aplicó descuento
+      if (descuento > 0) {
+        updateData['totalOriginal'] = totalOriginal;
+        updateData['total'] = totalFinal;
+        updateData['descuento'] = descuento;
+      }
+
+      await FirebaseFirestore.instance
+          .collection('pedido')
+          .doc(widget.pedidoId)
+          .update(updateData);
 
       widget.onPaid?.call();
       if (mounted) {

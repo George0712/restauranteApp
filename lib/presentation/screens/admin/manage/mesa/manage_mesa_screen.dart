@@ -115,6 +115,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
                         ),
                         const SizedBox(height: 24),
                         _buildGridMesas(mesasFiltradas, isTablet),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
@@ -272,7 +273,7 @@ class _AdminMesasScreenState extends ConsumerState<AdminMesasScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Mesa ${mesa.id.toString().padLeft(2, '0')}',
+                    'Mesa ${mesa.id.toString()}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,

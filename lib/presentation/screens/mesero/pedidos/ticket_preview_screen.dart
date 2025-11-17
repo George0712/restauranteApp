@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
+import 'package:restaurante_app/presentation/providers/mesero/print_ticket.dart';
+import 'package:share_plus/share_plus.dart';
 
 class TicketPreviewScreen extends ConsumerStatefulWidget {
   const TicketPreviewScreen({
@@ -27,6 +32,49 @@ class TicketPreviewScreen extends ConsumerStatefulWidget {
 
 class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
   final NumberFormat _currency = NumberFormat.currency(symbol: r'$');
+
+  Future<void> _printTicket(Map<String, dynamic> pedidoData) async {
+    await PrintTicketService.printTicket(
+      pedidoData: pedidoData,
+      pedidoId: widget.pedidoId,
+      ticketId: widget.ticketId,
+      mesaId: widget.mesaId,
+      mesaNombre: widget.mesaNombre,
+      clienteNombre: widget.clienteNombre,
+    );
+  }
+
+  Future<void> _shareTicket(Map<String, dynamic> pedidoData) async {
+    try {
+      // Generar imagen del ticket
+      final imageBytes = await PrintTicketService.generateTicketImage(
+        pedidoData: pedidoData,
+        pedidoId: widget.pedidoId,
+        ticketId: widget.ticketId,
+        mesaNombre: widget.mesaNombre,
+        clienteNombre: widget.clienteNombre,
+      );
+
+      // Guardar imagen temporal
+      final tempDir = await getTemporaryDirectory();
+      final shortId = widget.pedidoId.length > 8
+          ? widget.pedidoId.substring(0, 8)
+          : widget.pedidoId;
+      final file = File('${tempDir.path}/ticket_$shortId.png');
+      await file.writeAsBytes(imageBytes);
+
+      // Compartir usando el selector nativo
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Ticket del Pedido $shortId',
+        subject: 'Ticket - LA CENTRAL',
+      );
+    } catch (e) {
+      if (mounted) {
+        SnackbarHelper.showError('Error al compartir ticket: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +155,7 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
         final pedidoData = snapshot.data!.data() ?? <String, dynamic>{};
         final items = (pedidoData['items'] as List?) ?? const [];
         final subtotal = _asDouble(pedidoData['subtotal']);
+        final descuento = _asDouble(pedidoData['descuento']);
         final total = _asDouble(pedidoData['total']);
         final pagado = pedidoData['pagado'] == true;
         final estado = (pedidoData['status'] ?? 'pendiente').toString();
@@ -176,6 +225,7 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
                       pagado: pagado,
                       ticketNumero: ticketNumero,
                       subtotal: subtotal,
+                      descuento: descuento,
                       total: total,
                       formatter: _currency,
                     ),
@@ -183,16 +233,14 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
                     _TicketItemsList(items: items, formatter: _currency),
                     const SizedBox(height: 16),
                     _TicketTotals(
-                        subtotal: subtotal, total: total, formatter: _currency),
+                        subtotal: subtotal, descuento: descuento, total: total, formatter: _currency),
                     const SizedBox(height: 24),
                     // Botones de acción
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: Implementar impresión del ticket
-                            },
+                            onPressed: () => _printTicket(pedidoData),
                             icon: const Icon(Icons.print),
                             label: const Text('Imprimir'),
                             style: OutlinedButton.styleFrom(
@@ -211,9 +259,7 @@ class _TicketPreviewScreenState extends ConsumerState<TicketPreviewScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: Implementar compartir ticket
-                            },
+                            onPressed: () => _shareTicket(pedidoData),
                             icon: const Icon(Icons.share),
                             label: const Text('Compartir'),
                             style: OutlinedButton.styleFrom(
@@ -295,6 +341,7 @@ class _TicketHeader extends ConsumerWidget {
     required this.pagado,
     required this.ticketNumero,
     required this.subtotal,
+    required this.descuento,
     required this.total,
     required this.formatter,
   });
@@ -307,6 +354,7 @@ class _TicketHeader extends ConsumerWidget {
   final bool pagado;
   final String ticketNumero;
   final double subtotal;
+  final double descuento;
   final double total;
   final NumberFormat formatter;
 
@@ -583,12 +631,15 @@ class _AdicionalesList extends ConsumerWidget {
       children: adicionales.map((adicional) {
         final data = adicional as Map<String, dynamic>;
         final name = (data['name'] ?? data['nombre'] ?? 'Extra').toString();
-        final price = formatter.format(_toDouble(data['price']));
-        return Text(
-          '+ $name ($price)',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.6),
+        final price = _toDouble(data['price']);
+        return Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text(
+            '+ $name (${formatter.format(price)})',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.6),
+            ),
           ),
         );
       }).toList(),
@@ -605,11 +656,13 @@ class _AdicionalesList extends ConsumerWidget {
 class _TicketTotals extends ConsumerWidget {
   const _TicketTotals({
     required this.subtotal,
+    required this.descuento,
     required this.total,
     required this.formatter,
   });
 
   final double subtotal;
+  final double descuento;
   final double total;
   final NumberFormat formatter;
 
@@ -649,6 +702,10 @@ class _TicketTotals extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           _totalsRow('Subtotal', formatter.format(subtotal)),
+          if (descuento > 0) ...[
+            const SizedBox(height: 8),
+            _totalsRow('Descuento', '- ${formatter.format(descuento)}', isDiscount: true),
+          ],
           const SizedBox(height: 8),
           _totalsRow('Total', formatter.format(total), highlight: true),
         ],
@@ -656,14 +713,16 @@ class _TicketTotals extends ConsumerWidget {
     );
   }
 
-  Widget _totalsRow(String label, String value, {bool highlight = false}) {
+  Widget _totalsRow(String label, String value, {bool highlight = false, bool isDiscount = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: highlight ? 1 : 0.8),
+            color: isDiscount
+                ? const Color(0xFF34D399)
+                : Colors.white.withValues(alpha: highlight ? 1 : 0.8),
             fontSize: highlight ? 18 : 14,
             fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
           ),
@@ -671,7 +730,9 @@ class _TicketTotals extends ConsumerWidget {
         Text(
           value,
           style: TextStyle(
-            color: Colors.white,
+            color: isDiscount
+                ? const Color(0xFF34D399)
+                : Colors.white,
             fontSize: highlight ? 20 : 16,
             fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
           ),
