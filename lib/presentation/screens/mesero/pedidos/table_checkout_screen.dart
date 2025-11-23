@@ -14,7 +14,8 @@ class TableCheckoutScreen extends ConsumerStatefulWidget {
   const TableCheckoutScreen({super.key});
 
   @override
-  ConsumerState<TableCheckoutScreen> createState() => _TableCheckoutScreenState();
+  ConsumerState<TableCheckoutScreen> createState() =>
+      _TableCheckoutScreenState();
 }
 
 class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
@@ -22,7 +23,7 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   String _modeFilter = 'all';
-  String _paymentFilter = 'pending';
+  String _paymentFilter = 'all';
 
   static const Map<String, Color> _statusColors = {
     'pendiente': Color(0xFFF97316),
@@ -71,7 +72,8 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
               scrolledUnderElevation: 0,
               surfaceTintColor: Colors.transparent,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white),
                 onPressed: () => Navigator.of(context).maybePop(),
                 tooltip: 'Volver',
               ),
@@ -109,41 +111,37 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
                         ),
                         const SliverToBoxAdapter(child: SizedBox(height: 20)),
                         SliverToBoxAdapter(
-                          child: _buildFilters(isTablet),
+                          child: _buildFilters(isTablet, stats),
                         ),
                         const SliverToBoxAdapter(child: SizedBox(height: 18)),
-                        if (filtered.isEmpty)
-                          SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: _buildEmptyState(),
-                          )
-                        else
-                          SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final pedido = filtered[index];
-                                final statusColor =
-                                    _statusColors[pedido.status.toLowerCase()] ??
-                                        const Color(0xFF6366F1);
-                                final isPriority = _isPriority(pedido);
-                                return Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: index == filtered.length - 1 ? 28 : 18,
-                                  ),
-                                  child: _CheckoutCard(
-                                    pedido: pedido,
-                                    isTablet: isTablet,
-                                    statusColor: statusColor,
-                                    isPriority: isPriority,
-                                    currencyFormatter: _currencyFormatter,
-                                    onCharge: () => _handleCharge(pedido),
-                                    onViewTicket: () => _openTicket(pedido.id, pedido),
-                                  ),
-                                );
-                              },
-                              childCount: filtered.length,
-                            ),
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final pedido = filtered[index];
+                              final statusColor =
+                                  _statusColors[pedido.status.toLowerCase()] ??
+                                      const Color(0xFF6366F1);
+                              final isPriority = _isPriority(pedido);
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  bottom:
+                                      index == filtered.length - 1 ? 28 : 18,
+                                ),
+                                child: _CheckoutCard(
+                                  pedido: pedido,
+                                  isTablet: isTablet,
+                                  statusColor: statusColor,
+                                  isPriority: isPriority,
+                                  currencyFormatter: _currencyFormatter,
+                                  onCharge: () => _handleCharge(pedido),
+                                  onViewTicket: () =>
+                                      _openTicket(pedido.id, pedido),
+                                ),
+                              );
+                            },
+                            childCount: filtered.length,
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -172,7 +170,8 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
             scrolledUnderElevation: 0,
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white),
               onPressed: () => Navigator.of(context).maybePop(),
               tooltip: 'Volver',
             ),
@@ -199,10 +198,38 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
       ),
     );
   }
+
   Widget _buildHeader({
     required bool isTablet,
     required _CheckoutStats stats,
   }) {
+    final statsWidgets = [
+      _CompactStat(
+        label: 'Pendientes',
+        value: stats.pendingCount.toString(),
+        color: _statusColors['terminado']!,
+        icon: Icons.timer_outlined,
+      ),
+      _CompactStat(
+        label: 'Total pendiente',
+        value: _currencyFormatter.format(stats.pendingTotal),
+        color: const Color(0xFF34D399),
+        icon: Icons.attach_money_rounded,
+      ),
+      _CompactStat(
+        label: 'Pagados',
+        value: stats.paidCount.toString(),
+        color: _statusColors['pagado']!,
+        icon: Icons.verified_rounded,
+      ),
+      _CompactStat(
+        label: 'Total pagado',
+        value: _currencyFormatter.format(stats.paidTotal),
+        color: const Color(0xFF60A5FA),
+        icon: Icons.receipt_long_rounded,
+      ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -223,48 +250,108 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        const SizedBox(height: 20),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
-            children: [
-              _SummaryStat(
-                title: 'Pendientes',
-                value: stats.pendingCount.toString(),
-                color: _statusColors['terminado']!,
-                icon: Icons.timer_outlined,
-              ),
-              const SizedBox(width: 12),
-              _SummaryStat(
-                title: 'Total pendiente',
-                value: _currencyFormatter.format(stats.pendingTotal),
-                color: const Color(0xFF34D399),
-                icon: Icons.attach_money_rounded,
-              ),
-              const SizedBox(width: 12),
-              _SummaryStat(
-                title: 'Pagados',
-                value: stats.paidCount.toString(),
-                color: _statusColors['pagado']!,
-                icon: Icons.verified_rounded,
-              ),
-              const SizedBox(width: 12),
-              _SummaryStat(
-                title: 'Total pagado',
-                value: _currencyFormatter.format(stats.paidTotal),
-                color: const Color(0xFF60A5FA),
-                icon: Icons.receipt_long_rounded,
-              ),
-            ],
+        const SizedBox(height: 16),
+        if (isTablet)
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: statsWidgets,
+          )
+        else
+          GridView.count(
+            crossAxisCount: 2,
+            childAspectRatio: 2.8,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: statsWidgets,
           ),
-        ),
       ],
     );
   }
 
+  Widget _buildStatChip({
+    required String label,
+    required int value,
+    required Color color,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final backgroundColor = selected
+        ? color.withValues(alpha: 0.16)
+        : Colors.white.withValues(alpha: 0.08);
+    final borderColor = selected
+        ? color.withValues(alpha: 0.65)
+        : Colors.white.withValues(alpha: 0.14);
+    final valueColor = selected ? Colors.white : color;
+    final iconColor = selected ? Colors.white : color;
 
-  Widget _buildFilters(bool isTablet) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: borderColor),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.28),
+                    blurRadius: 8,
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: selected
+                    ? color.withValues(alpha: 0.4)
+                    : color.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value.toString(),
+                  style: TextStyle(
+                    color: valueColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color:
+                        Colors.white.withValues(alpha: selected ? 0.9 : 0.65),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilters(bool isTablet, _CheckoutStats stats) {
+    final int totalCount = stats.pendingCount + stats.paidCount;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -281,23 +368,37 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
           padding: const EdgeInsets.only(bottom: 6),
           child: Row(
             children: [
-              _buildPaymentChip(
+              _buildStatChip(
+                label: 'Todas',
+                value: totalCount,
+                color: const Color(0xFF8B5CF6),
+                icon: Icons.receipt_long_rounded,
+                selected: _paymentFilter == 'all',
+                onTap: () {
+                  setState(() => _paymentFilter = 'all');
+                },
+              ),
+              const SizedBox(width: 10),
+              _buildStatChip(
                 label: 'Pendientes',
-                value: 'pending',
-                selectedValue: _paymentFilter,
+                value: stats.pendingCount,
                 color: _statusColors['terminado']!,
+                icon: Icons.timer_outlined,
+                selected: _paymentFilter == 'pending',
+                onTap: () {
+                  setState(() => _paymentFilter = 'pending');
+                },
               ),
-              _buildPaymentChip(
+              const SizedBox(width: 10),
+              _buildStatChip(
                 label: 'Pagados',
-                value: 'paid',
-                selectedValue: _paymentFilter,
+                value: stats.paidCount,
                 color: _statusColors['pagado']!,
-              ),
-              _buildPaymentChip(
-                label: 'Todos',
-                value: 'all',
-                selectedValue: _paymentFilter,
-                color: const Color(0xFF71717A),
+                icon: Icons.verified_rounded,
+                selected: _paymentFilter == 'paid',
+                onTap: () {
+                  setState(() => _paymentFilter = 'paid');
+                },
               ),
             ],
           ),
@@ -338,38 +439,6 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
     );
   }
 
-  Widget _buildPaymentChip({
-    required String label,
-    required String value,
-    required String selectedValue,
-    required Color color,
-  }) {
-    final isSelected = selectedValue == value;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.75),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        selected: isSelected,
-        onSelected: (_) => setState(() => _paymentFilter = value),
-        selectedColor: color.withValues(alpha: 0.7),
-        backgroundColor: const Color(0xFF1F233A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: isSelected ? color : Colors.white.withValues(alpha: 0.1),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      ),
-    );
-  }
-
   Widget _buildModeChip({
     required String label,
     required String value,
@@ -383,7 +452,9 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
         label: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.75),
+            color: isSelected
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.75),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -415,26 +486,39 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
 
   List<Pedido> _applyFilters(List<Pedido> pedidos) {
     final query = _searchController.text.trim().toLowerCase();
-    const readyStatuses = {'terminado', 'entregado', 'completado', 'listo', 'pagado'};
+    const readyStatuses = {
+      'terminado',
+      'entregado',
+      'completado',
+      'listo',
+      'pagado'
+    };
 
     final result = pedidos.where((pedido) {
       final status = pedido.status.toLowerCase();
       final isPaid = pedido.pagado;
 
+      // Filtro por modo (igual que antes)
       if (_modeFilter != 'all' && pedido.mode.toLowerCase() != _modeFilter) {
         return false;
       }
 
+      // Solo tomar listos para cobrar o ya pagados
       if (!isPaid && !readyStatuses.contains(status)) {
         return false;
       }
 
+      // Filtro por pago al estilo statChip
       switch (_paymentFilter) {
         case 'pending':
           if (isPaid) return false;
           break;
         case 'paid':
           if (!isPaid) return false;
+          break;
+        case 'all':
+        default:
+          // No filtra por pago
           break;
       }
 
@@ -443,21 +527,24 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
       }
 
       final mesa = (pedido.mesaNombre ?? '').toLowerCase();
-      final cliente = (pedido.clienteNombre ?? pedido.cliente ?? '').toLowerCase();
+      final cliente =
+          (pedido.clienteNombre ?? pedido.cliente ?? '').toLowerCase();
       final telefono = (pedido.clienteTelefono ?? '').toLowerCase();
       final direccion = (pedido.clienteDireccion ?? '').toLowerCase();
       final identifier = pedido.id.toLowerCase();
 
       return mesa.contains(query) ||
-             cliente.contains(query) ||
-             telefono.contains(query) ||
-             direccion.contains(query) ||
-             identifier.contains(query);
+          cliente.contains(query) ||
+          telefono.contains(query) ||
+          direccion.contains(query) ||
+          identifier.contains(query);
     }).toList();
 
     result.sort((a, b) {
-      final dateA = a.createdAt ?? a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-      final dateB = b.createdAt ?? b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final dateA =
+          a.createdAt ?? a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final dateB =
+          b.createdAt ?? b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
       return dateB.compareTo(dateA);
     });
 
@@ -495,11 +582,13 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
     }
     if (pedido.extras.isNotEmpty) {
       final lastItems = pedido.extras.last.items;
-      if (lastItems.any((item) => (item.notas ?? '').toLowerCase().contains('prioridad'))) {
+      if (lastItems.any(
+          (item) => (item.notas ?? '').toLowerCase().contains('prioridad'))) {
         return true;
       }
     }
-    final priorityLevel = (pedido.toJson()['priorityLevel'] ?? '').toString().toLowerCase();
+    final priorityLevel =
+        (pedido.toJson()['priorityLevel'] ?? '').toString().toLowerCase();
     return priorityLevel == 'alta';
   }
 
@@ -510,7 +599,8 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) => PaymentBottomSheet(
         pedidoId: pedido.id,
-        onPaid: () => SnackbarHelper.showSuccess('Pago registrado correctamente'),
+        onPaid: () =>
+            SnackbarHelper.showSuccess('Pago registrado correctamente'),
       ),
     );
 
@@ -576,43 +666,8 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
     }
 
     context.push(
-      Uri(path: '/mesero/pedidos/ticket/$pedidoId', queryParameters: query).toString(),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.04),
-            ),
-            child: const Icon(Icons.receipt_long_rounded,
-                size: 46, color: Color(0xFF6366F1)),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No hay pedidos para cobrar',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Selecciona otro día o ajusta los filtros de búsqueda.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
+      Uri(path: '/mesero/pedidos/ticket/$pedidoId', queryParameters: query)
+          .toString(),
     );
   }
 
@@ -642,8 +697,8 @@ class _TableCheckoutScreenState extends ConsumerState<TableCheckoutScreen> {
       ],
     );
   }
-
 }
+
 class _CheckoutStats {
   const _CheckoutStats({
     required this.pendingTotal,
@@ -679,20 +734,23 @@ class _CheckoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final itemsCount = pedido.items.fold<int>(0, (total, item) => total + item.cantidad);
+    final itemsCount =
+        pedido.items.fold<int>(0, (total, item) => total + item.cantidad);
     final priorityLabel = isPriority ? 'Prioridad' : 'Normal';
-    final priorityColor = isPriority ? const Color(0xFFEF4444) : const Color(0xFF38BDF8);
+    final priorityColor =
+        isPriority ? const Color(0xFFEF4444) : const Color(0xFF38BDF8);
     final isPaid = pedido.pagado;
     final totalFormatted = currencyFormatter.format(pedido.total);
     final pendingLabel = isPaid ? 'Pagado' : 'Pendiente por cobrar';
-    final statusLabel = _statusText(pedido.status);
+    final statusLabel = isPaid ? 'Pagado' : _statusText(pedido.status);
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         color: const Color(0xFF121429),
-        border: Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2),
+        border:
+            Border.all(color: statusColor.withValues(alpha: 0.35), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: statusColor.withValues(alpha: 0.2),
@@ -746,7 +804,8 @@ class _CheckoutCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   color: statusColor.withValues(alpha: 0.18),
@@ -793,7 +852,8 @@ class _CheckoutCard extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
                 ),
               ),
             )
@@ -825,7 +885,8 @@ class _CheckoutCard extends StatelessWidget {
                     label: const Text('Ver ticket'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.white,
-                      side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                      side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.3)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -948,63 +1009,6 @@ class _MetaItem extends StatelessWidget {
   }
 }
 
-class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({
-    required this.title,
-    required this.value,
-    required this.color,
-    required this.icon,
-  });
-
-  final String title;
-  final String value;
-  final Color color;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 160,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: const Color(0xFF121429),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.18),
-            blurRadius: 14,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 14),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ScrollToTopButton extends StatefulWidget {
   const _ScrollToTopButton({required this.controller});
 
@@ -1063,19 +1067,88 @@ class _ScrollToTopButtonState extends State<_ScrollToTopButton> {
     );
   }
 }
-  String _statusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'pendiente':
-        return 'Pendiente';
-      case 'preparando':
-        return 'En cocina';
-      case 'terminado':
-        return 'Listo para pago';
-      case 'entregado':
-        return 'Entregado';
-      case 'pagado':
-        return 'Pagado';
-      default:
-        return status;
-    }
+
+String _statusText(String status) {
+  switch (status.toLowerCase()) {
+    case 'pendiente':
+      return 'Pendiente';
+    case 'preparando':
+      return 'En cocina';
+    case 'terminado':
+      return 'Listo para pago';
+    case 'entregado':
+      return 'Entregado';
+    case 'pagado':
+      return 'Pagado';
+    default:
+      return status;
   }
+}
+
+class _CompactStat extends StatelessWidget {
+  const _CompactStat({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFF121429),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.18),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
