@@ -143,9 +143,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
                                 final pedido = filtered[index];
-                                final statusColor = _statusColors[
-                                        pedido.status.toLowerCase()] ??
-                                    const Color(0xFF6366F1);
+                                // Si el pedido está pagado, usar el color de pagado
+                                final statusColor = pedido.pagado
+                                    ? _statusColors['pagado']!
+                                    : (_statusColors[pedido.status.toLowerCase()] ??
+                                        const Color(0xFF6366F1));
                                 final isPriority = _isPriority(pedido);
                                 return Padding(
                                   padding: EdgeInsets.only(
@@ -299,6 +301,13 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         count: stats.deliveredCount,
         color: _statusColors['entregado']!,
         icon: Icons.delivery_dining,
+      ),
+      _StatusFilterData(
+        key: 'pagado',
+        label: 'Pagados',
+        count: stats.pagadoCount,
+        color: _statusColors['pagado']!,
+        icon: Icons.payment,
       ),
     ];
 
@@ -474,9 +483,32 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         return false;
       }
 
-      if (_statusFilter != 'all' &&
-          pedido.status.toLowerCase() != _statusFilter) {
-        return false;
+      // Filtro de estado
+      if (_statusFilter != 'all') {
+        // Si el filtro es 'pagado', verificar el atributo pagado
+        if (_statusFilter == 'pagado') {
+          if (!pedido.pagado) return false;
+        } else {
+          // Para otros filtros, no mostrar pedidos pagados
+          if (pedido.pagado) return false;
+          
+          final status = pedido.status.toLowerCase();
+          final mode = pedido.mode.isNotEmpty ? pedido.mode.toLowerCase() : 'mesa';
+          
+          // Para mesas, terminado/listo se cuenta como entregado
+          if (_statusFilter == 'entregado' && mode == 'mesa') {
+            if (status != 'terminado' && status != 'listo' && status != 'entregado') {
+              return false;
+            }
+          } else if (_statusFilter == 'terminado' && mode != 'mesa') {
+            // Para llevar/domicilio, terminado/listo es el filtro correcto
+            if (status != 'terminado' && status != 'listo') {
+              return false;
+            }
+          } else if (status != _statusFilter) {
+            return false;
+          }
+        }
       }
 
       final reference = pedido.createdAt ?? pedido.updatedAt;
@@ -540,9 +572,19 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     int preparingCount = 0;
     int completedCount = 0;
     int deliveredCount = 0;
+    int pagadoCount = 0;
 
     for (final pedido in pedidos) {
-      switch (pedido.status.toLowerCase()) {
+      // Si está pagado, contar como pagado
+      if (pedido.pagado) {
+        pagadoCount++;
+        continue;
+      }
+      
+      final status = pedido.status.toLowerCase();
+      final mode = pedido.mode.isNotEmpty ? pedido.mode.toLowerCase() : 'mesa';
+      
+      switch (status) {
         case 'pendiente':
           pendingCount++;
           break;
@@ -551,7 +593,13 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
           break;
         case 'terminado':
         case 'listo':
-          completedCount++;
+          // Para mesas, terminado/listo significa entregado
+          // Para llevar/domicilio, terminado/listo es listo
+          if (mode == 'mesa') {
+            deliveredCount++;
+          } else {
+            completedCount++;
+          }
           break;
         case 'entregado':
           deliveredCount++;
@@ -564,6 +612,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
       preparingCount: preparingCount,
       completedCount: completedCount,
       deliveredCount: deliveredCount,
+      pagadoCount: pagadoCount,
     );
   }
 
@@ -858,12 +907,14 @@ class _TrackingStats {
     required this.preparingCount,
     required this.completedCount,
     required this.deliveredCount,
+    required this.pagadoCount,
   });
 
   final int pendingCount;
   final int preparingCount;
   final int completedCount;
   final int deliveredCount;
+  final int pagadoCount;
 }
 
 class _StatusFilterData {
@@ -917,8 +968,7 @@ class _StatusChip extends StatelessWidget {
               ? [
                   BoxShadow(
                     color: data.color.withValues(alpha: 0.28),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                    blurRadius: 4,
                   ),
                 ]
               : null,
@@ -993,7 +1043,8 @@ class _TrackingCard extends StatelessWidget {
     final priorityLabel = isPriority ? 'Prioridad' : 'Normal';
     final priorityColor =
         isPriority ? const Color(0xFFEF4444) : const Color(0xFF38BDF8);
-    final statusLabel = _statusText(pedido.status);
+    // Si el pedido está pagado, mostrar "Pagado" en lugar del status
+    final statusLabel = pedido.pagado ? 'Pagado' : _statusText(pedido.status);
 
     return GestureDetector(
       onTap: onTap,
@@ -1076,60 +1127,14 @@ class _TrackingCard extends StatelessWidget {
                   mode: pedido.mode.isNotEmpty 
                       ? pedido.mode.toLowerCase() 
                       : 'mesa',
+                  isPagado: pedido.pagado,
                 ),
                 const SizedBox(height: 18),
-                Column(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: onTogglePriority,
-                              icon: Icon(
-                                isPriority ? Icons.bookmark_remove : Icons.bookmark_add,
-                                size: 18,
-                              ),
-                              label: Text(
-                                  isPriority ? 'Quitar prioridad' : 'Marcar prioridad'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                side:
-                                    BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14)),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: onSendNote,
-                              icon: const Icon(Icons.message_rounded, size: 18),
-                              label: const Text('Nota a cocina'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF6366F1),
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        color: Colors.white.withValues(alpha: 0.3),
-                        size: 14,
-                      ),
-                    ),
-                  ],
+                _buildActionButtons(
+                  pedido: pedido,
+                  isPriority: isPriority,
+                  onTogglePriority: onTogglePriority,
+                  onSendNote: onSendNote,
                 ),
               ],
             ),
@@ -1141,10 +1146,7 @@ class _TrackingCard extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(20),
-                    bottomLeft: Radius.circular(14),
-                  ),
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
                   color: statusColor.withValues(alpha: 0.18),
                   border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                 ),
@@ -1228,6 +1230,101 @@ class _TrackingCard extends StatelessWidget {
       default:
         return status;
     }
+  }
+
+  static Widget _buildActionButtons({
+    required Pedido pedido,
+    required bool isPriority,
+    required VoidCallback onTogglePriority,
+    required VoidCallback onSendNote,
+  }) {
+    final status = pedido.status.toLowerCase();
+    final mode = pedido.mode.isNotEmpty ? pedido.mode.toLowerCase() : 'mesa';
+    final isPagado = pedido.pagado;
+    
+    // Determinar si mostrar los botones
+    // Para mesas: ocultar si ya salió de cocina (terminado, entregado) o si está pagado
+    // Para llevar/domicilio: ocultar si está pagado o entregado
+    bool shouldShowButtons = false;
+    
+    if (mode == 'mesa') {
+      // En mesa, solo mostrar botones si está pendiente o preparando y NO está pagado
+      shouldShowButtons = (status == 'pendiente' || status == 'preparando') && !isPagado;
+    } else {
+      // Para llevar/domicilio, mostrar si no está pagado Y no está entregado
+      shouldShowButtons = !isPagado && status != 'entregado';
+    }
+    
+    if (!shouldShowButtons) {
+      // Solo mostrar el icono de flecha
+      return Column(
+        children: [
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white.withValues(alpha: 0.3),
+              size: 14,
+            ),
+          ),
+        ],
+      );
+    }
+    
+    // Mostrar los botones de acción
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onTogglePriority,
+                  icon: Icon(
+                    isPriority ? Icons.bookmark_remove : Icons.bookmark_add,
+                    size: 18,
+                  ),
+                  label: Text(
+                      isPriority ? 'Quitar prioridad' : 'Marcar prioridad'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: onSendNote,
+                  icon: const Icon(Icons.message_rounded, size: 18),
+                  label: const Text('Nota a cocina'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Icon(
+            Icons.arrow_forward_ios_rounded,
+            color: Colors.white.withValues(alpha: 0.3),
+            size: 14,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -1366,31 +1463,36 @@ class _OrderTimeline extends StatelessWidget {
   const _OrderTimeline({
     required this.status,
     required this.mode,
+    required this.isPagado,
   });
 
   final String status;
   final String mode;
+  final bool isPagado;
 
   @override
   Widget build(BuildContext context) {
-    // Para pedidos de mesa: Pendiente -> Cocina -> Listo -> Entregado
-    // Para pedidos para llevar/domicilio: Pendiente -> Cocina -> Listo (sin entregado)
+    // Para pedidos de mesa: Pendiente -> Cocina -> Entregado -> Pagado
+    // Para pedidos para llevar/domicilio: Pendiente -> Cocina -> Listo -> Entregado
     final isMesa = mode == 'mesa';
     
     final stages = isMesa
         ? [
             const _TimelineStage(label: 'Pendiente', key: 'pendiente', icon: Icons.access_time),
             const _TimelineStage(label: 'Cocina', key: 'preparando', icon: Icons.restaurant),
-            const _TimelineStage(label: 'Listo', key: 'terminado', icon: Icons.check_circle),
-            const _TimelineStage(label: 'Entregado', key: 'entregado', icon: Icons.delivery_dining),
+            const _TimelineStage(label: 'Entregado', key: 'entregado', icon: Icons.room_service),
+            const _TimelineStage(label: 'Pagado', key: 'pagado', icon: Icons.payment),
           ]
         : [
             const _TimelineStage(label: 'Pendiente', key: 'pendiente', icon: Icons.access_time),
             const _TimelineStage(label: 'Cocina', key: 'preparando', icon: Icons.restaurant),
             const _TimelineStage(label: 'Listo', key: 'terminado', icon: Icons.check_circle),
+            const _TimelineStage(label: 'Entregado', key: 'entregado', icon: Icons.delivery_dining),
           ];
 
-    final currentIndex = _getCurrentStageIndex(status, isMesa);
+    final currentIndex = _getCurrentStageIndex(status, isMesa, isPagado);
+    // Si está pagado y es el último estado, marcarlo como completado también
+    final isLastStageCompleted = isPagado && currentIndex == stages.length - 1;
 
     return Row(
       children: [
@@ -1399,7 +1501,7 @@ class _OrderTimeline extends StatelessWidget {
             child: _TimelineStageItem(
               stage: stages[i],
               isActive: i <= currentIndex,
-              isCompleted: i < currentIndex,
+              isCompleted: i < currentIndex || (i == currentIndex && isLastStageCompleted),
             ),
           ),
           if (i < stages.length - 1)
@@ -1424,7 +1526,12 @@ class _OrderTimeline extends StatelessWidget {
     );
   }
 
-  int _getCurrentStageIndex(String status, bool isMesa) {
+  int _getCurrentStageIndex(String status, bool isMesa, bool isPagado) {
+    // Si el pedido está pagado, mostrar el último estado
+    if (isPagado) {
+      return isMesa ? 3 : 3; // Último estado en ambos casos
+    }
+    
     switch (status.toLowerCase()) {
       case 'pendiente':
       case 'nuevo':
@@ -1434,16 +1541,13 @@ class _OrderTimeline extends StatelessWidget {
         return 1;
       case 'terminado':
       case 'listo':
-        // Si es mesa y está terminado, mostrar como listo (índice 2)
-        // Si es para llevar/domicilio, este es el último paso
-        return 2;
+        // Si es mesa, terminado/listo significa que ya está entregado (índice 2)
+        // Si es para llevar/domicilio, está listo pero no entregado (índice 2)
+        return isMesa ? 2 : 2;
       case 'entregado':
-        // Para pedidos de mesa, entregado es el último paso
-        // Para otros modos, entregado no existe, así que se queda en "listo"
-        return isMesa ? 3 : 2;
-      case 'pagado':
-        // Pagado es el estado final para mesas, debe mostrar todos los pasos completados
-        return isMesa ? 3 : 2;
+        // Para pedidos de mesa, entregado es el paso 2 (antes de pagado)
+        // Para otros modos, entregado es el último paso (índice 3)
+        return isMesa ? 2 : 3;
       default:
         return 0;
     }
@@ -1637,7 +1741,7 @@ class _OrderDetailsSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           // Items list
-          Expanded(
+          Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(

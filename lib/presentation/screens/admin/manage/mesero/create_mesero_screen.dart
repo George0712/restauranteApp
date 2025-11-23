@@ -45,6 +45,18 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    // Remover listeners
+    final controller = ref.read(registerUserControllerProvider);
+    controller.nombreController.removeListener(_validateFields);
+    controller.apellidosController.removeListener(_validateFields);
+    controller.telefonoController.removeListener(_validateFields);
+    controller.direccionController.removeListener(_validateFields);
+    
+    super.dispose();
+  }
+
   void _clearFormFields() {
     final controller = ref.read(registerUserControllerProvider);
     controller.nombreController.clear();
@@ -54,6 +66,13 @@ class _CreateMeseroScreenState extends ConsumerState<CreateMeseroScreen> {
     controller.userNameController.clear();
     controller.emailController.clear();
     controller.passwordController.clear();
+    
+    // Limpiar la imagen después del frame actual para evitar modificar el provider durante el build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(profileImageProvider.notifier).clearImage();
+      }
+    });
   }
 
   void _validateFields() {

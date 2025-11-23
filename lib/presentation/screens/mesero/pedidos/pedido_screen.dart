@@ -148,7 +148,7 @@ class _SeleccionProductosScreenState
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),

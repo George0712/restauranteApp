@@ -90,9 +90,6 @@ class _CreateItemProductScreenState
     // Limpiar controladores
     registerProductController.clearAllFields();
 
-    // Limpiar imagen
-    ref.read(profileImageProvider.notifier).clearImage();
-
     // Inicializar estado local directamente (sin setState en initState)
     selectedCategory = null;
     isAvailable = true;
@@ -104,6 +101,13 @@ class _CreateItemProductScreenState
 
     // Resetear validación
     ref.read(isValidFieldsProvider.notifier).state = false;
+
+    // Limpiar imagen después del frame actual para evitar modificar el provider durante el build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(profileImageProvider.notifier).clearImage();
+      }
+    });
   }
 
   // Método para limpiar todos los campos (con setState para uso normal)
@@ -113,9 +117,6 @@ class _CreateItemProductScreenState
 
     // Limpiar controladores
     registerProductController.clearAllFields();
-
-    // Limpiar imagen
-    ref.read(profileImageProvider.notifier).clearImage();
 
     // LIMPIAR ESTADO LOCAL CORRECTAMENTE
     setState(() {
@@ -130,6 +131,13 @@ class _CreateItemProductScreenState
 
     // Resetear validación
     ref.read(isValidFieldsProvider.notifier).state = false;
+
+    // Limpiar imagen después del frame actual
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(profileImageProvider.notifier).clearImage();
+      }
+    });
   }
 
   // Cargar datos del producto para edición
@@ -376,7 +384,7 @@ class _CreateItemProductScreenState
         ref.watch(registerProductoControllerProvider);
     final categoryAsync = ref.watch(categoryDisponibleProvider);
     final areFieldsValid = ref.watch(isValidFieldsProvider);
-    final profileImage = ref.read(profileImageProvider);
+    final profileImage = ref.watch(profileImageProvider);
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
@@ -627,7 +635,7 @@ class _CreateItemProductScreenState
                               hint: Text(
                                 AppStrings.category,
                                 style: TextStyle(
-                                    color: Colors.white.withOpacity(0.5)),
+                                    color: Colors.white.withValues(alpha: 0.5)),
                               ),
                               autovalidateMode: AutovalidateMode.onUserInteraction,
                               dropdownColor: const Color(0xFF1A1A2E),

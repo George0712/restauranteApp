@@ -1623,8 +1623,9 @@ class _TakeawayOrderCard extends StatelessWidget {
       final minutes = diff.inMinutes % 60;
       return 'Hace ${diff.inHours}h ${minutes}m';
     }
-    if (diff.inDays < 7)
+    if (diff.inDays < 7) {
       return 'Hace ${diff.inDays} dia${diff.inDays == 1 ? '' : 's'}';
+    }
     return DateFormat('dd MMM - HH:mm', 'es').format(date);
   }
 }

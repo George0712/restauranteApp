@@ -41,8 +41,12 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
         (stats['entregado'] ?? 0) +
         (stats['cancelado'] ?? 0);
 
+    // Si no hay pedidos en curso, iniciar en la pestaña de completados
+    final initialIndex = pendingCount == 0 ? 1 : 0;
+
     return DefaultTabController(
       length: 2,
+      initialIndex: initialIndex,
       child: Scaffold(
         backgroundColor: Colors.black,
         extendBodyBehindAppBar: true,
