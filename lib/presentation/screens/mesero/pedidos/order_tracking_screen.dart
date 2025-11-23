@@ -1620,13 +1620,13 @@ class _TimelineStageItem extends StatelessWidget {
 }
 
 // Order details sheet
-class _OrderDetailsSheet extends StatelessWidget {
+class _OrderDetailsSheet extends ConsumerWidget {
   const _OrderDetailsSheet({required this.pedido});
 
   final Pedido pedido;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final itemsCount = pedido.items.fold<int>(0, (total, item) => total + item.cantidad);
 
     return Container(

@@ -113,7 +113,7 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
                   const SizedBox(height: 12),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: TabBarView(
                         physics: const BouncingScrollPhysics(),
                         children: [
@@ -758,7 +758,9 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.85,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -770,91 +772,94 @@ class _HistorialScreenState extends ConsumerState<HistorialScreen> {
           ),
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
 
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.receipt_long,
-                    color: Color(0xFF8B5CF6),
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Detalles del Pedido',
-                      style: TextStyle(
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.receipt_long,
+                      color: Color(0xFF8B5CF6),
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Detalles del Pedido',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.close,
                         color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
-            // Content
-            Expanded(
-              child: StreamBuilder<DocumentSnapshot>(
-                stream:
-                    _firestore.collection('pedido').doc(pedidoId).snapshots(),
-                builder: (context, snapshot) {
-                  // Usar datos iniciales si están disponibles y no hay snapshot aún
-                  Map<String, dynamic>? data = datosIniciales;
+              // Content
+              Flexible(
+                child: StreamBuilder<DocumentSnapshot>(
+                  stream:
+                      _firestore.collection('pedido').doc(pedidoId).snapshots(),
+                  builder: (context, snapshot) {
+                    // Usar datos iniciales si están disponibles y no hay snapshot aún
+                    Map<String, dynamic>? data = datosIniciales;
 
-                  if (snapshot.hasError) {
-                    return _buildErrorContent('Error al cargar los detalles',
-                        snapshot.error.toString());
-                  }
-
-                  if (snapshot.hasData && snapshot.data!.exists) {
-                    try {
-                      data = snapshot.data!.data() as Map<String, dynamic>;
-                    } catch (e) {
-                      return _buildErrorContent(
-                          'Error al procesar los datos', e.toString());
+                    if (snapshot.hasError) {
+                      return _buildErrorContent('Error al cargar los detalles',
+                          snapshot.error.toString());
                     }
-                  } else if (data == null &&
-                      snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xFF8B5CF6),
-                      ),
-                    );
-                  }
 
-                  if (data == null || data.isEmpty) {
-                    return _buildErrorContent('Pedido no encontrado',
-                        'No se pudieron cargar los datos del pedido');
-                  }
+                    if (snapshot.hasData && snapshot.data!.exists) {
+                      try {
+                        data = snapshot.data!.data() as Map<String, dynamic>;
+                      } catch (e) {
+                        return _buildErrorContent(
+                            'Error al procesar los datos', e.toString());
+                      }
+                    } else if (data == null &&
+                        snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF8B5CF6),
+                        ),
+                      );
+                    }
 
-                  return _buildPedidoDetails(pedidoId, data);
-                },
+                    if (data == null || data.isEmpty) {
+                      return _buildErrorContent('Pedido no encontrado',
+                          'No se pudieron cargar los datos del pedido');
+                    }
+
+                    return _buildPedidoDetails(pedidoId, data);
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
