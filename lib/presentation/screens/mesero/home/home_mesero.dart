@@ -682,7 +682,7 @@ class _HomeMeseroScreenState extends ConsumerState<HomeMeseroScreen> {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'Comunicate con el administrador o revisa los tutoriales para resolver dudas durante tu turno.',
+                  'Comunicate con el administrador para resolver cualquier duda durante tu turno.',
                   style: TextStyle(
                     color: Color.fromRGBO(255, 255, 255, 0.85),
                     fontSize: 14,
