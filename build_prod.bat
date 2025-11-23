@@ -1,0 +1,3 @@
+@echo off
+echo Construyendo Restaurante App en modo PRODUCCION...
+flutter build apk --flavor prod -t lib/main_prod.dart --release

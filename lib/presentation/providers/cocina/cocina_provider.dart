@@ -38,7 +38,8 @@ final updatedOrderNotificationProvider = StateProvider<OrderNotification?>((ref)
 
 // Map para rastrear pedidos previos y detectar cambios
 final Map<String, String> _previousPedidosStatus = {};
-final Set<String> _seenPedidoIds = {};
+final Map<String, int> _seenPedidoTimestamps = {}; // Cambiar a Map para rastrear timestamps
+final Map<String, String> _pedidosPriorityLevel = {}; // Map para almacenar priorityLevel de cada pedido
 
 // StreamProvider para obtener pedidos en tiempo real
 final pedidosStreamProvider = StreamProvider<List<Pedido>>((ref) {
@@ -60,20 +61,33 @@ final pedidosStreamProvider = StreamProvider<List<Pedido>>((ref) {
         final data = doc.data();
         final currentStatus = data['status'] as String? ?? 'pendiente';
 
-        // Detectar nuevo pedido
-        if (!_seenPedidoIds.contains(pedidoId) && currentStatus == 'pendiente') {
-          _seenPedidoIds.add(pedidoId);
-          Future.microtask(() {
-            ref.read(newOrderNotificationProvider.notifier).state =
-                OrderNotification(
-                  message: 'Pedido #${pedidoId.substring(0, 8).toUpperCase()}',
-                  timestamp: DateTime.now().millisecondsSinceEpoch,
-                );
+        // Detectar nuevo pedido basándose en timestamp de creación
+        final createdAt = data['createdAt'] as Timestamp?;
+        if (createdAt != null && currentStatus == 'pendiente') {
+          final createdTimestamp = createdAt.millisecondsSinceEpoch;
+          final lastSeenTimestamp = _seenPedidoTimestamps[pedidoId];
+          
+          // Notificar si es un pedido nuevo (no visto antes) o si fue creado recientemente
+          if (lastSeenTimestamp == null || createdTimestamp > lastSeenTimestamp) {
+            _seenPedidoTimestamps[pedidoId] = createdTimestamp;
+            
+            // Solo notificar si el pedido fue creado en los últimos 5 minutos
+            // Esto evita notificar pedidos antiguos al recargar
+            final now = DateTime.now().millisecondsSinceEpoch;
+            if (now - createdTimestamp < 300000) { // 5 minutos
+              Future.microtask(() {
+                ref.read(newOrderNotificationProvider.notifier).state =
+                    OrderNotification(
+                      message: 'Pedido #${pedidoId.substring(0, 8).toUpperCase()}',
+                      timestamp: DateTime.now().millisecondsSinceEpoch,
+                    );
 
-            Future.delayed(const Duration(milliseconds: 3500), () {
-              ref.read(newOrderNotificationProvider.notifier).state = null;
-            });
-          });
+                Future.delayed(const Duration(milliseconds: 3500), () {
+                  ref.read(newOrderNotificationProvider.notifier).state = null;
+                });
+              });
+            }
+          }
         }
 
         // Solo actualizar el estado previo para tracking, sin notificar
@@ -109,6 +123,14 @@ final pedidosStreamProvider = StreamProvider<List<Pedido>>((ref) {
           continue;
         }
 
+        // Almacenar priorityLevel en el Map global
+        final priorityLevel = data['priorityLevel'] as String?;
+        if (priorityLevel != null) {
+          _pedidosPriorityLevel[doc.id] = priorityLevel;
+        } else {
+          _pedidosPriorityLevel.remove(doc.id);
+        }
+        
         pedidos.add(Pedido.fromJson({...data, 'id': doc.id}));
       } catch (e, stackTrace) {
         developer.log('Error procesando pedido ${doc.id}: $e', error: e, stackTrace: stackTrace);
@@ -397,15 +419,57 @@ final pedidoStatsProvider = Provider<AsyncValue<Map<String, int>>>((ref) {
   );
 });
 
+// Función auxiliar para verificar si un pedido tiene prioridad
+bool _isPedidoPriority(Pedido pedido) {
+  // Verificar en notas
+  final notas = (pedido.notas ?? '').toLowerCase();
+  if (notas.contains('[prioridad]')) {
+    return true;
+  }
+  // Verificar en extras
+  if (pedido.extras.isNotEmpty) {
+    final lastItems = pedido.extras.last.items;
+    if (lastItems.any(
+        (item) => (item.notas ?? '').toLowerCase().contains('prioridad'))) {
+      return true;
+    }
+  }
+  // Verificar priorityLevel desde el Map global
+  final priorityLevel = (_pedidosPriorityLevel[pedido.id] ?? '').toLowerCase();
+  return priorityLevel == 'alta';
+}
+
 List<Pedido> _sortByRecent(List<Pedido> pedidos) {
   final ordered = List<Pedido>.from(pedidos);
   ordered.sort((a, b) {
-    // ✅ USAR SOLO createdAt para mantener el orden de llegada original
-    // Ignorar updatedAt para evitar que los pedidos se reordenen al actualizarlos
+    final aStatus = a.status.toLowerCase();
+    final bStatus = b.status.toLowerCase();
+    
+    // Pedidos en preparación siempre primero
+    final aIsPreparing = aStatus == 'preparando';
+    final bIsPreparing = bStatus == 'preparando';
+    
+    if (aIsPreparing && !bIsPreparing) return -1;
+    if (!aIsPreparing && bIsPreparing) return 1;
+    
+    // Si ambos están en preparación, mantener orden original
+    if (aIsPreparing && bIsPreparing) {
+      final dateA = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final dateB = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return dateA.compareTo(dateB);
+    }
+    
+    // Verificar prioridad
+    final aIsPriority = _isPedidoPriority(a);
+    final bIsPriority = _isPedidoPriority(b);
+    
+    // Pedidos prioritarios después de los que están en preparación
+    if (aIsPriority && !bIsPriority) return -1;
+    if (!aIsPriority && bIsPriority) return 1;
+    
+    // Si ambos tienen la misma prioridad, ordenar por fecha (FIFO)
     final aDate = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
     final bDate = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-    // Ordenar de más antiguo a más reciente (FIFO)
-    // Los pedidos más antiguos aparecen primero (índice 0)
     return aDate.compareTo(bDate);
   });
   return ordered;

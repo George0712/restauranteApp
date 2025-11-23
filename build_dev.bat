@@ -1,0 +1,3 @@
+@echo off
+echo Construyendo Restaurante App en modo DESARROLLO...
+flutter build apk --flavor dev -t lib/main_dev.dart

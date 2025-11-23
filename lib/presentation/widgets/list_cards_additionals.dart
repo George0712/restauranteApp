@@ -5,6 +5,7 @@ import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/additonal_model.dart';
 import 'package:restaurante_app/presentation/controllers/admin/manage_products_controller.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/widgets/build_empty_state.dart';
 
 class ListCardsAdditionals extends ConsumerStatefulWidget {
   const ListCardsAdditionals({super.key});
@@ -22,7 +23,11 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
     return additionalsAsync.when(
       data: (additionals) {
         if (additionals.isEmpty) {
-          return const Text('No hay adicionales disponibles.');
+          return buildEmptyState(
+            context, 
+            'No hay adicionales registrados', 
+            Icons.category_outlined,
+          );
         }
 
         return GridView.builder(
@@ -34,7 +39,7 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
             crossAxisCount: 2,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 2,
+            childAspectRatio: 1.8,
           ),
           itemBuilder: (context, index) {
             final additional = additionals[index];
@@ -45,7 +50,7 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                   gradient: LinearGradient(
                     colors: [
                       Colors.white,
-                      Colors.white.withValues(alpha: 0.6),
+                      Colors.white.withAlpha(160),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -53,27 +58,50 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: additional.disponible
-                        ? Colors.green.withValues(alpha: 0.2)
-                        : Colors.red.withValues(alpha: 0.2),
+                        ? Colors.green.withAlpha(80)
+                        : Colors.red.withAlpha(80),
                   ),
                   boxShadow: [
                     BoxShadow(
-                        color: Colors.black.withAlpha(10),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4)),
+                      color: Colors.black.withAlpha(10),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
                   ],
                 ),
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 child: Stack(
                   children: [
+                    // CONTENIDO CENTRADO (Nombre y precio)
                     Center(
-                      child: Text(
-                        additional.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.black),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            additional.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '\$${additional.price.toStringAsFixed(0).replaceAllMapped(
+                                  RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+                                  (Match m) => '${m[1]}.',
+                                )}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
                     // Badge de disponibilidad
@@ -82,8 +110,8 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                       right: 0,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 5,
+                          vertical: 5,
                         ),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -107,21 +135,6 @@ class _ListCardsAdditionalsState extends ConsumerState<ListCardsAdditionals> {
                                       : const Color(0xFFEF4444))
                                   .withValues(alpha: 0.4),
                               blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              additional.disponible
-                                  ? 'Disponible'
-                                  : 'No disponible',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
                             ),
                           ],
                         ),
@@ -389,7 +402,6 @@ class _AdditionalOptionsSheetState
       name: widget.additional.name,
       price: widget.additional.price,
       disponible: !widget.additional.disponible,
-      photo: widget.additional.photo,
     );
 
     if (mounted) {

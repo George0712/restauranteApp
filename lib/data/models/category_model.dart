@@ -1,13 +1,11 @@
 class CategoryModel {
   final String id;
   final String name;
-  final String? photo;
   final bool disponible;
 
   CategoryModel({
     required this.id,
     required this.name,
-    this.photo,
     this.disponible = true,
   });
 
@@ -15,7 +13,6 @@ class CategoryModel {
     return {
       'id': id,
       'name': name,
-      if (photo != null) 'photo': photo,
       'disponible': disponible,
     };
   }
@@ -24,7 +21,6 @@ class CategoryModel {
     return CategoryModel(
       id: id,
       name: map['name'] ?? '',
-      photo: map['photo'],
       disponible: map['disponible'] ?? true,
     );
   }
@@ -32,14 +28,11 @@ class CategoryModel {
   CategoryModel copyWith({
     String? id,
     String? name,
-    String? description,
-    String? photo,
     bool? disponible,
   }) {
     return CategoryModel(
       id: id ?? this.id,
       name: name ?? this.name,
-      photo: photo ?? this.photo,
       disponible: disponible ?? this.disponible,
     );
   }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/combo_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/widgets/build_empty_state.dart';
 import 'package:restaurante_app/presentation/widgets/cloudinary_image_widget.dart';
 
 class ListCardsCombos extends ConsumerWidget {
@@ -18,44 +19,10 @@ class ListCardsCombos extends ConsumerWidget {
     return combosAsync.when(
       data: (combos) {
         if (combos.isEmpty) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF2D2E37).withValues(alpha: 0.5),
-                    const Color(0xFF1A1B23).withValues(alpha: 0.3),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.grey.shade700,
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.fastfood_outlined,
-                    size: 48,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No hay Combos registrados',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade300,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          return buildEmptyState(
+            context, 
+            'No hay combos registrados', 
+            Icons.fastfood_outlined,
           );
         }
 

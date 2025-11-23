@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/widgets/build_empty_state.dart';
 
 class ListCardsCategories extends ConsumerWidget {
   const ListCardsCategories({super.key});
@@ -14,7 +15,11 @@ class ListCardsCategories extends ConsumerWidget {
     return categoriasAsync.when(
       data: (categorias) {
         if (categorias.isEmpty) {
-          return const Text('No hay categorías disponibles.');
+          return buildEmptyState(
+            context, 
+            'No hay categorías registradas', 
+            Icons.category_outlined,
+          );
         }
         return GridView.builder(
           shrinkWrap: true,
@@ -75,8 +80,8 @@ class ListCardsCategories extends ConsumerWidget {
                           right: 0,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 5,
+                              vertical: 5,
                             ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
@@ -100,21 +105,6 @@ class ListCardsCategories extends ConsumerWidget {
                                           : const Color(0xFFEF4444))
                                       .withValues(alpha: 0.4),
                                   blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  categoria.disponible
-                                      ? 'Disponible'
-                                      : 'No disponible',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
                                 ),
                               ],
                             ),

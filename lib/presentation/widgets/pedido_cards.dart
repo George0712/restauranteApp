@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
+import 'package:restaurante_app/data/models/incidencia_model.dart';
 import 'package:restaurante_app/data/models/pedido.dart';
 import 'package:restaurante_app/presentation/providers/cocina/cocina_provider.dart';
 
@@ -818,158 +822,457 @@ class PedidoCard extends ConsumerWidget {
   }
 
   void _showReportDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0F172A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Row(
-          children: [
-            Icon(Icons.warning_rounded, color: Colors.redAccent, size: 24),
-            SizedBox(width: 8),
-            Text(
-              'Opciones del pedido',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-              ),
-            ),
-          ],
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         ),
-        content: Column(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Pedido #${_generateFriendlyId(pedido.id)}',
-              style: const TextStyle(
-                color: Color(0xFFCBD5F5),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              '¿Qué acción deseas realizar?',
-              style: TextStyle(
-                color: Color(0xFFCBD5F5),
-                height: 1.4,
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF97316).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.more_vert_rounded,
+                    color: Color(0xFFF97316),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Opciones del pedido',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Pedido #${_generateFriendlyId(pedido.id)}',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Opciones
+            _buildOptionButton(
+              context: context,
+              icon: Icons.report_problem_outlined,
+              title: 'Reportar problema',
+              subtitle: 'Notificar un problema con este pedido',
+              color: const Color(0xFFEF4444),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showReportIssueDialog(context, ref);
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildOptionButton(
+              context: context,
+              icon: Icons.cancel_outlined,
+              title: 'Cancelar pedido',
+              subtitle: 'Cancelar este pedido permanentemente',
+              color: const Color(0xFFF97316),
+              onTap: () {
+                Navigator.of(context).pop();
+                _showCancelConfirmDialog(context, ref);
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionButton({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
               ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white.withValues(alpha: 0.4),
+              size: 16,
             ),
           ],
         ),
-        actions: [
-          // Botón de reportar problema
-          TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showReportIssueDialog(context, ref);
-            },
-            icon: const Icon(Icons.report_problem_outlined, size: 18),
-            label: const Text('Reportar problema'),
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
-          ),
-          // Botón de cancelar pedido
-          TextButton.icon(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showCancelConfirmDialog(context, ref);
-            },
-            icon: const Icon(Icons.cancel_outlined, size: 18),
-            label: const Text('Cancelar pedido'),
-            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
-          ),
-          // Botón de cerrar
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
       ),
     );
   }
 
   void _showReportIssueDialog(BuildContext context, WidgetRef ref) {
     final TextEditingController reportController = TextEditingController();
+    bool isLoading = false;
     
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0F172A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: const Row(
-          children: [
-            Icon(Icons.report_problem_outlined, color: Colors.redAccent, size: 24),
-            SizedBox(width: 8),
-            Text(
-              'Reportar problema',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Container(
+          decoration: BoxDecoration(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Describe el problema con el pedido #${_generateFriendlyId(pedido.id)}:',
-              style: const TextStyle(
-                color: Color(0xFFCBD5F5),
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reportController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: 'Ej: Faltan ingredientes, cliente canceló, problema con la cocina...',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.redAccent),
-                ),
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
           ),
-          ElevatedButton.icon(
-            onPressed: () {
-              if (reportController.text.trim().isNotEmpty) {
-                Navigator.of(context).pop();
-                // Aquí se puede implementar la lógica para enviar el reporte
-              }
-            },
-            icon: const Icon(Icons.send, size: 18),
-            label: const Text('Enviar reporte'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-            ),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            left: 20,
+            right: 20,
+            top: 20,
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.report_problem_outlined,
+                      color: Color(0xFFEF4444),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Reportar problema',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Pedido #${_generateFriendlyId(pedido.id)}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: isLoading
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    icon: Icon(
+                      Icons.close_rounded,
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Descripción
+              Text(
+                'Describe el problema con este pedido:',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Campo de texto
+              TextField(
+                controller: reportController,
+                maxLines: 4,
+                enabled: !isLoading,
+                decoration: InputDecoration(
+                  hintText: 'Ej: Faltan ingredientes, cliente canceló, problema con la cocina, producto no disponible...',
+                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+                style: const TextStyle(color: Colors.white),
+              ),
+              const SizedBox(height: 24),
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              if (reportController.text.trim().isEmpty) {
+                                SnackbarHelper.showWarning(
+                                    'Por favor describe el problema');
+                                return;
+                              }
+                              setState(() => isLoading = true);
+                              try {
+                                await _submitReport(
+                                    context, ref, reportController.text.trim());
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  SnackbarHelper.showError(
+                                      'Error al reportar: $e');
+                                }
+                              } finally {
+                                if (context.mounted) {
+                                  setState(() => isLoading = false);
+                                }
+                              }
+                            },
+                      icon: isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded, size: 18),
+                      label: Text(isLoading ? 'Enviando...' : 'Enviar reporte'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEF4444),
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor:
+                            const Color(0xFFEF4444).withValues(alpha: 0.5),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  Future<void> _submitReport(
+      BuildContext context, WidgetRef ref, String descripcion) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('No hay usuario autenticado');
+      }
+
+      // Obtener información del usuario (cocinero)
+      final userDoc = await FirebaseFirestore.instance
+          .collection('usuario')
+          .doc(user.uid)
+          .get();
+
+      final userData = userDoc.data();
+      final nombre = userData?['nombre'] ?? '';
+      final apellidos = userData?['apellidos'] ?? '';
+      final usuarioNombre = (nombre.isNotEmpty || apellidos.isNotEmpty)
+          ? '${nombre.trim()} ${apellidos.trim()}'.trim()
+          : 'Usuario desconocido';
+
+      // Obtener información de la mesa si existe
+      String? mesaId;
+      String? mesaNombre;
+      if (pedido.mode.toLowerCase() == 'mesa') {
+        if (pedido.mesaId != null && pedido.mesaId! > 0) {
+          mesaId = pedido.mesaId.toString();
+        }
+        mesaNombre = pedido.mesaNombre ?? 
+            (pedido.mesaId != null && pedido.mesaId! > 0
+                ? 'Mesa ${pedido.mesaId}'
+                : null);
+      }
+
+      // Crear la incidencia
+      final incidencia = Incidencia(
+        tipo: 'cocina',
+        categoria: 'normal',
+        asunto: 'Problema con pedido #${_generateFriendlyId(pedido.id)}',
+        descripcion: descripcion,
+        meseroId: user.uid,
+        meseroNombre: usuarioNombre,
+        mesaId: mesaId,
+        mesaNombre: mesaNombre,
+        pedidoId: pedido.id,
+        createdAt: DateTime.now(),
+      );
+
+      // Guardar en Firebase
+      await FirebaseFirestore.instance
+          .collection('incidencia')
+          .add(incidencia.toJson());
+
+      if (!context.mounted) return;
+
+      SnackbarHelper.showSuccess(
+          'Problema reportado exitosamente. El administrador será notificado.');
+    } catch (e) {
+      if (!context.mounted) return;
+      rethrow;
+    }
   }
 
   void _showCancelConfirmDialog(BuildContext context, WidgetRef ref) {

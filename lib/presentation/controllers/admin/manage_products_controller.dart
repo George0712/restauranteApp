@@ -299,7 +299,6 @@ class RegisterAdditionalController {
         name: name,
         price: price,
         disponible: disponible,
-        photo: photo,
       );
       await docRef.set(additional.toMap());
       return null;

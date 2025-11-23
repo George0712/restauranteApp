@@ -5,7 +5,7 @@ import 'package:restaurante_app/data/models/incidencia_model.dart';
 // Provider para obtener todas las incidencias en tiempo real
 final incidenciasStreamProvider = StreamProvider<List<Incidencia>>((ref) {
   return FirebaseFirestore.instance
-      .collection('incidencias')
+      .collection('incidencia')
       .orderBy('createdAt', descending: true)
       .snapshots()
       .map((snapshot) {

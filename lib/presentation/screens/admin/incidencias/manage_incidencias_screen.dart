@@ -728,16 +728,16 @@ class _ChipInfo extends StatelessWidget {
   }
 }
 
-class _ScrollToTopButton extends StatefulWidget {
+class _ScrollToTopButton extends ConsumerStatefulWidget {
   const _ScrollToTopButton({required this.controller});
 
   final ScrollController controller;
 
   @override
-  State<_ScrollToTopButton> createState() => _ScrollToTopButtonState();
+  ConsumerState<_ScrollToTopButton> createState() => _ScrollToTopButtonState();
 }
 
-class _ScrollToTopButtonState extends State<_ScrollToTopButton> {
+class _ScrollToTopButtonState extends ConsumerState<_ScrollToTopButton> {
   bool _isVisible = false;
 
   @override

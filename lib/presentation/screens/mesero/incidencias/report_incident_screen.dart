@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/data/models/incidencia_model.dart';
 
 class ReportIncidentScreen extends StatefulWidget {
@@ -545,12 +546,16 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
 
       // Obtener información del mesero
       final userDoc = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('usuario')
           .doc(user.uid)
           .get();
 
       final userData = userDoc.data();
-      final meseroNombre = userData?['nombre'] ?? 'Usuario desconocido';
+      final nombre = userData?['nombre'] ?? '';
+      final apellidos = userData?['apellidos'] ?? '';
+      final meseroNombre = (nombre.isNotEmpty || apellidos.isNotEmpty)
+          ? '${nombre.trim()} ${apellidos.trim()}'.trim()
+          : 'Usuario desconocido';
 
       // Crear la incidencia
       final incidencia = Incidencia(
@@ -565,7 +570,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
 
       // Guardar en Firebase
       await FirebaseFirestore.instance
-          .collection('incidencias')
+          .collection('incidencia')
           .add(incidencia.toJson());
 
       if (!mounted) return;
@@ -585,7 +590,7 @@ class _ReportIncidentScreenState extends State<ReportIncidentScreen> {
       if (!mounted) return;
 
       // Volver a la pantalla anterior
-      Navigator.of(context).pop();
+      context.pop();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);

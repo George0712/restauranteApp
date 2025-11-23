@@ -48,7 +48,7 @@ final turnoActivoProvider = StreamProvider<TurnoModel?>((ref) {
       }
 
       return FirebaseFirestore.instance
-          .collection('turnos')
+          .collection('turno')
           .where('userId', isEqualTo: user.uid)
           .where('activo', isEqualTo: true)
           .limit(1)
@@ -141,7 +141,7 @@ class TurnoController {
 
       // Verificar si ya tiene un turno activo
       final turnoActivoQuery = await _firestore
-          .collection('turnos')
+          .collection('turno')
           .where('userId', isEqualTo: user.uid)
           .where('activo', isEqualTo: true)
           .get();
@@ -176,7 +176,7 @@ class TurnoController {
         userName: userName,
       );
 
-      await _firestore.collection('turnos').add(turno.toMap());
+      await _firestore.collection('turno').add(turno.toMap());
 
       // Programar desactivación automática
       _programarDesactivacionAutomatica(horaFinProgramada, user.uid);
@@ -204,7 +204,7 @@ class TurnoController {
   Future<void> _desactivarTurnoAutomaticamente(String userId) async {
     try {
       final turnosActivos = await _firestore
-          .collection('turnos')
+          .collection('turno')
           .where('userId', isEqualTo: userId)
           .where('activo', isEqualTo: true)
           .get();
@@ -225,7 +225,7 @@ class TurnoController {
   /// Finalizar turno manualmente (solo si ha pasado el tiempo programado)
   Future<void> finalizarTurno(String turnoId) async {
     try {
-      final turnoDoc = await _firestore.collection('turnos').doc(turnoId).get();
+      final turnoDoc = await _firestore.collection('turno').doc(turnoId).get();
 
       if (!turnoDoc.exists) {
         SnackbarHelper.showError('Turno no encontrado');
@@ -260,7 +260,7 @@ class TurnoController {
     try {
       final ahora = _getColombiaTime();
       final turnosActivos = await _firestore
-          .collection('turnos')
+          .collection('turno')
           .where('activo', isEqualTo: true)
           .get();
 

@@ -16,6 +16,9 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
       _OrderTrackingScreenState();
 }
 
+// Provider para almacenar los niveles de prioridad de los pedidos
+final pedidosPriorityProvider = StateProvider<Map<String, String>>((ref) => {});
+
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
@@ -51,6 +54,20 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     final pedidosAsync = ref.watch(pedidosStreamProvider);
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 900;
+    
+    // Cargar prioridades cuando cambien los pedidos (solo cuando hay datos nuevos)
+    ref.listen<AsyncValue<List<Pedido>>>(pedidosStreamProvider, (previous, next) {
+      next.whenData((pedidos) {
+        // Solo cargar si los pedidos realmente cambiaron
+        if (previous?.valueOrNull != pedidos) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _loadPriorities(pedidos);
+            }
+          });
+        }
+      });
+    });
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -482,7 +499,32 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
           identifier.contains(query);
     }).toList();
 
+    // Ordenar con lógica de prioridad
     result.sort((a, b) {
+      final aIsPriority = _isPriority(a);
+      final bIsPriority = _isPriority(b);
+      final aStatus = a.status.toLowerCase();
+      final bStatus = b.status.toLowerCase();
+      
+      // Pedidos en preparación siempre primero
+      final aIsPreparing = aStatus == 'preparando';
+      final bIsPreparing = bStatus == 'preparando';
+      
+      if (aIsPreparing && !bIsPreparing) return -1;
+      if (!aIsPreparing && bIsPreparing) return 1;
+      
+      // Si ambos están en preparación, mantener orden original
+      if (aIsPreparing && bIsPreparing) {
+        final dateA = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final dateB = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return dateA.compareTo(dateB);
+      }
+      
+      // Pedidos prioritarios después de los que están en preparación
+      if (aIsPriority && !bIsPriority) return -1;
+      if (!aIsPriority && bIsPriority) return 1;
+      
+      // Si ambos tienen la misma prioridad, ordenar por fecha
       final dateA =
           a.createdAt ?? a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
       final dateB =
@@ -526,10 +568,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
   }
 
   bool _isPriority(Pedido pedido) {
+    // Verificar en notas
     final notas = (pedido.notas ?? '').toLowerCase();
     if (notas.contains('[prioridad]')) {
       return true;
     }
+    // Verificar en extras
     if (pedido.extras.isNotEmpty) {
       final lastItems = pedido.extras.last.items;
       if (lastItems.any(
@@ -537,19 +581,72 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
         return true;
       }
     }
-    final priorityLevel =
-        (pedido.toJson()['priorityLevel'] ?? '').toString().toLowerCase();
+    // Verificar priorityLevel desde el provider
+    final priorityMap = ref.read(pedidosPriorityProvider);
+    final priorityLevel = (priorityMap[pedido.id] ?? '').toLowerCase();
     return priorityLevel == 'alta';
+  }
+  
+  // Cargar priorityLevel de todos los pedidos desde Firestore
+  Future<void> _loadPriorities(List<Pedido> pedidos) async {
+    try {
+      // Leer todos los documentos de una vez para mayor eficiencia
+      final ids = pedidos.map((p) => p.id).toList();
+      if (ids.isEmpty) return;
+      
+      // Dividir en lotes de 10 (límite de Firestore in query)
+      final priorityMap = <String, String>{};
+      for (var i = 0; i < ids.length; i += 10) {
+        final batch = ids.skip(i).take(10).toList();
+        try {
+          final docs = await Future.wait(
+            batch.map((id) => FirebaseFirestore.instance
+                .collection('pedido')
+                .doc(id)
+                .get()),
+          );
+          
+          for (final doc in docs) {
+            if (doc.exists) {
+              final data = doc.data();
+              final priorityLevel = data?['priorityLevel'] as String?;
+              if (priorityLevel != null) {
+                priorityMap[doc.id] = priorityLevel;
+              }
+            }
+          }
+        } catch (e) {
+          // Continuar con el siguiente lote
+        }
+      }
+      
+      if (mounted) {
+        ref.read(pedidosPriorityProvider.notifier).state = priorityMap;
+      }
+    } catch (e) {
+      // Error al cargar prioridades
+    }
   }
 
   Future<void> _togglePriority(Pedido pedido, bool currentPriority) async {
     try {
       final db = FirebaseFirestore.instance;
       final newPriority = !currentPriority;
+      final newPriorityLevel = newPriority ? 'alta' : 'normal';
 
-      await db.collection('pedidos').doc(pedido.id).update({
-        'priorityLevel': newPriority ? 'alta' : 'normal',
+      await db.collection('pedido').doc(pedido.id).update({
+        'priorityLevel': newPriorityLevel,
+        'updatedAt': FieldValue.serverTimestamp(),
       });
+      
+      // Actualizar el provider localmente
+      final priorityMap = Map<String, String>.from(ref.read(pedidosPriorityProvider));
+      priorityMap[pedido.id] = newPriorityLevel;
+      ref.read(pedidosPriorityProvider.notifier).state = priorityMap;
+      
+      SnackbarHelper.showSuccess(
+        newPriority ? 'Prioridad marcada' : 'Prioridad removida',
+      );
     } catch (e) {
       SnackbarHelper.showError('Error al actualizar prioridad: $e');
     }
@@ -566,6 +663,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
 
   Future<void> _openKitchenNoteDialog(Pedido pedido) async {
     final controller = TextEditingController();
+    // Cargar nota existente si hay
+    final existingNote = pedido.notas ?? '';
+    if (existingNote.isNotEmpty) {
+      controller.text = existingNote;
+    }
 
     final result = await showDialog<String>(
       context: context,
@@ -614,10 +716,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> {
     if (result != null && result.isNotEmpty) {
       try {
         final db = FirebaseFirestore.instance;
-        await db.collection('pedidos').doc(pedido.id).update({
-          'kitchenNote': result,
+        await db.collection('pedido').doc(pedido.id).update({
+          'notas': result,
           'kitchenNoteTimestamp': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
         });
+        SnackbarHelper.showSuccess('Nota enviada a cocina');
       } catch (e) {
         SnackbarHelper.showError('Error al enviar nota: $e');
       }
@@ -908,11 +1012,9 @@ class _TrackingCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
+        child: Stack(
+          children: [
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -951,23 +1053,6 @@ class _TrackingCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        color: statusColor.withValues(alpha: 0.18),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
-                      ),
-                      child: Text(
-                        statusLabel,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -986,56 +1071,96 @@ class _TrackingCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 18),
-                _OrderTimeline(status: pedido.status.toLowerCase()),
+                _OrderTimeline(
+                  status: pedido.status.toLowerCase(),
+                  mode: pedido.mode.isNotEmpty 
+                      ? pedido.mode.toLowerCase() 
+                      : 'mesa',
+                ),
                 const SizedBox(height: 18),
-                Row(
+                Column(
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: onTogglePriority,
-                        icon: Icon(
-                          isPriority ? Icons.bookmark_remove : Icons.bookmark_add,
-                          size: 18,
-                        ),
-                        label: Text(
-                            isPriority ? 'Quitar prioridad' : 'Marcar prioridad'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side:
-                              BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                        ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: onTogglePriority,
+                              icon: Icon(
+                                isPriority ? Icons.bookmark_remove : Icons.bookmark_add,
+                                size: 18,
+                              ),
+                              label: Text(
+                                  isPriority ? 'Quitar prioridad' : 'Marcar prioridad'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side:
+                                    BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: onSendNote,
+                              icon: const Icon(Icons.message_rounded, size: 18),
+                              label: const Text('Nota a cocina'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6366F1),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: onSendNote,
-                        icon: const Icon(Icons.message_rounded, size: 18),
-                        label: const Text('Nota a cocina'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6366F1),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Colors.white.withValues(alpha: 0.3),
+                        size: 14,
                       ),
                     ),
                   ],
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Icon(
-            Icons.arrow_forward_ios_rounded,
-            color: Colors.white.withValues(alpha: 0.5),
-            size: 20,
-          ),
-        ],
-      ),
+            // Estado en la esquina superior derecha
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(20),
+                    bottomLeft: Radius.circular(14),
+                  ),
+                  color: statusColor.withValues(alpha: 0.18),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1043,6 +1168,16 @@ class _TrackingCard extends StatelessWidget {
   static String _locationLabel(Pedido pedido) {
     final mesaNombre = (pedido.mesaNombre ?? '').trim();
     if (mesaNombre.isNotEmpty) {
+      // Si ya contiene "mesa" o "Mesa", devolverlo tal cual
+      // Si no, verificar si es solo un número y agregar "Mesa"
+      final lowerMesa = mesaNombre.toLowerCase();
+      if (lowerMesa.contains('mesa')) {
+        return mesaNombre;
+      }
+      // Si es solo un número, agregar "Mesa"
+      if (RegExp(r'^\d+$').hasMatch(mesaNombre)) {
+        return 'Mesa $mesaNombre';
+      }
       return mesaNombre;
     }
     final clienteNombre = (pedido.clienteNombre ?? '').trim();
@@ -1228,20 +1363,34 @@ class _ScrollToTopButtonState extends State<_ScrollToTopButton> {
 
 // Timeline widget showing order progress
 class _OrderTimeline extends StatelessWidget {
-  const _OrderTimeline({required this.status});
+  const _OrderTimeline({
+    required this.status,
+    required this.mode,
+  });
 
   final String status;
+  final String mode;
 
   @override
   Widget build(BuildContext context) {
-    final stages = [
-      const _TimelineStage(label: 'Pendiente', key: 'pendiente', icon: Icons.access_time),
-      const _TimelineStage(label: 'Cocina', key: 'preparando', icon: Icons.restaurant),
-      const _TimelineStage(label: 'Listo', key: 'terminado', icon: Icons.check_circle),
-      const _TimelineStage(label: 'Entregado', key: 'entregado', icon: Icons.delivery_dining),
-    ];
+    // Para pedidos de mesa: Pendiente -> Cocina -> Listo -> Entregado
+    // Para pedidos para llevar/domicilio: Pendiente -> Cocina -> Listo (sin entregado)
+    final isMesa = mode == 'mesa';
+    
+    final stages = isMesa
+        ? [
+            const _TimelineStage(label: 'Pendiente', key: 'pendiente', icon: Icons.access_time),
+            const _TimelineStage(label: 'Cocina', key: 'preparando', icon: Icons.restaurant),
+            const _TimelineStage(label: 'Listo', key: 'terminado', icon: Icons.check_circle),
+            const _TimelineStage(label: 'Entregado', key: 'entregado', icon: Icons.delivery_dining),
+          ]
+        : [
+            const _TimelineStage(label: 'Pendiente', key: 'pendiente', icon: Icons.access_time),
+            const _TimelineStage(label: 'Cocina', key: 'preparando', icon: Icons.restaurant),
+            const _TimelineStage(label: 'Listo', key: 'terminado', icon: Icons.check_circle),
+          ];
 
-    final currentIndex = _getCurrentStageIndex(status);
+    final currentIndex = _getCurrentStageIndex(status, isMesa);
 
     return Row(
       children: [
@@ -1254,15 +1403,18 @@ class _OrderTimeline extends StatelessWidget {
             ),
           ),
           if (i < stages.length - 1)
-            Expanded(
-              child: Container(
-                height: 2,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: i < currentIndex
-                        ? [const Color(0xFF22C55E), const Color(0xFF22C55E)]
-                        : [Colors.white.withValues(alpha: 0.2), Colors.white.withValues(alpha: 0.2)],
+            SizedBox(
+              width: 20,
+              child: Center(
+                child: Container(
+                  height: 2,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: i < currentIndex
+                          ? [const Color(0xFF22C55E), const Color(0xFF22C55E)]
+                          : [Colors.white.withValues(alpha: 0.2), Colors.white.withValues(alpha: 0.2)],
+                    ),
                   ),
                 ),
               ),
@@ -1272,19 +1424,26 @@ class _OrderTimeline extends StatelessWidget {
     );
   }
 
-  int _getCurrentStageIndex(String status) {
-    switch (status) {
+  int _getCurrentStageIndex(String status, bool isMesa) {
+    switch (status.toLowerCase()) {
       case 'pendiente':
       case 'nuevo':
         return 0;
       case 'preparando':
+      case 'en_preparacion':
         return 1;
       case 'terminado':
       case 'listo':
+        // Si es mesa y está terminado, mostrar como listo (índice 2)
+        // Si es para llevar/domicilio, este es el último paso
         return 2;
       case 'entregado':
+        // Para pedidos de mesa, entregado es el último paso
+        // Para otros modos, entregado no existe, así que se queda en "listo"
+        return isMesa ? 3 : 2;
       case 'pagado':
-        return 3;
+        // Pagado es el estado final para mesas, debe mostrar todos los pasos completados
+        return isMesa ? 3 : 2;
       default:
         return 0;
     }

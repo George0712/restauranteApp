@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/widgets/build_empty_state.dart';
 import 'package:restaurante_app/presentation/widgets/cloudinary_image_widget.dart';
 
 class ListCardsProducts extends ConsumerWidget {
@@ -18,6 +19,7 @@ class ListCardsProducts extends ConsumerWidget {
 
     return productsAsync.when(
       data: (productos) {
+        
         // Filtrar productos por búsqueda
         final productosFiltrados =
             searchQuery != null && searchQuery!.isNotEmpty
@@ -29,59 +31,17 @@ class ListCardsProducts extends ConsumerWidget {
                 : productos;
 
         if (productosFiltrados.isEmpty) {
-          return Center(
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFF2D2E37).withValues(alpha: 0.5),
-                    const Color(0xFF1A1B23).withValues(alpha: 0.3),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Colors.grey.shade700,
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    searchQuery != null && searchQuery!.isNotEmpty
-                        ? Icons.search_off
-                        : Icons.inventory_2_outlined,
-                    size: 48,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    searchQuery != null && searchQuery!.isNotEmpty
-                        ? 'No se encontraron productos'
-                        : 'No hay Productos registrados',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade300,
-                    ),
-                  ),
-                  if (searchQuery != null && searchQuery!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        'Intenta con otro término de búsqueda',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade400,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+          final mensaje = searchQuery != null && searchQuery!.isNotEmpty
+              ? 'No se encontraron productos'
+              : 'No hay productos registrados';
+          final icono = searchQuery != null && searchQuery!.isNotEmpty
+              ? Icons.search_off
+              : Icons.fastfood_outlined;
+          
+          return buildEmptyState(
+            context, 
+            mensaje, 
+            icono,
           );
         }
 

@@ -3,13 +3,11 @@ class AdditionalModel {
   final String name;
   final double price;
   final bool disponible;
-  final String? photo;
 
   AdditionalModel({
     required this.id,
     required this.name,
     required this.price,
-    this.photo,
     this.disponible = true,
   });
 
@@ -19,7 +17,6 @@ class AdditionalModel {
       'id': id,
       'name': name,
       'price': price,
-      if(photo != null) 'photo': photo,
       'disponible': disponible,
     };
   }
@@ -31,7 +28,6 @@ class AdditionalModel {
       name: map['name'] ?? '',
       price: (map['price'] ?? 0).toDouble(),
       disponible: map['disponible'] ?? true,
-      photo: map['photo'] ?? '',
     );
   }
 
@@ -40,14 +36,12 @@ class AdditionalModel {
     String? id,
     String? name,
     double? price,
-    String? photo,
     bool? disponible,
   }) {
     return AdditionalModel(
       id: id ?? this.id,
       name: name ?? this.name,
       price: price ?? this.price,
-      photo: photo ?? this.photo,
       disponible: disponible ?? this.disponible,
     );
   }

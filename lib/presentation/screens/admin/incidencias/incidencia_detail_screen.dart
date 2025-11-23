@@ -56,7 +56,7 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
       value: SystemUiOverlayStyle.light,
       child: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('incidencias')
+            .collection('incidencia')
             .doc(widget.incidenciaId)
             .snapshots(),
         builder: (context, snapshot) {
@@ -468,7 +468,7 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
 
     try {
       await FirebaseFirestore.instance
-          .collection('incidencias')
+          .collection('incidencia')
           .doc(incidencia.id)
           .update({
         'estado': nuevoEstado,
@@ -562,7 +562,7 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
       }
 
       final userDoc = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('usuario')
           .doc(user.uid)
           .get();
 
@@ -570,7 +570,7 @@ class _IncidenciaDetailScreenState extends State<IncidenciaDetailScreen> {
       final adminNombre = userData?['nombre'] ?? 'Administrador';
 
       await FirebaseFirestore.instance
-          .collection('incidencias')
+          .collection('incidencia')
           .doc(incidencia.id)
           .update({
         'estado': 'resuelta',

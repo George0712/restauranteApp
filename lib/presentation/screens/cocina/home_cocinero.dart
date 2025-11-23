@@ -519,6 +519,7 @@ class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
     if (currentOrders.isEmpty) return;
 
     final currentIds = currentOrders.map((p) => p.id).toSet();
+    final now = DateTime.now();
 
     // Solo verificar si ya tenemos IDs conocidos (evita notificación en primera carga)
     if (_knownOrderIds.isNotEmpty) {
@@ -528,23 +529,31 @@ class _PendingOrdersTabState extends ConsumerState<_PendingOrdersTab> {
       if (newOrderIds.isNotEmpty) {
         for (final orderId in newOrderIds) {
           final newOrder = currentOrders.firstWhere((p) => p.id == orderId);
-
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              ref.read(newOrderNotificationProvider.notifier).state =
-                  OrderNotification(
-                message: 'Pedido #${newOrder.id.substring(0, 8).toUpperCase()}',
-                timestamp: DateTime.now().millisecondsSinceEpoch,
-              );
-
-              // Auto-limpiar después de 3.5 segundos
-              Future.delayed(const Duration(milliseconds: 3500), () {
+          
+          // Solo notificar si el pedido fue creado recientemente (últimos 5 minutos)
+          // Esto evita notificar pedidos antiguos que aparecen por primera vez
+          final createdAt = newOrder.createdAt;
+          if (createdAt != null) {
+            final timeDiff = now.difference(createdAt);
+            if (timeDiff.inMinutes <= 5 && newOrder.status == 'pendiente') {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted) {
-                  ref.read(newOrderNotificationProvider.notifier).state = null;
+                  ref.read(newOrderNotificationProvider.notifier).state =
+                      OrderNotification(
+                    message: 'Pedido #${newOrder.id.substring(0, 8).toUpperCase()}',
+                    timestamp: DateTime.now().millisecondsSinceEpoch,
+                  );
+
+                  // Auto-limpiar después de 3.5 segundos
+                  Future.delayed(const Duration(milliseconds: 3500), () {
+                    if (mounted) {
+                      ref.read(newOrderNotificationProvider.notifier).state = null;
+                    }
+                  });
                 }
               });
             }
-          });
+          }
         }
       }
 

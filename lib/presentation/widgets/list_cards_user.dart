@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:restaurante_app/core/helpers/snackbar_helper.dart';
 import 'package:restaurante_app/data/models/user_model.dart';
 import 'package:restaurante_app/presentation/providers/admin/admin_provider.dart';
+import 'package:restaurante_app/presentation/widgets/build_empty_state.dart';
 
 class ListCardsUsers extends ConsumerWidget {
   final String rol;
@@ -23,7 +24,11 @@ class ListCardsUsers extends ConsumerWidget {
     return usersAsync.when(
       data: (usuarios) {
         if (usuarios.isEmpty) {
-          return _buildEmptyState(context);
+          return buildEmptyState(
+            context, 
+            'No hay usuarios registrados', 
+            Icons.people_alt_outlined,
+          );
         }
 
         return GridView.builder(
@@ -99,37 +104,6 @@ class ListCardsUsers extends ConsumerWidget {
       error: (error, stackTrace) => Center(
           child: Text('Error al cargar usuarios: $error',
               style: const TextStyle(color: Colors.red))),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-          vertical: MediaQuery.of(context).padding.top + 200),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.04),
-            ),
-            child: const Icon(Icons.people_alt_outlined,
-                size: 46, color: Color(0xFF6366F1)),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No hay cocineros registrados',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

@@ -1,0 +1,3 @@
+@echo off
+echo Ejecutando Restaurante App en modo PRODUCCION...
+flutter run --flavor prod -t lib/main_prod.dart

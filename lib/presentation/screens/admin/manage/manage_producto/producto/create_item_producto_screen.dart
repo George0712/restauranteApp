@@ -35,13 +35,7 @@ class _CreateItemProductScreenState
   bool _isLoading = false;
   bool _hasLoadedData = false;
   double _uploadProgress = 0.0;
-  String? _originalImageUrl; // Para mantener referencia de la imagen original
-
-  // Controladores para limpiar en dispose
-  VoidCallback? _nombreListener;
-  VoidCallback? _precioListener;
-  VoidCallback? _tiempoListener;
-  VoidCallback? _ingredientesListener;
+  String? _originalImageUrl;
 
   // Getter para determinar si estamos editando
   bool get isEditing => widget.productId != null;
@@ -51,27 +45,33 @@ class _CreateItemProductScreenState
     super.initState();
 
     // Limpiar datos al iniciar SOLO si estamos creando (no editando)
+    // Inicializar directamente sin setState() ya que estamos en initState()
     if (!isEditing) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _clearAllFields();
-      });
+      _initializeFields();
     }
 
     final registerProductController =
         ref.read(registerProductoControllerProvider);
-
-    // Guardar referencias a los listeners
-    _nombreListener = _validateFields;
-    _precioListener = _validateFields;
-    _tiempoListener = _validateFields;
-    _ingredientesListener = _validateFields;
-
-    registerProductController.nombreController.addListener(_nombreListener!);
-    registerProductController.precioController.addListener(_precioListener!);
+    registerProductController.nombreController.addListener(_validateFields);
+    registerProductController.precioController.addListener(_validateFields);
     registerProductController.tiempoPreparacionController
-        .addListener(_tiempoListener!);
+        .addListener(_validateFields);
     registerProductController.ingredientesController
-        .addListener(_ingredientesListener!);
+        .addListener(_validateFields);
+  }
+
+  @override
+  void dispose() {
+    // Eliminar listeners para evitar memory leaks
+    final registerProductController =
+        ref.read(registerProductoControllerProvider);
+    registerProductController.nombreController.removeListener(_validateFields);
+    registerProductController.precioController.removeListener(_validateFields);
+    registerProductController.tiempoPreparacionController
+        .removeListener(_validateFields);
+    registerProductController.ingredientesController
+        .removeListener(_validateFields);
+    super.dispose();
   }
 
   void _validateFields() {
@@ -82,34 +82,31 @@ class _CreateItemProductScreenState
     ref.read(isValidFieldsProvider.notifier).state = isValid;
   }
 
-  @override
-  void dispose() {
-    // Limpiar listeners sin usar ref
-    if (_nombreListener != null || _precioListener != null ||
-        _tiempoListener != null || _ingredientesListener != null) {
-      try {
-        final registerProductController =
-            ref.read(registerProductoControllerProvider);
-        if (_nombreListener != null) {
-          registerProductController.nombreController.removeListener(_nombreListener!);
-        }
-        if (_precioListener != null) {
-          registerProductController.precioController.removeListener(_precioListener!);
-        }
-        if (_tiempoListener != null) {
-          registerProductController.tiempoPreparacionController.removeListener(_tiempoListener!);
-        }
-        if (_ingredientesListener != null) {
-          registerProductController.ingredientesController.removeListener(_ingredientesListener!);
-        }
-      } catch (e) {
-        // Ignorar error si ref ya no está disponible
-      }
-    }
-    super.dispose();
+  // Método para inicializar campos sin setState (para usar en initState)
+  void _initializeFields() {
+    final registerProductController =
+        ref.read(registerProductoControllerProvider);
+
+    // Limpiar controladores
+    registerProductController.clearAllFields();
+
+    // Limpiar imagen
+    ref.read(profileImageProvider.notifier).clearImage();
+
+    // Inicializar estado local directamente (sin setState en initState)
+    selectedCategory = null;
+    isAvailable = true;
+    _hasLoadedData = false;
+    _originalImageUrl = null;
+
+    // Resetear formulario
+    _formKey.currentState?.reset();
+
+    // Resetear validación
+    ref.read(isValidFieldsProvider.notifier).state = false;
   }
 
-  // Método para limpiar todos los campos
+  // Método para limpiar todos los campos (con setState para uso normal)
   void _clearAllFields() {
     final registerProductController =
         ref.read(registerProductoControllerProvider);
@@ -424,7 +421,7 @@ class _CreateItemProductScreenState
                     style: const TextStyle(fontSize: 16, color: Colors.white),
                   ),
                   const SizedBox(height: 24),
-        
+
                   // Foto de perfil
                   Center(
                     child: GestureDetector(
@@ -435,7 +432,8 @@ class _CreateItemProductScreenState
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: theme.primaryColor.withValues(alpha: 0.3),
+                                color:
+                                    theme.primaryColor.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                               boxShadow: [
@@ -491,7 +489,8 @@ class _CreateItemProductScreenState
                                   color: theme.primaryColor,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.2),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.2),
                                       blurRadius: 5,
                                       offset: const Offset(0, 2),
                                     ),
@@ -517,7 +516,7 @@ class _CreateItemProductScreenState
                       ),
                     ),
                   ),
-        
+
                   // Texto informativo debajo de la imagen
                   const SizedBox(height: 8),
                   Center(
@@ -532,9 +531,9 @@ class _CreateItemProductScreenState
                       ),
                     ),
                   ),
-        
+
                   const SizedBox(height: 24),
-        
+
                   // Formulario
                   Form(
                     key: _formKey,
@@ -542,7 +541,8 @@ class _CreateItemProductScreenState
                       children: [
                         CustomInputField(
                           hintText: AppStrings.name,
-                          controller: registerProductController.nombreController,
+                          controller:
+                              registerProductController.nombreController,
                           isRequired: true,
                           textCapitalization: TextCapitalization.words,
                           prefixIcon: const Icon(
@@ -560,7 +560,8 @@ class _CreateItemProductScreenState
                         CustomInputField(
                           hintText: AppStrings.price,
                           keyboardType: TextInputType.number,
-                          controller: registerProductController.precioController,
+                          controller:
+                              registerProductController.precioController,
                           isRequired: true,
                           prefixIcon: const Icon(
                             Icons.attach_money,
@@ -577,15 +578,20 @@ class _CreateItemProductScreenState
                         // Categoría - Dropdown
                         categoryAsync.when(
                           data: (categories) {
-                            // LIMPIAR VALOR VACÍO O INVÁLIDO
                             String? validatedCategory = selectedCategory;
-        
+                            if (validatedCategory != null &&
+                                !categories.any((category) =>
+                                    category.id == validatedCategory)) {
+                              validatedCategory = null;
+                            }
+
                             if (validatedCategory != null) {
                               // Si cambió el valor, actualizar el estado
                               if (validatedCategory != selectedCategory) {
                                 developer.log(
                                     'Actualizando categoría de "$selectedCategory" a "$validatedCategory"');
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
                                   if (mounted) {
                                     setState(() {
                                       selectedCategory = validatedCategory;
@@ -597,7 +603,8 @@ class _CreateItemProductScreenState
                                   height: 56,
                                   decoration: BoxDecoration(
                                     border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.12),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.12),
                                     ),
                                     borderRadius: BorderRadius.circular(32),
                                     color: Colors.white.withValues(alpha: 0.08),
@@ -614,11 +621,15 @@ class _CreateItemProductScreenState
                                 );
                               }
                             }
-        
+
                             return DropdownButtonFormField<String>(
-                              key: ValueKey(
-                                  'dropdown_${categories.length}_${validatedCategory ?? "null"}'),
                               value: validatedCategory,
+                              hint: Text(
+                                AppStrings.category,
+                                style: TextStyle(
+                                    color: Colors.white.withOpacity(0.5)),
+                              ),
+                              autovalidateMode: AutovalidateMode.onUserInteraction,
                               dropdownColor: const Color(0xFF1A1A2E),
                               style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
@@ -631,20 +642,10 @@ class _CreateItemProductScreenState
                                   color: Color(0xFF34D399),
                                   fontSize: 18,
                                 ),
-                                hintText: AppStrings.category,
-                                hintStyle: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                ),
                                 prefixIcon: const Icon(
                                   Icons.shopping_bag_outlined,
                                   color: Color(0xFF34D399),
                                   size: 22,
-                                ),
-                                suffixText: '*',
-                                suffixStyle: const TextStyle(
-                                  color: Color(0xFFEF4444),
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
                                 ),
                                 filled: true,
                                 fillColor: Colors.white.withValues(alpha: 0.08),
@@ -703,9 +704,10 @@ class _CreateItemProductScreenState
                                   selectedCategory = value;
                                 });
                               },
-                              validator: (value) => value == null || value.isEmpty
-                                  ? 'Seleccione una categoría'
-                                  : null,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Seleccione una categoría'
+                                      : null,
                             );
                           },
                           loading: () => Container(
@@ -732,7 +734,8 @@ class _CreateItemProductScreenState
                                   Text(
                                     'Cargando categorías...',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.7),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],
@@ -742,7 +745,8 @@ class _CreateItemProductScreenState
                           error: (error, stack) => Container(
                             height: 56,
                             decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFFEF4444)),
+                              border:
+                                  Border.all(color: const Color(0xFFEF4444)),
                               borderRadius: BorderRadius.circular(32),
                               color: Colors.white.withValues(alpha: 0.08),
                             ),
@@ -769,7 +773,8 @@ class _CreateItemProductScreenState
                           ),
                           validator: (value) => value == null || value.isEmpty
                               ? 'Ingrese el tiempo de preparación'
-                              : AppConstants.timePreparationRegex.hasMatch(value)
+                              : AppConstants.timePreparationRegex
+                                      .hasMatch(value)
                                   ? null
                                   : 'Este campo no es válido',
                         ),
@@ -795,9 +800,9 @@ class _CreateItemProductScreenState
                       ],
                     ),
                   ),
-        
+
                   const SizedBox(height: 32),
-        
+
                   // Botones
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

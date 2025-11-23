@@ -73,7 +73,6 @@ class _ManageCategoryScreenState extends ConsumerState<ManageCategoryScreen> {
                     // Botones
                     ElevatedButton(
                       onPressed: () {
-                        context.pop();
                         context.push('/admin/manage/category/create-item-categorys');
                       },
                       style: ElevatedButton.styleFrom(
